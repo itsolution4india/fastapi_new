@@ -3,3 +3,7 @@
 2024-11-23 12:50:42 [INFO] Sending batch of 1 contacts
 2024-11-23 12:50:43 [ERROR] Failed to send message to 916361161836. Status: 404, Error: {"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (hi_template) does not exist in en"},"fbtrace_id":"Al8KlDR-LMozsQiPXB4NAll"}}
 2024-11-23 12:50:43 [INFO] All messages processed.
+2024-11-23 13:03:17 [INFO] Processing 1 contacts for sending messages.
+2024-11-23 13:03:17 [INFO] Sending batch of 1 contacts
+2024-11-23 13:03:17 [ERROR] Failed to send message to 916361161836. Status: 404, Error: {"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (hi_template) does not exist in en"},"fbtrace_id":"Al3wqzafo3LHKWlQBnbAL6C"}}
+2024-11-23 13:03:18 [INFO] All messages processed.
