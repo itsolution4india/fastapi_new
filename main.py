@@ -11,13 +11,22 @@ from fastapi import FastAPI, HTTPException, Request
 from typing import Optional, List
 import httpx
 
-# Configure logging to log to console only (no file).
+# Directory and file for logging
+log_directory = "logs"
+log_file = "app.log"
+
+# Ensure log directory exists
+if not os.path.exists(log_directory):
+    os.makedirs(log_directory)
+
+# Configure logging to log to both console and a file
 logging.basicConfig(
     level=logging.INFO,  # Set to DEBUG for more verbose logging
     format="%(asctime)s [%(levelname)s] %(message)s",  # Include timestamp
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[
-        logging.StreamHandler()  # Log to console (stdout)
+        logging.StreamHandler(),  # Log to console (stdout)
+        logging.FileHandler(os.path.join(log_directory, log_file))  # Log to file
     ]
 )
 
