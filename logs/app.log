@@ -7,3 +7,49 @@
 2024-11-23 13:03:17 [INFO] Sending batch of 1 contacts
 2024-11-23 13:03:17 [ERROR] Failed to send message to 916361161836. Status: 404, Error: {"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (hi_template) does not exist in en"},"fbtrace_id":"Al3wqzafo3LHKWlQBnbAL6C"}}
 2024-11-23 13:03:18 [INFO] All messages processed.
+2024-11-23 14:17:12 [INFO] HTTP Request: GET https://wtsdealnow.com/api/users/ "HTTP/1.1 200 OK"
+2024-11-23 14:17:12 [INFO] User validation successful for user_id: TESTDEMO2024
+2024-11-23 14:17:12 [INFO] Coin validation successful. Required: 1, Available: 78
+2024-11-23 14:17:12 [INFO] Processing 1 contacts for sending messages.
+2024-11-23 14:17:12 [INFO] Sending batch of 1 contacts
+2024-11-23 14:17:12 [ERROR] Failed to send message to 916361161836. Status: 400, Error: {"error":{"message":"(#100) Param template['components'][0]['parameters'][0]['image']['id'] is not a valid whatsapp business account media attachment ID","type":"OAuthException","code":100,"fbtrace_id":"Avnm740tj2-yEcJmf6uspqS"}}
+2024-11-23 14:17:13 [INFO] All messages processed.
+2024-11-23 14:20:31 [INFO] HTTP Request: GET https://wtsdealnow.com/api/users/ "HTTP/1.1 200 OK"
+2024-11-23 14:20:31 [INFO] User validation successful for user_id: TESTDEMO2024
+2024-11-23 14:20:31 [INFO] Coin validation successful. Required: 1, Available: 78
+2024-11-23 14:20:31 [INFO] Processing 1 contacts for sending messages.
+2024-11-23 14:20:31 [INFO] Sending batch of 1 contacts
+2024-11-23 14:20:31 [ERROR] Failed to send message to 916361161836. Status: 400, Error: {"error":{"message":"(#100) Param template['components'][0]['parameters'][0]['image']['id'] is not a valid whatsapp business account media attachment ID","type":"OAuthException","code":100,"fbtrace_id":"A68_4MTzQc3Lefk8pE2nfPa"}}
+2024-11-23 14:20:32 [INFO] All messages processed.
+2024-11-23 14:32:44 [INFO] Root endpoint accessed.
+2024-11-24 07:01:45 [INFO] HTTP Request: GET https://wtsdealnow.com/api/users/ "HTTP/1.1 200 OK"
+2024-11-24 07:01:45 [INFO] User validation successful for user_id: TESTDEMO2024
+2024-11-24 07:01:45 [INFO] Coin validation successful. Required: 1, Available: 78
+2024-11-24 07:01:45 [INFO] Processing 1 contacts for sending messages.
+2024-11-24 07:01:45 [INFO] Sending batch of 1 contacts
+2024-11-24 07:01:45 [ERROR] Failed to send message to 916361161836. Status: 400, Error: {"error":{"message":"(#100) Param template['components'][0]['parameters'][0]['image']['id'] is not a valid whatsapp business account media attachment ID","type":"OAuthException","code":100,"fbtrace_id":"Akn12wsaz1qvW4Zl8E6Wou8"}}
+2024-11-24 07:01:46 [INFO] All messages processed.
+2024-11-24 07:06:44 [INFO] Root endpoint accessed.
+2024-11-24 07:16:08 [INFO] HTTP Request: GET https://wtsdealnow.com/api/users/ "HTTP/1.1 200 OK"
+2024-11-24 07:16:08 [INFO] User validation successful for user_id: TESTDEMO2024
+2024-11-24 07:16:08 [INFO] Coin validation successful. Required: 1, Available: 78
+2024-11-24 07:16:08 [INFO] Processing 1 contacts for sending messages.
+2024-11-24 07:16:08 [INFO] Sending batch of 1 contacts
+2024-11-24 07:16:09 [INFO] All messages processed.
+2024-11-24 07:16:09 [INFO] HTTP Request: POST https://wtsdealnow.com/update-balance-report/ "HTTP/1.1 200 OK"
+2024-11-24 10:31:14 [INFO] Root endpoint accessed.
+2024-11-24 12:37:51 [INFO] Root endpoint accessed.
+2024-11-24 12:51:56 [INFO] Processing 1 contacts for sending messages.
+2024-11-24 12:51:56 [INFO] Sending batch of 1 contacts
+2024-11-24 12:51:57 [INFO] All messages processed.
+2024-11-24 12:52:05 [INFO] Processing 1 contacts for sending messages.
+2024-11-24 12:52:05 [INFO] Sending batch of 1 contacts
+2024-11-24 12:52:05 [ERROR] Failed to send message to 916361161836. Status: 404, Error: {"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (help_for_cc_pay) does not exist in en"},"fbtrace_id":"AEY8HwX_yoIa5O1c1ysT-sw"}}
+2024-11-24 12:52:06 [INFO] All messages processed.
+2024-11-24 13:09:29 [INFO] Processing 1 contacts for sending messages.
+2024-11-24 13:09:29 [INFO] Sending batch of 1 contacts
+2024-11-24 13:09:30 [INFO] All messages processed.
+2024-11-24 13:09:37 [INFO] Processing 1 contacts for sending messages.
+2024-11-24 13:09:37 [INFO] Sending batch of 1 contacts
+2024-11-24 13:09:38 [ERROR] Failed to send message to 916361161836. Status: 404, Error: {"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (help_for_cc_pay) does not exist in en"},"fbtrace_id":"ARJ3EpymcMDQSYeiJEJJqx-"}}
+2024-11-24 13:09:38 [INFO] All messages processed.
