@@ -53,3 +53,248 @@
 2024-11-24 13:09:37 [INFO] Sending batch of 1 contacts
 2024-11-24 13:09:38 [ERROR] Failed to send message to 916361161836. Status: 404, Error: {"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (help_for_cc_pay) does not exist in en"},"fbtrace_id":"ARJ3EpymcMDQSYeiJEJJqx-"}}
 2024-11-24 13:09:38 [INFO] All messages processed.
+2024-11-24 13:20:51 [INFO] Processing 1 contacts for sending messages.
+2024-11-24 13:20:51 [INFO] Sending batch of 1 contacts
+2024-11-24 13:20:53 [INFO] All messages processed.
+2024-11-24 13:20:57 [INFO] Processing 1 contacts for sending messages.
+2024-11-24 13:20:57 [INFO] Sending batch of 1 contacts
+2024-11-24 13:20:59 [INFO] All messages processed.
+2024-11-24 13:21:03 [INFO] Processing 1 contacts for sending messages.
+2024-11-24 13:21:03 [INFO] Sending batch of 1 contacts
+2024-11-24 13:21:05 [INFO] All messages processed.
+2024-11-24 13:21:10 [INFO] Processing 1 contacts for sending messages.
+2024-11-24 13:21:10 [INFO] Sending batch of 1 contacts
+2024-11-24 13:21:11 [INFO] All messages processed.
+2024-11-24 13:21:25 [INFO] Processing 1 contacts for sending messages.
+2024-11-24 13:21:25 [INFO] Sending batch of 1 contacts
+2024-11-24 13:21:26 [INFO] All messages processed.
+2024-11-25 04:45:26 [INFO] Root endpoint accessed.
+2024-11-25 04:55:58 [INFO] Processing 1 contacts for sending messages.
+2024-11-25 04:55:58 [INFO] Sending batch of 1 contacts
+2024-11-25 04:55:59 [INFO] All messages processed.
+2024-11-25 04:56:09 [INFO] Processing 1 contacts for sending messages.
+2024-11-25 04:56:09 [INFO] Sending batch of 1 contacts
+2024-11-25 04:56:10 [INFO] All messages processed.
+2024-11-25 04:56:36 [INFO] Processing 1 contacts for sending messages.
+2024-11-25 04:56:36 [INFO] Sending batch of 1 contacts
+2024-11-25 04:56:38 [INFO] All messages processed.
+2024-11-25 04:59:33 [INFO] Processing 0 contacts for sending messages.
+2024-11-25 04:59:33 [INFO] All messages processed.
+2024-11-25 05:00:16 [INFO] Processing 2 contacts for sending messages.
+2024-11-25 05:00:16 [INFO] Sending batch of 2 contacts
+2024-11-25 05:00:18 [INFO] All messages processed.
+2024-11-25 09:50:06 [INFO] Processing 4 contacts for sending messages.
+2024-11-25 09:50:06 [INFO] Sending batch of 4 contacts
+2024-11-25 09:50:08 [INFO] All messages processed.
+2024-11-25 10:10:46 [INFO] Processing 0 contacts for sending messages.
+2024-11-25 10:10:46 [INFO] All messages processed.
+2024-11-25 10:14:48 [INFO] Processing 1 contacts for sending messages.
+2024-11-25 10:14:48 [INFO] Sending batch of 1 contacts
+2024-11-25 10:14:49 [INFO] All messages processed.
+2024-11-25 10:14:59 [INFO] Processing 2 contacts for sending messages.
+2024-11-25 10:14:59 [INFO] Sending batch of 2 contacts
+2024-11-25 10:15:00 [INFO] All messages processed.
+2024-11-25 10:22:20 [INFO] Processing 3 contacts for sending messages.
+2024-11-25 10:22:20 [INFO] Sending batch of 3 contacts
+2024-11-25 10:22:21 [INFO] All messages processed.
+2024-11-25 10:25:15 [INFO] Processing 3 contacts for sending messages.
+2024-11-25 10:25:15 [INFO] Sending batch of 3 contacts
+2024-11-25 10:25:16 [INFO] All messages processed.
+2024-11-25 10:27:09 [INFO] Processing 0 contacts for sending messages.
+2024-11-25 10:27:09 [INFO] All messages processed.
+2024-11-25 10:28:05 [INFO] Processing 1 contacts for sending messages.
+2024-11-25 10:28:05 [INFO] Sending batch of 1 contacts
+2024-11-25 10:28:05 [ERROR] Failed to send message to 919711340505. Status: 400, Error: {"error":{"message":"(#132012) Parameter format does not match format in the created template","type":"OAuthException","code":132012,"error_data":{"messaging_product":"whatsapp","details":"header: Format mismatch, expected IMAGE, received UNKNOWN"},"fbtrace_id":"AE7QA7sMXcduQFIOOi_t4lm"}}
+2024-11-25 10:28:05 [INFO] All messages processed.
+2024-11-25 10:28:53 [INFO] Processing 1 contacts for sending messages.
+2024-11-25 10:28:53 [INFO] Sending batch of 1 contacts
+2024-11-25 10:28:54 [ERROR] Failed to send message to 919711340505. Status: 400, Error: {"error":{"message":"(#132012) Parameter format does not match format in the created template","type":"OAuthException","code":132012,"error_data":{"messaging_product":"whatsapp","details":"header: Format mismatch, expected IMAGE, received UNKNOWN"},"fbtrace_id":"Ayyaqm3Eo0LeWMzy8gOdJTJ"}}
+2024-11-25 10:28:54 [INFO] All messages processed.
+2024-11-25 10:29:24 [INFO] Processing 1 contacts for sending messages.
+2024-11-25 10:29:24 [INFO] Sending batch of 1 contacts
+2024-11-25 10:29:24 [ERROR] Failed to send message to 918285055176. Status: 400, Error: {"error":{"message":"(#132012) Parameter format does not match format in the created template","type":"OAuthException","code":132012,"error_data":{"messaging_product":"whatsapp","details":"header: Format mismatch, expected IMAGE, received UNKNOWN"},"fbtrace_id":"AK41aSJeGwbqwcf1__S_mD9"}}
+2024-11-25 10:29:24 [INFO] All messages processed.
+2024-11-25 10:29:49 [INFO] Processing 1 contacts for sending messages.
+2024-11-25 10:29:49 [INFO] Sending batch of 1 contacts
+2024-11-25 10:29:50 [INFO] All messages processed.
+2024-11-25 10:43:59 [INFO] Processing 3 contacts for sending messages.
+2024-11-25 10:43:59 [INFO] Sending batch of 3 contacts
+2024-11-25 10:44:00 [INFO] All messages processed.
+2024-11-25 10:49:04 [INFO] Processing 4 contacts for sending messages.
+2024-11-25 10:49:04 [INFO] Sending batch of 4 contacts
+2024-11-25 10:49:05 [INFO] All messages processed.
+2024-11-25 10:59:06 [INFO] Processing 4 contacts for sending messages.
+2024-11-25 10:59:06 [INFO] Sending batch of 4 contacts
+2024-11-25 10:59:08 [INFO] All messages processed.
+2024-11-25 12:16:44 [INFO] Processing 7 contacts for sending messages.
+2024-11-25 12:16:44 [INFO] Sending batch of 7 contacts
+2024-11-25 12:16:45 [INFO] All messages processed.
+2024-11-26 06:50:56 [INFO] Processing 1 contacts for sending messages.
+2024-11-26 06:50:56 [INFO] Sending batch of 1 contacts
+2024-11-26 06:50:57 [INFO] All messages processed.
+2024-11-26 06:51:01 [INFO] Processing 1 contacts for sending messages.
+2024-11-26 06:51:01 [INFO] Sending batch of 1 contacts
+2024-11-26 06:51:03 [INFO] All messages processed.
+2024-11-26 06:51:06 [INFO] Processing 1 contacts for sending messages.
+2024-11-26 06:51:06 [INFO] Sending batch of 1 contacts
+2024-11-26 06:51:08 [INFO] All messages processed.
+2024-11-26 06:51:16 [INFO] Processing 1 contacts for sending messages.
+2024-11-26 06:51:16 [INFO] Sending batch of 1 contacts
+2024-11-26 06:51:17 [INFO] All messages processed.
+2024-11-26 10:55:21 [INFO] request token='EAAGZBdt7VWLcBO8nr7i8nChTcNXzWF9aNMjPYVjjKU7BbNfIJGETpZAJY3A2y9vLxzo4xZCace1xKiqG7jS7772Hpak96BPl360cG8Dzt83ujr8BSwGyUbNRS2mIjwZBfUwhNFKXtpFZC2QJ9Lh6OcKLRuoNJ1sAXGk2LZBkNu9BN7JSpBbTnU2vR6neoYv4FFUwZDZD' phone_number_id='498352686693631' contact_list=['916361161836'] message_type='text' header=None body='hello' footer=None button_data=None product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2024-11-26 10:55:21 [INFO] Processing 1 contacts for sending messages.
+2024-11-26 10:55:21 [INFO] Sending batch of 1 contacts
+2024-11-26 10:55:23 [INFO] All messages processed.
+2024-11-26 11:05:10 [INFO] Root endpoint accessed.
+2024-11-26 12:17:35 [INFO] Processing 2 contacts for sending messages.
+2024-11-26 12:17:35 [INFO] Sending batch of 2 contacts
+2024-11-26 12:17:37 [INFO] All messages processed.
+2024-11-26 12:21:23 [INFO] Processing 2 contacts for sending messages.
+2024-11-26 12:21:23 [INFO] Sending batch of 2 contacts
+2024-11-26 12:21:23 [ERROR] Failed to send message to 919818088414. Status: 400, Error: {"error":{"message":"(#132012) Parameter format does not match format in the created template","type":"OAuthException","code":132012,"error_data":{"messaging_product":"whatsapp","details":"header: Format mismatch, expected IMAGE, received UNKNOWN"},"fbtrace_id":"A_Kk_nEeKmOIsmIc60mdnFS"}}
+2024-11-26 12:21:23 [ERROR] Failed to send message to 919711340505. Status: 400, Error: {"error":{"message":"(#132012) Parameter format does not match format in the created template","type":"OAuthException","code":132012,"error_data":{"messaging_product":"whatsapp","details":"header: Format mismatch, expected IMAGE, received UNKNOWN"},"fbtrace_id":"AP5l-GaXFtuMG-TcOvhXttS"}}
+2024-11-26 12:21:24 [INFO] All messages processed.
+2024-11-26 13:24:05 [INFO] Root endpoint accessed.
+2024-11-26 14:58:09 [INFO] Processing 1 contacts for sending messages.
+2024-11-26 14:58:09 [INFO] Sending batch of 1 contacts
+2024-11-26 14:58:10 [ERROR] Failed to send message to 919818088414. Status: 400, Error: {"error":{"message":"(#132012) Parameter format does not match format in the created template","type":"OAuthException","code":132012,"error_data":{"messaging_product":"whatsapp","details":"header: Format mismatch, expected IMAGE, received UNKNOWN"},"fbtrace_id":"A_-TUBmKU-WcQMuBmJTOndr"}}
+2024-11-26 14:58:10 [INFO] All messages processed.
+2024-11-27 07:05:34 [INFO] Processing 1 contacts for sending messages.
+2024-11-27 07:05:34 [INFO] Sending batch of 1 contacts
+2024-11-27 07:05:36 [INFO] All messages processed.
+2024-11-27 07:10:34 [INFO] Processing 1 contacts for sending messages.
+2024-11-27 07:10:34 [INFO] Sending batch of 1 contacts
+2024-11-27 07:10:36 [INFO] All messages processed.
+2024-11-27 07:31:03 [INFO] Processing 0 contacts for sending messages.
+2024-11-27 07:31:03 [INFO] All messages processed.
+2024-11-27 07:32:33 [INFO] Processing 1 contacts for sending messages.
+2024-11-27 07:32:33 [INFO] Sending batch of 1 contacts
+2024-11-27 07:32:35 [INFO] All messages processed.
+2024-11-27 07:35:06 [INFO] Processing 0 contacts for sending messages.
+2024-11-27 07:35:06 [INFO] All messages processed.
+2024-11-27 07:35:45 [INFO] Processing 0 contacts for sending messages.
+2024-11-27 07:35:45 [INFO] All messages processed.
+2024-11-27 07:37:39 [INFO] Processing 1 contacts for sending messages.
+2024-11-27 07:37:39 [INFO] Sending batch of 1 contacts
+2024-11-27 07:37:40 [INFO] All messages processed.
+2024-11-27 08:48:32 [INFO] Processing 0 contacts for sending messages.
+2024-11-27 08:48:32 [INFO] All messages processed.
+2024-11-27 08:59:04 [INFO] Processing 2 contacts for sending messages.
+2024-11-27 08:59:04 [INFO] Sending batch of 2 contacts
+2024-11-27 08:59:04 [ERROR] Failed to send message to 917827943656. Status: 400, Error: {"error":{"message":"(#100) Invalid parameter","type":"OAuthException","code":100,"error_data":{"messaging_product":"whatsapp","details":"Invalid parameter"},"fbtrace_id":"ArNDFaPsBfv-uGW8kPwYnhp"}}
+2024-11-27 08:59:07 [INFO] All messages processed.
+2024-11-27 09:00:10 [INFO] Processing 1 contacts for sending messages.
+2024-11-27 09:00:10 [INFO] Sending batch of 1 contacts
+2024-11-27 09:00:11 [INFO] All messages processed.
+2024-11-27 09:37:39 [INFO] Processing 5 contacts for sending messages.
+2024-11-27 09:37:39 [INFO] Sending batch of 5 contacts
+2024-11-27 09:37:39 [ERROR] Failed to send message to 917827943656. Status: 400, Error: {"error":{"message":"(#100) Invalid parameter","type":"OAuthException","code":100,"error_data":{"messaging_product":"whatsapp","details":"Invalid parameter"},"fbtrace_id":"AB9O9INy_O1HHj7t52GQUeX"}}
+2024-11-27 09:37:40 [INFO] All messages processed.
+2024-11-27 09:39:43 [INFO] Processing 2 contacts for sending messages.
+2024-11-27 09:39:43 [INFO] Sending batch of 2 contacts
+2024-11-27 09:39:44 [ERROR] Failed to send message to 917827943656. Status: 400, Error: {"error":{"message":"(#100) Invalid parameter","type":"OAuthException","code":100,"error_data":{"messaging_product":"whatsapp","details":"Invalid parameter"},"fbtrace_id":"AEwyEx2-k-qPfCAPbArt--A"}}
+2024-11-27 09:39:45 [INFO] All messages processed.
+2024-11-27 12:11:03 [INFO] Processing 1 contacts for sending messages.
+2024-11-27 12:11:03 [INFO] Sending batch of 1 contacts
+2024-11-27 12:11:04 [INFO] All messages processed.
+2024-11-27 12:30:14 [INFO] Processing 917 contacts for sending messages.
+2024-11-27 12:30:14 [INFO] Sending batch of 75 contacts
+2024-11-27 12:30:17 [INFO] Sending batch of 75 contacts
+2024-11-27 12:30:20 [INFO] Sending batch of 75 contacts
+2024-11-27 12:30:22 [INFO] Sending batch of 75 contacts
+2024-11-27 12:30:25 [INFO] Sending batch of 75 contacts
+2024-11-27 12:30:27 [INFO] Sending batch of 75 contacts
+2024-11-27 12:30:30 [INFO] Sending batch of 75 contacts
+2024-11-27 12:30:32 [INFO] Sending batch of 75 contacts
+2024-11-27 12:30:35 [INFO] Sending batch of 75 contacts
+2024-11-27 12:30:37 [INFO] Sending batch of 75 contacts
+2024-11-27 12:30:38 [INFO] Sending batch of 75 contacts
+2024-11-27 12:30:41 [INFO] Sending batch of 75 contacts
+2024-11-27 12:30:44 [INFO] Sending batch of 17 contacts
+2024-11-27 12:30:45 [INFO] All messages processed.
+2024-11-27 13:31:26 [INFO] Processing 1 contacts for sending messages.
+2024-11-27 13:31:26 [INFO] Sending batch of 1 contacts
+2024-11-27 13:31:26 [ERROR] Failed to send message to 916361161836. Status: 404, Error: {"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (feedback_flow_msg01) does not exist in en"},"fbtrace_id":"AcIXxjornMZCwS1zKeUR3cY"}}
+2024-11-27 13:31:26 [INFO] All messages processed.
+2024-11-27 15:58:47 [INFO] Root endpoint accessed.
+2024-11-28 08:20:55 [INFO] Processing 0 contacts for sending messages.
+2024-11-28 08:20:55 [INFO] All messages processed.
+2024-11-28 08:21:19 [INFO] Processing 4 contacts for sending messages.
+2024-11-28 08:21:19 [INFO] Sending batch of 4 contacts
+2024-11-28 08:21:19 [ERROR] Failed to send message to 916361161836. Status: 404, Error: {"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (feedback_flow_msg01) does not exist in en"},"fbtrace_id":"AgM1FymvF1Fo-eaPRjmYbgs"}}
+2024-11-28 08:21:19 [ERROR] Failed to send message to 918396820007. Status: 404, Error: {"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (feedback_flow_msg01) does not exist in en"},"fbtrace_id":"AU-P58J6ONoF4TcV3u_-TuG"}}
+2024-11-28 08:21:19 [ERROR] Failed to send message to 919315494292. Status: 404, Error: {"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (feedback_flow_msg01) does not exist in en"},"fbtrace_id":"AXilV2vwPaaFXycZa9urtvz"}}
+2024-11-28 08:21:19 [ERROR] Failed to send message to 918285055176. Status: 404, Error: {"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (feedback_flow_msg01) does not exist in en"},"fbtrace_id":"AZxwn_Z0V5tMPdQ83C5Wc-z"}}
+2024-11-28 08:21:19 [INFO] All messages processed.
+2024-11-28 10:46:16 [INFO] request token='EAAGnWBuof2oBO0hd9BFZBBEUKLoMZAH1m1JtbUOEd3ZC8GIGjZAyeZB0yFy7SkaByNMKxLQHp6lnstogZAFbJs3b391VCh8uhoxixehHt3vbBYfFuuxvDkjLJEmll48gqw7k33ZCjQxCxgOLK6NpPrtVyTDqSitaPQZBD4dui8EGXajlS1VO35sBOfltsZBvZCMt0mK0u2aQzocFupoPohaIAsz3ZB5fAHoJh6Tm9R9DxKk' phone_number_id='344709618736355' contact_list=['919315494292'] message_type='text' header=None body='Hello! How can I help you today' footer=None button_data=None product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2024-11-28 10:46:16 [INFO] Processing 1 contacts for sending messages.
+2024-11-28 10:46:16 [INFO] Sending batch of 1 contacts
+2024-11-28 10:46:17 [INFO] All messages processed.
+2024-11-28 10:49:49 [INFO] request token='EAAGnWBuof2oBO0hd9BFZBBEUKLoMZAH1m1JtbUOEd3ZC8GIGjZAyeZB0yFy7SkaByNMKxLQHp6lnstogZAFbJs3b391VCh8uhoxixehHt3vbBYfFuuxvDkjLJEmll48gqw7k33ZCjQxCxgOLK6NpPrtVyTDqSitaPQZBD4dui8EGXajlS1VO35sBOfltsZBvZCMt0mK0u2aQzocFupoPohaIAsz3ZB5fAHoJh6Tm9R9DxKk' phone_number_id='344709618736355' contact_list=['919315494292'] message_type='text' header=None body='hi' footer=None button_data=None product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2024-11-28 10:49:49 [INFO] Processing 1 contacts for sending messages.
+2024-11-28 10:49:49 [INFO] Sending batch of 1 contacts
+2024-11-28 10:49:50 [INFO] All messages processed.
+2024-11-28 10:54:07 [INFO] Processing 1 contacts for sending messages.
+2024-11-28 10:54:07 [INFO] Sending batch of 1 contacts
+2024-11-28 10:54:09 [INFO] All messages processed.
+2024-11-28 10:57:55 [INFO] Processing 1 contacts for sending messages.
+2024-11-28 10:57:55 [INFO] Sending batch of 1 contacts
+2024-11-28 10:57:57 [INFO] All messages processed.
+2024-11-28 13:32:22 [INFO] Processing 2 contacts for sending messages.
+2024-11-28 13:32:22 [INFO] Sending batch of 2 contacts
+2024-11-28 13:32:22 [ERROR] Failed to send message to 917827943656. Status: 400, Error: {"error":{"message":"(#100) Invalid parameter","type":"OAuthException","code":100,"error_data":{"messaging_product":"whatsapp","details":"Invalid parameter"},"fbtrace_id":"ALJGbGCAF9LBsjKeuefGIqq"}}
+2024-11-28 13:32:24 [INFO] All messages processed.
+2024-11-28 23:20:48 [INFO] Root endpoint accessed.
+2024-11-29 06:11:50 [INFO] Processing 5 contacts for sending messages.
+2024-11-29 06:11:50 [INFO] Sending batch of 5 contacts
+2024-11-29 06:11:51 [INFO] All messages processed.
+2024-11-29 07:35:29 [INFO] Root endpoint accessed.
+2024-11-29 09:17:28 [INFO] Processing 3 contacts for sending messages.
+2024-11-29 09:17:28 [INFO] Sending batch of 3 contacts
+2024-11-29 09:17:30 [INFO] All messages processed.
+2024-11-29 11:15:31 [INFO] Processing 1 contacts for sending messages.
+2024-11-29 11:15:31 [INFO] Sending batch of 1 contacts
+2024-11-29 11:15:33 [INFO] All messages processed.
+2024-11-29 12:40:51 [INFO] Processing 3 contacts for sending messages.
+2024-11-29 12:40:51 [INFO] Sending batch of 3 contacts
+2024-11-29 12:40:51 [ERROR] Failed to send message to 917827943656. Status: 400, Error: {"error":{"message":"(#100) Invalid parameter","type":"OAuthException","code":100,"error_data":{"messaging_product":"whatsapp","details":"Invalid parameter"},"fbtrace_id":"AZENgl7IgUEa-i70gsPVWG-"}}
+2024-11-29 12:40:52 [INFO] All messages processed.
+2024-11-29 12:41:20 [INFO] Processing 1 contacts for sending messages.
+2024-11-29 12:41:20 [INFO] Sending batch of 1 contacts
+2024-11-29 12:41:21 [INFO] All messages processed.
+2024-11-29 12:43:48 [INFO] Processing 14 contacts for sending messages.
+2024-11-29 12:43:48 [INFO] Sending batch of 14 contacts
+2024-11-29 12:43:49 [INFO] All messages processed.
+2024-11-29 13:08:25 [INFO] Root endpoint accessed.
+2024-11-29 13:08:26 [INFO] Root endpoint accessed.
+2024-11-29 13:49:45 [INFO] Processing 1 contacts for sending messages.
+2024-11-29 13:49:45 [INFO] Sending batch of 1 contacts
+2024-11-29 13:49:47 [INFO] All messages processed.
+2024-11-29 15:59:43 [INFO] Root endpoint accessed.
+2024-11-30 02:00:13 [INFO] Root endpoint accessed.
+2024-11-30 06:42:11 [INFO] Processing 1 contacts for sending messages.
+2024-11-30 06:42:11 [INFO] Sending batch of 1 contacts
+2024-11-30 06:42:13 [INFO] All messages processed.
+2024-11-30 07:47:41 [INFO] request token='EACHkZAGbr5ocBO9XuhguxDPmHYuNZC0xvH2lArWxWeIFEDPINzPgVZAZAg4G7CsHZAZBDddp9cVP0TErmC7nEknJZAaZCdMVlWBLpD37x1tIaH9poIrMKG98NYe7gZAUcezlsEjt8egFW7A60TZAHGVWW12RShw1OnFOpu9M6RqM6JZCdgIt8ZBc4ctUmpmf5toIRyxmEOotvufh8aobdtiNhlADo6UzGg2O1WCfKPRVwXWG' phone_number_id='492630533932274' contact_list=['919899987773'] message_type='text' header=None body='kjsgduqgwuj' footer=None button_data=None product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2024-11-30 07:47:41 [INFO] Processing 1 contacts for sending messages.
+2024-11-30 07:47:41 [INFO] Sending batch of 1 contacts
+2024-11-30 07:47:43 [INFO] All messages processed.
+2024-11-30 07:47:52 [INFO] request token='EACHkZAGbr5ocBO9XuhguxDPmHYuNZC0xvH2lArWxWeIFEDPINzPgVZAZAg4G7CsHZAZBDddp9cVP0TErmC7nEknJZAaZCdMVlWBLpD37x1tIaH9poIrMKG98NYe7gZAUcezlsEjt8egFW7A60TZAHGVWW12RShw1OnFOpu9M6RqM6JZCdgIt8ZBc4ctUmpmf5toIRyxmEOotvufh8aobdtiNhlADo6UzGg2O1WCfKPRVwXWG' phone_number_id='492630533932274' contact_list=['919899987773'] message_type='text' header=None body='kjsgduqgwuj' footer=None button_data=None product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2024-11-30 07:47:52 [INFO] Processing 1 contacts for sending messages.
+2024-11-30 07:47:52 [INFO] Sending batch of 1 contacts
+2024-11-30 07:47:53 [INFO] All messages processed.
+2024-11-30 08:17:07 [INFO] Processing 11 contacts for sending messages.
+2024-11-30 08:17:07 [INFO] Sending batch of 11 contacts
+2024-11-30 08:17:09 [INFO] All messages processed.
+2024-11-30 22:01:45 [INFO] Root endpoint accessed.
+2024-12-01 05:27:49 [INFO] Root endpoint accessed.
+2024-12-01 14:39:37 [INFO] Root endpoint accessed.
+2024-12-02 08:42:12 [INFO] Root endpoint accessed.
+2024-12-02 08:42:16 [INFO] Root endpoint accessed.
+2024-12-02 08:46:08 [INFO] Processing 0 contacts for sending messages.
+2024-12-02 08:46:08 [INFO] All messages processed.
+2024-12-02 08:49:17 [INFO] Processing 12 contacts for sending messages.
+2024-12-02 08:49:17 [INFO] Sending batch of 12 contacts
+2024-12-02 08:49:19 [INFO] All messages processed.
+2024-12-02 09:00:37 [INFO] Processing 1 contacts for sending messages.
+2024-12-02 09:00:37 [INFO] Sending batch of 1 contacts
