@@ -365,7 +365,7 @@ async def send_otp_message(session: aiohttp.ClientSession, token: str, phone_num
     button_url = "https://www.whatsapp.com/otp/code/?otp_type=COPY_CODE&code_expiration_minutes=10&code=otp123456"
     button_component["parameters"].append({
         "type": "text",
-        "text": "123456"
+        "text": variables[0]
     })
 
     payload = {
