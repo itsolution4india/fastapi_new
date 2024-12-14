@@ -621,14 +621,17 @@ async def send_bot_messages(token: str, phone_number_id: str, contact_list: ty.L
     logger.info("All messages processed.")
 
 async def validate_numbers_async(token: str, phone_number_id: str, contact_list: ty.List[str], message_text: str) -> None:
+    results = []
     logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
         for batch in chunks(contact_list, 75):
             logger.info(f"Sending batch of {len(batch)} contacts")
             tasks = [validate_nums(session, token, phone_number_id, contact, message_text) for contact in batch]
-            await asyncio.gather(*tasks)
-            await asyncio.sleep(0.5)
+            batch_results = await asyncio.gather(*tasks)
+            results.extend(batch_results)
+            await asyncio.sleep(0.4)
     logger.info("All messages processed.")
+    return results
 
 def chunks(lst: ty.List[str], size: int) -> ty.Generator[ty.List[str], None, None]:
     for i in range(0, len(lst), size):
