@@ -439,10 +439,18 @@ async def validate_nums(session: aiohttp.ClientSession, token: str, phone_number
         }
 
     try:
-        response = session.post(url, json=payload, headers=headers)
-        if response.status_code != 200:
-            logger.error(f"Failed to send to {contact}. Status: {response.status_code}")
-            return
+        async with session.post(url, json=payload, headers=headers) as response:
+            response_text = await response.text()
+            if response.status == 200:
+                return {
+                    "status": "success",
+                    "response_text": response_text
+                }
+            else:
+                return {
+                    "status": "failed",
+                    "response_text": response_text
+                }
     except Exception as e:
         logger.error(f"Error sending to {contact}: {e}")
         return
