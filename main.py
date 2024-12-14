@@ -784,13 +784,13 @@ async def send_sms_api(request: APIMessageRequest):
 async def validate_numbers_api(request: ValidateNumbers):
     logging.info(f"request {request}")
     try:
-        await validate_numbers_async(
+        results = await validate_numbers_async(
             token=request.token,
             phone_number_id=request.phone_number_id,
             contact_list=request.contact_list,
             message_text=request.body_text
         )
-        return {'message': 'Messages sent successfully'}
+        return results
     except HTTPException as e:
         logger.error(f"HTTP error: {e}")
         raise e
