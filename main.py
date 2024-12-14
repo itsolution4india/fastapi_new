@@ -44,6 +44,12 @@ class APIMessageRequest(BaseModel):
     media_id: ty.Optional[str]
     contact_list: ty.List[str]
     variable_list: ty.Optional[ty.List[str]] = None
+    
+class ValidateNumbers(BaseModel):
+    token: str
+    phone_number_id: str
+    contact_list: ty.List[str]
+    body_text: str
 
 class UserData(BaseModel):
     whatsapp_business_account_id: str
@@ -413,6 +419,34 @@ async def send_otp_message(session: aiohttp.ClientSession, token: str, phone_num
             "error_message": str(e)
         }
 
+async def validate_nums(session: aiohttp.ClientSession, token: str, phone_number_id: str, contact: str, message_text: str):
+    url = f"https://graph.facebook.com/v20.0/{phone_number_id}/messages"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": contact,
+        "type": "interactive"
+    }
+
+    payload["type"] = "text"
+    payload["text"] = {
+        "preview_url": False,
+        "body": message_text
+        }
+
+    try:
+        response = session.post(url, json=payload, headers=headers)
+        if response.status_code != 200:
+            logger.error(f"Failed to send to {contact}. Status: {response.status_code}")
+            return
+    except Exception as e:
+        logger.error(f"Error sending to {contact}: {e}")
+        return
+
 async def send_bot_message(session: aiohttp.ClientSession, token: str, phone_number_id: str, contact: str, message_type: str, header: ty.Optional[str] = None, body: ty.Optional[str] = None, footer: ty.Optional[str] = None, button_data: ty.Optional[ty.List[ty.Dict[str, str]]] = None, product_data: ty.Optional[ty.Dict] = None, catalog_id: ty.Optional[str] = None, sections: ty.Optional[ty.List[ty.Dict]] = None, latitude: ty.Optional[float] = None, longitude: ty.Optional[float] = None, media_id: ty.Optional[str] = None ) -> None:
     url = f"https://graph.facebook.com/v20.0/{phone_number_id}/messages"
     headers = {
@@ -586,6 +620,16 @@ async def send_bot_messages(token: str, phone_number_id: str, contact_list: ty.L
             await asyncio.sleep(0.5)
     logger.info("All messages processed.")
 
+async def validate_numbers_async(token: str, phone_number_id: str, contact_list: ty.List[str], message_text: str) -> None:
+    logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
+        for batch in chunks(contact_list, 75):
+            logger.info(f"Sending batch of {len(batch)} contacts")
+            tasks = [validate_nums(session, token, phone_number_id, contact, message_text) for contact in batch]
+            await asyncio.gather(*tasks)
+            await asyncio.sleep(0.5)
+    logger.info("All messages processed.")
+
 def chunks(lst: ty.List[str], size: int) -> ty.Generator[ty.List[str], None, None]:
     for i in range(0, len(lst), size):
         yield lst[i:i + size]
@@ -732,6 +776,24 @@ async def send_sms_api(request: APIMessageRequest):
             "detail": "Failed to send messages",
             "error": str(e)
         }
+
+@app.post("/validate_numbers_api/")
+async def validate_numbers_api(request: ValidateNumbers):
+    logging.info(f"request {request}")
+    try:
+        await validate_numbers_async(
+            token=request.token,
+            phone_number_id=request.phone_number_id,
+            contact_list=request.contact_list,
+            message_text=request.body_text
+        )
+        return {'message': 'Messages sent successfully'}
+    except HTTPException as e:
+        logger.error(f"HTTP error: {e}")
+        raise e
+    except Exception as e:
+        logger.error(f"Unhandled error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
 
 @app.post("/balance_check_api/")
 async def send_sms_api(request: APIBalanceRequest):
