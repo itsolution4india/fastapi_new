@@ -782,7 +782,6 @@ async def send_sms_api(request: APIMessageRequest):
 
 @app.post("/validate_numbers_api/")
 async def validate_numbers_api(request: ValidateNumbers):
-    logging.info(f"request {request}")
     try:
         results = await validate_numbers_async(
             token=request.token,
@@ -790,6 +789,7 @@ async def validate_numbers_api(request: ValidateNumbers):
             contact_list=request.contact_list,
             message_text=request.body_text
         )
+        logger.info(results)
         return results
     except HTTPException as e:
         logger.error(f"HTTP error: {e}")
