@@ -42,6 +42,7 @@ class APIMessageRequest(BaseModel):
     language: str
     media_type: str
     media_id: ty.Optional[str]
+    category: ty.Optional[str]
     contact_list: ty.List[str]
     variable_list: ty.Optional[ty.List[str]] = None
     
@@ -733,7 +734,15 @@ async def send_sms_api(request: APIMessageRequest):
     # Step 2: Validate coins
     try:
         total_contacts = len(request.contact_list)
-        await validate_coins(user_data.coins, total_contacts)
+        category = len(request.category)
+        if category == "Utility":
+            user_coins = user_data.authentication_coins
+        elif category == "Marketing":
+            user_coins = user_data.marketing_coins
+        else:
+            user_coins = user_data.coins
+            
+        await validate_coins(user_coins, total_contacts)
         logger.info(f"Coin validation successful. Required: {total_contacts}, Available: {user_data.coins}")
     except HTTPException as e:
         logger.error(f"Coin validation failed: {e.detail}")
