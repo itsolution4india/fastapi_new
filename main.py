@@ -58,6 +58,8 @@ class UserData(BaseModel):
     register_app__app_id: str
     register_app__token: str
     coins: int
+    marketing_coins: int
+    authentication_coins: int
 
 class APIBalanceRequest(BaseModel):
     user_id: str
@@ -102,7 +104,9 @@ async def fetch_user_data(user_id: str, api_token: str) -> UserData:
                 phone_number_id=user["phone_number_id"],
                 register_app__app_id=user["register_app__app_id"],
                 register_app__token=user["register_app__token"],
-                coins=user["coins"]
+                coins=user["coins"],
+                marketing_coins=user["marketing_coins"],
+                authentication_coins=user["authentication_coins"]
             )
     except HTTPException:
         raise
