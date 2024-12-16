@@ -744,7 +744,7 @@ async def send_sms_api(request: APIMessageRequest):
         elif category == "Marketing":
             user_coins = user_data.marketing_coins
         else:
-            user_coins = user_data.coins
+            user_coins = user_data.authentication_coins + user_data.marketing_coins
             
         await validate_coins(user_coins, total_contacts)
         logger.info(f"Coin validation successful. Required: {total_contacts}, Available: {user_data.coins}")
