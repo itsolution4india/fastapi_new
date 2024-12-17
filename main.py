@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, Request
 from typing import Optional, List
 import httpx
+from fastapi.middleware.cors import CORSMiddleware
 
 # Directory and file for logging
 log_directory = "logs"
@@ -33,6 +34,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 # Define the Pydantic model for request body
 class APIMessageRequest(BaseModel):
