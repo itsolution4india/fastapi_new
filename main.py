@@ -134,7 +134,8 @@ async def update_balance_and_report(
     api_token: str,
     coins: int,
     contact_list: ty.List[str],
-    template_name: str
+    template_name: str,
+    category: str
 ) -> str:
     """Update balance and create report"""
     try:
@@ -148,7 +149,8 @@ async def update_balance_and_report(
             coins=coins,
             phone_numbers=phone_numbers,
             all_contact=all_contact,
-            template_name=template_name
+            template_name=template_name,
+            category = category
         )
         
         async with httpx.AsyncClient() as client:
@@ -806,7 +808,8 @@ async def send_sms_api(request: APIMessageRequest):
                 api_token=request.api_token,
                 coins=successful_sends,  # Only deduct coins for successful sends
                 contact_list=request.contact_list,
-                template_name=request.template_name
+                template_name=request.template_name,
+                category = category
             )
         else:
             report_id = None
