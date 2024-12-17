@@ -650,6 +650,31 @@ def chunks(lst: ty.List[str], size: int) -> ty.Generator[ty.List[str], None, Non
     for i in range(0, len(lst), size):
         yield lst[i:i + size]
 
+async def get_template_details_by_name(token: str, waba_id: str, template_name: str):
+    url = f"https://graph.facebook.com/v14.0/{waba_id}/message_templates"
+    
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
+    
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url, headers=headers, params={"name": template_name}) as response:
+                if response.status == 200:
+                    templates = await response.json()
+                    for template in templates.get('data', []):
+                        if template['name'] == template_name:
+                            return template
+                    logging.error(f"Template with name {template_name} not found.")
+                    raise HTTPException(status_code=404, detail=f"Template with name {template_name} not found.")
+                else:
+                    logging.error(f"Failed to get template details. Status code: {response.status}")
+                    logging.error(f"Response: {await response.text()}")
+                    raise HTTPException(status_code=response.status, detail="Failed to get template details.")
+        except Exception as e:
+            logging.error(f"An error occurred: {e}")
+            raise HTTPException(status_code=500, detail="Internal Server Error")
+
 @app.post("/send_sms/")
 async def send_messages_api(request: MessageRequest):
     try:
@@ -735,13 +760,19 @@ async def send_sms_api(request: APIMessageRequest):
         logger.error(f"User validation failed: {e.detail}")
         return {"error code": "510","status": "failed", "detail": e.detail}
     
+    try:
+        template = await get_template_details_by_name(user_data.register_app__token, user_data.whatsapp_business_account_id, request.template_name)
+        category = template.get('category', 'Category not found')
+    except HTTPException as e:
+        logger.error(f"Template validation Failed: {e.detail}")
+        return {"error code": "404 Not Found","status": "failed", "detail": e.detail} 
+    
     # Step 2: Validate coins
     try:
         total_contacts = len(request.contact_list)
-        category = len(request.category)
-        if category == "Utility":
+        if category == "AUTHENTICATION" or category == "UTILITY":
             user_coins = user_data.authentication_coins
-        elif category == "Marketing":
+        elif category == "MARKETING":
             user_coins = user_data.marketing_coins
         else:
             user_coins = user_data.authentication_coins + user_data.marketing_coins
