@@ -186,15 +186,13 @@ async def update_balance_and_report(
         )
 
 
-class MessageRequest(BaseModel):
+class CarouselRequest(BaseModel):
     token: str
     phone_number_id: str
     template_name: str
-    language: str
-    media_type: str
-    media_id: ty.Optional[str]
     contact_list: ty.List[str]
-    variable_list: ty.Optional[ty.List[str]] = None
+    media_id_list: ty.List[str]
+    template_details: dict
 
 class FlowMessageRequest(BaseModel):
     token: str
@@ -327,6 +325,112 @@ async def send_message(session: aiohttp.ClientSession, token: str, phone_number_
                     "status": "success",
                     "contact": contact,
                     "message_id": f"template_{template_name}_{context_info}",
+                    "response": response_text
+                }
+            else:
+                logger.error(f"Failed to send message to {contact}. Status: {response.status}, Error: {response_text}")
+                return {
+                    "status": "failed",
+                    "contact": contact,
+                    "error_code": response.status,
+                    "error_message": response_text
+                }
+    except aiohttp.ClientError as e:
+        logger.error(f"Error sending message to {contact}: {e}")
+        return {
+            "status": "failed",
+            "contact": contact,
+            "error_code": "client_error",
+            "error_message": str(e)
+        }
+        
+async def send_carousel(
+    session: aiohttp.ClientSession, 
+    token: str, 
+    phone_number_id: str, 
+    template_name: str, 
+    contact: str, 
+    media_id_list: ty.List[str], 
+    template_details: dict
+) -> dict:
+    url = f"https://graph.facebook.com/v21.0/{phone_number_id}/messages"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    cards = []
+    for idx, media_id in enumerate(media_id_list):
+        card = {
+            "card_index": idx,
+            "components": [
+                {
+                    "type": "header",
+                    "parameters": [
+                        {
+                            "type": "image",
+                            "image": {
+                                "id": media_id
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "button",
+                    "sub_type": "quick_reply",
+                    "index": "0",
+                    "parameters": [
+                        {
+                            "type": "payload",
+                            "payload": f"more-item-{idx}"
+                        }
+                    ]
+                },
+                {
+                    "type": "button",
+                    "sub_type": "url",
+                    "index": "1",
+                    "parameters": [
+                        {
+                            "type": "text",
+                            "text": f"url-item-{idx}"
+                        }
+                    ]
+                }
+            ]
+        }
+        cards.append(card)
+    
+    carousel_message = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": contact,
+        "type": "template",
+        "template": {
+            "name": template_details['template_name'],
+            "language": {
+                "code": template_details['template_language']
+            },
+            "components": [
+                {
+                    "type": "body"
+                },
+                {
+                    "type": "carousel",
+                    "cards": cards
+                }
+            ]
+        }
+    }
+
+    try:
+        async with session.post(url, headers=headers, json=carousel_message) as response:
+            response_text = await response.text()
+            if response.status == 200:
+                return {
+                    "status": "success",
+                    "contact": contact,
+                    "message_id": f"template_{template_name}",
                     "response": response_text
                 }
             else:
@@ -624,6 +728,20 @@ async def send_messages(token: str, phone_number_id: str, template_name: str, la
 
     return results
 
+async def send_carousels(token: str, phone_number_id: str, template_name: str, contact_list: ty.List[str], media_id_list: ty.List[str], template_details: dict) -> None:
+    logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
+    results = []
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
+        for batch in chunks(contact_list, 75):
+            logger.info(f"Sending batch of {len(batch)} contacts")
+            tasks = [send_carousel(session, token, phone_number_id, template_name, contact, media_id_list, template_details) for contact in batch]
+            batch_results = await asyncio.gather(*tasks)
+            results.extend(batch_results)
+            await asyncio.sleep(0.5)
+    logger.info("All messages processed.")
+
+    return results
+
 async def send_template_with_flows(token: str, phone_number_id: str, template_name: str, flow_id: str, language: str, recipient_phone_number: ty.List[str]) -> None:
     logger.info(f"Processing {len(recipient_phone_number)} contacts for sending messages.")
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
@@ -700,6 +818,26 @@ async def send_messages_api(request: MessageRequest):
             variable_list=request.variable_list
         )
         return {'message': 'Messages sent successfully'}
+    except HTTPException as e:
+        logger.error(f"HTTP error: {e}")
+        raise e
+    except Exception as e:
+        logger.error(f"Unhandled error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
+    
+@app.post("/send_carousel_messages/")
+async def send_carousel_api(request: CarouselRequest):
+    try:
+        await send_carousels(
+            token=request.token,
+            phone_number_id=request.phone_number_id,
+            template_name=request.template_name,
+            contact_list=request.contact_list,
+            media_id_list= request.media_id_list,
+            template_details = request.template_details
+            
+        )
+        return {'message': 'Carousel Messages sent successfully'}
     except HTTPException as e:
         logger.error(f"HTTP error: {e}")
         raise e
