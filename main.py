@@ -840,10 +840,10 @@ async def send_carousel_api(request: CarouselRequest):
         return {'message': 'Carousel Messages sent successfully'}
     except HTTPException as e:
         logger.error(f"HTTP error: {e}")
-        raise e
+        return str(e)
     except Exception as e:
         logger.error(f"Unhandled error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
+        return str(e)
 
 @app.post("/bot_api/")
 async def bot_api(request: BotMessageRequest):
