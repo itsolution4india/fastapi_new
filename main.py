@@ -193,6 +193,16 @@ class CarouselRequest(BaseModel):
     contact_list: ty.List[str]
     media_id_list: ty.List[str]
     template_details: dict
+    
+class MessageRequest(BaseModel):
+    token: str
+    phone_number_id: str
+    template_name: str
+    language: str
+    media_type: str
+    media_id: ty.Optional[str]
+    contact_list: ty.List[str]
+    variable_list: ty.Optional[ty.List[str]] = None
 
 class FlowMessageRequest(BaseModel):
     token: str
