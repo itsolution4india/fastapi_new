@@ -778,16 +778,21 @@ async def validate_numbers_async(token: str, phone_number_id: str, contact_list:
         for batch in chunks(contact_list, 78):
             logger.info(f"Sending batch of {len(batch)} contacts")
             tasks = [validate_nums(session, token, phone_number_id, contact, message_text) for contact in batch]
-            batch_results = await asyncio.gather(*tasks)
-            results.extend(batch_results)
+            try:
+                batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+                results.extend(batch_results)
+            except Exception as e:
+                logger.error(f"Error during batch processing: {e}")
             await asyncio.sleep(0.2)
-    logger.info("All messages processed.")
-    # Optionally, notify user when the task is done
-    notify_user(results)
+    
+    logger.info(f"All messages processed. Total results: {len(results)}")
+    logger.info("Calling notify_user with results.")
+    notify_user(results)  # Check if this gets logged
 
 WEBHOOK_URL = "https://wtsdealnow.com/notify_user"
 
 async def notify_user(results):
+    logger.info("notify_user function called")
     """Send results to a webhook as a notification when task is completed."""
     payload = {
         "status": "completed",
