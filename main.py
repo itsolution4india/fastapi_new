@@ -12,6 +12,7 @@ from typing import Optional, List
 import httpx
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import BackgroundTasks
+import random
 
 # Directory and file for logging
 log_directory = "logs"
@@ -82,6 +83,10 @@ class UpdateBalanceReportRequest(BaseModel):
     phone_numbers: str
     all_contact: ty.List[int]
     template_name: str
+
+def generate_unique_id() -> str:
+    """Generate a 16-digit unique number."""
+    return ''.join([str(random.randint(0, 9)) for _ in range(16)])
 
 async def fetch_user_data(user_id: str, api_token: str) -> UserData:
     """Fetch user data from the API"""
@@ -771,7 +776,7 @@ async def send_bot_messages(token: str, phone_number_id: str, contact_list: ty.L
             await asyncio.sleep(0.2)
     logger.info("All messages processed.")
 
-async def validate_numbers_async(token: str, phone_number_id: str, contact_list: ty.List[str], message_text: str) -> None:
+async def validate_numbers_async(token: str, phone_number_id: str, contact_list: ty.List[str], message_text: str, unique_id: str) -> None:
     results = []
     logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
@@ -787,16 +792,17 @@ async def validate_numbers_async(token: str, phone_number_id: str, contact_list:
     
     logger.info(f"All messages processed. Total results: {len(results)}")
     logger.info("Calling notify_user with results.")
-    await notify_user(results)
+    await notify_user(results, unique_id)
 
 WEBHOOK_URL = "https://wtsdealnow.com/notify_user/"
 
-async def notify_user(results):
+async def notify_user(results, unique_id: str):
     logger.info("notify_user function called")
     """Send results to a webhook as a notification when task is completed."""
     payload = {
         "status": "completed",
-        "results": results
+        "results": results,
+        "unique_id": unique_id
     }
 
     headers = {
@@ -1023,6 +1029,7 @@ async def send_sms_api(request: APIMessageRequest):
 @app.post("/validate_numbers_api/")
 async def validate_numbers_api(request: ValidateNumbers, background_tasks: BackgroundTasks):
     try:
+        unique_id = generate_unique_id()
         # Schedule the background task and return immediately
         background_tasks.add_task(
             validate_numbers_async,
@@ -1031,7 +1038,10 @@ async def validate_numbers_api(request: ValidateNumbers, background_tasks: Backg
             contact_list=request.contact_list,
             message_text=request.body_text
         )
-        return {"message": "Task is being processed in the background. You will be notified when it's complete."}
+        return {
+            "message": "Task is being processed in the background. You will be notified when it's complete.",
+            "unique_id": unique_id
+        }
     except HTTPException as e:
         logger.error(f"HTTP error: {e}")
         raise e
