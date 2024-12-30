@@ -787,7 +787,7 @@ async def validate_numbers_async(token: str, phone_number_id: str, contact_list:
     
     logger.info(f"All messages processed. Total results: {len(results)}")
     logger.info("Calling notify_user with results.")
-    notify_user(results)  # Check if this gets logged
+    await notify_user(results)
 
 WEBHOOK_URL = "https://wtsdealnow.com/notify_user/"
 
