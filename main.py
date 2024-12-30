@@ -11,6 +11,7 @@ from fastapi import FastAPI, HTTPException, Request
 from typing import Optional, List
 import httpx
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import BackgroundTasks
 
 # Directory and file for logging
 log_directory = "logs"
@@ -559,14 +560,12 @@ async def validate_nums(session: aiohttp.ClientSession, token: str, phone_number
     payload = {
         "messaging_product": "whatsapp",
         "to": contact,
-        "type": "interactive"
-    }
-
-    payload["type"] = "text"
-    payload["text"] = {
-        "preview_url": False,
-        "body": message_text
+        "type": "text",
+        "text": {
+            "preview_url": False,
+            "body": message_text
         }
+    }
 
     try:
         async with session.post(url, json=payload, headers=headers) as response:
@@ -583,7 +582,7 @@ async def validate_nums(session: aiohttp.ClientSession, token: str, phone_number
                 }
     except Exception as e:
         logger.error(f"Error sending to {contact}: {e}")
-        return
+        return {"status": "error", "message": str(e)}
 
 async def send_bot_message(session: aiohttp.ClientSession, token: str, phone_number_id: str, contact: str, message_type: str, header: ty.Optional[str] = None, body: ty.Optional[str] = None, footer: ty.Optional[str] = None, button_data: ty.Optional[ty.List[ty.Dict[str, str]]] = None, product_data: ty.Optional[ty.Dict] = None, catalog_id: ty.Optional[str] = None, sections: ty.Optional[ty.List[ty.Dict]] = None, latitude: ty.Optional[float] = None, longitude: ty.Optional[float] = None, media_id: ty.Optional[str] = None ) -> None:
     url = f"https://graph.facebook.com/v20.0/{phone_number_id}/messages"
@@ -783,7 +782,31 @@ async def validate_numbers_async(token: str, phone_number_id: str, contact_list:
             results.extend(batch_results)
             await asyncio.sleep(0.2)
     logger.info("All messages processed.")
-    return results
+    # Optionally, notify user when the task is done
+    notify_user(results)
+
+WEBHOOK_URL = "https://wtsdealnow.com/notify_user"
+
+async def notify_user(results):
+    """Send results to a webhook as a notification when task is completed."""
+    payload = {
+        "status": "completed",
+        "results": results
+    }
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(WEBHOOK_URL, json=payload, headers=headers) as response:
+                if response.status == 200:
+                    logger.info("Successfully notified user via webhook.")
+                else:
+                    logger.error(f"Failed to notify user. Status: {response.status}, Response: {await response.text()}")
+    except Exception as e:
+        logger.error(f"Error notifying user via webhook: {e}")
 
 def chunks(lst: ty.List[str], size: int) -> ty.Generator[ty.List[str], None, None]:
     for i in range(0, len(lst), size):
@@ -993,16 +1016,17 @@ async def send_sms_api(request: APIMessageRequest):
         }
 
 @app.post("/validate_numbers_api/")
-async def validate_numbers_api(request: ValidateNumbers):
+async def validate_numbers_api(request: ValidateNumbers, background_tasks: BackgroundTasks):
     try:
-        results = await validate_numbers_async(
+        # Schedule the background task and return immediately
+        background_tasks.add_task(
+            validate_numbers_async,
             token=request.token,
             phone_number_id=request.phone_number_id,
             contact_list=request.contact_list,
             message_text=request.body_text
         )
-        logger.info(results)
-        return results
+        return {"message": "Task is being processed in the background. You will be notified when it's complete."}
     except HTTPException as e:
         logger.error(f"HTTP error: {e}")
         raise e
