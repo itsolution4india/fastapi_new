@@ -1036,7 +1036,8 @@ async def validate_numbers_api(request: ValidateNumbers, background_tasks: Backg
             token=request.token,
             phone_number_id=request.phone_number_id,
             contact_list=request.contact_list,
-            message_text=request.body_text
+            message_text=request.body_text,
+            unique_id=unique_id
         )
         return {
             "message": "Task is being processed in the background. You will be notified when it's complete.",
