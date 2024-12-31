@@ -210,6 +210,7 @@ class MessageRequest(BaseModel):
     media_id: ty.Optional[str]
     contact_list: ty.List[str]
     variable_list: ty.Optional[ty.List[str]] = None
+    request_id: Optional[str] = None
 
 class FlowMessageRequest(BaseModel):
     token: str
@@ -720,7 +721,7 @@ async def send_bot_message(session: aiohttp.ClientSession, token: str, phone_num
         logger.error(f"Error sending message to {contact}: {e}")
         return
 
-async def send_messages(token: str, phone_number_id: str, template_name: str, language: str, media_type: str, media_id: ty.Optional[str], contact_list: ty.List[str], variable_list: ty.List[str]) -> None:
+async def send_messages(token: str, phone_number_id: str, template_name: str, language: str, media_type: str, media_id: ty.Optional[str], contact_list: ty.List[str], variable_list: ty.List[str],unique_id: str, request_id: Optional[str] = None) -> None:
     logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
     results = []
     if media_type == "OTP":
@@ -728,19 +729,29 @@ async def send_messages(token: str, phone_number_id: str, template_name: str, la
             for batch in chunks(contact_list, 78):
                 logger.info(f"Sending batch of {len(batch)} contacts")
                 tasks = [send_otp_message(session, token, phone_number_id, template_name, language, "TEXT", media_id, contact, variable_list) for contact in batch]
-                batch_results = await asyncio.gather(*tasks)
-                results.extend(batch_results)
+                try:
+                    batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+                    results.extend(batch_results)
+                except Exception as e:
+                    logger.error(f"Error during batch processing: {e}")
                 await asyncio.sleep(0.2)
+        await notify_user(results, unique_id, request_id)
     else:
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
             for batch in chunks(contact_list, 78):
                 logger.info(f"Sending batch of {len(batch)} contacts")
                 tasks = [send_message(session, token, phone_number_id, template_name, language, media_type, media_id, contact, variable_list) for contact in batch]
-                batch_results = await asyncio.gather(*tasks)
-                results.extend(batch_results)
+                try:
+                    batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+                    results.extend(batch_results)
+                except Exception as e:
+                    logger.error(f"Error during batch processing: {e}")
                 await asyncio.sleep(0.2)
-        logger.info("All messages processed.")
 
+        logger.info(f"All messages processed. Total results: {len(results)}")
+        logger.info("Calling notify_user with results.")
+        await notify_user(results, unique_id, request_id)
+        
     return results
 
 async def send_carousels(token: str, phone_number_id: str, template_name: str, contact_list: ty.List[str], media_id_list: ty.List[str], template_details: dict) -> None:
@@ -850,9 +861,12 @@ async def get_template_details_by_name(token: str, waba_id: str, template_name: 
             raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @app.post("/send_sms/")
-async def send_messages_api(request: MessageRequest):
+async def send_messages_api(request: MessageRequest, background_tasks: BackgroundTasks):
     try:
-        await send_messages(
+        unique_id = generate_unique_id()
+        
+        background_tasks.add_task(
+            send_messages,
             token=request.token,
             phone_number_id=request.phone_number_id,
             template_name=request.template_name,
@@ -860,9 +874,15 @@ async def send_messages_api(request: MessageRequest):
             media_type=request.media_type,
             media_id=request.media_id,
             contact_list=request.contact_list,
-            variable_list=request.variable_list
+            variable_list=request.variable_list,
+            request_id=request.request_id,
+            unique_id=unique_id
         )
-        return {'message': 'Messages sent successfully'}
+        return {
+            'message': 'Messages sent successfully',
+            "unique_id": unique_id,
+            "request_id": request.request_id
+        }
     except HTTPException as e:
         logger.error(f"HTTP error: {e}")
         raise e
