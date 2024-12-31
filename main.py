@@ -62,6 +62,7 @@ class ValidateNumbers(BaseModel):
     phone_number_id: str
     contact_list: ty.List[str]
     body_text: str
+    report_id: Optional[str] = None
 
 class UserData(BaseModel):
     whatsapp_business_account_id: str
@@ -776,7 +777,7 @@ async def send_bot_messages(token: str, phone_number_id: str, contact_list: ty.L
             await asyncio.sleep(0.2)
     logger.info("All messages processed.")
 
-async def validate_numbers_async(token: str, phone_number_id: str, contact_list: ty.List[str], message_text: str, unique_id: str) -> None:
+async def validate_numbers_async(token: str, phone_number_id: str, contact_list: ty.List[str], message_text: str, unique_id: str, report_id: Optional[str] = None) -> None:
     results = []
     logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
@@ -792,17 +793,17 @@ async def validate_numbers_async(token: str, phone_number_id: str, contact_list:
     
     logger.info(f"All messages processed. Total results: {len(results)}")
     logger.info("Calling notify_user with results.")
-    await notify_user(results, unique_id)
+    await notify_user(results, unique_id, report_id)
 
 WEBHOOK_URL = "https://wtsdealnow.com/notify_user/"
 
-async def notify_user(results, unique_id: str):
+async def notify_user(results, unique_id: str, report_id):
     logger.info("notify_user function called")
     """Send results to a webhook as a notification when task is completed."""
     payload = {
         "status": "completed",
-        "results": results,
-        "unique_id": unique_id
+        "unique_id": unique_id,
+        "report_id": report_id
     }
 
     headers = {
@@ -1037,11 +1038,13 @@ async def validate_numbers_api(request: ValidateNumbers, background_tasks: Backg
             phone_number_id=request.phone_number_id,
             contact_list=request.contact_list,
             message_text=request.body_text,
-            unique_id=unique_id
+            unique_id=unique_id,
+            report_id= request.report_id
         )
         return {
             "message": "Task is being processed in the background. You will be notified when it's complete.",
-            "unique_id": unique_id
+            "unique_id": unique_id,
+            "report_id": request.report_id
         }
     except HTTPException as e:
         logger.error(f"HTTP error: {e}")
