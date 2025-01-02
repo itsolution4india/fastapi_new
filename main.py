@@ -219,6 +219,7 @@ class FlowMessageRequest(BaseModel):
     flow_id: str
     language: str
     recipient_phone_number: ty.List[str]
+    request_id: Optional[str] = None
 
 class BotMessageRequest(BaseModel):
     token: str
@@ -768,15 +769,21 @@ async def send_carousels(token: str, phone_number_id: str, template_name: str, c
 
     return results
 
-async def send_template_with_flows(token: str, phone_number_id: str, template_name: str, flow_id: str, language: str, recipient_phone_number: ty.List[str]) -> None:
+async def send_template_with_flows(token: str, phone_number_id: str, template_name: str, flow_id: str, language: str, recipient_phone_number: ty.List[str],unique_id: str, request_id: Optional[str] = None) -> None:
     logger.info(f"Processing {len(recipient_phone_number)} contacts for sending messages.")
+    results = []
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
         for batch in chunks(recipient_phone_number, 78):
             logger.info(f"Sending batch of {len(batch)} contacts")
             tasks = [send_template_with_flow(session, token, phone_number_id, template_name, flow_id, language, contact) for contact in batch]
-            await asyncio.gather(*tasks)
+            try:
+                batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+                results.extend(batch_results)
+            except Exception as e:
+                logger.error(f"Error during batch processing: {e}")
             await asyncio.sleep(0.2)
     logger.info("All messages processed.")
+    await notify_user(results, unique_id, request_id)
 
 async def send_bot_messages(token: str, phone_number_id: str, contact_list: ty.List[str], message_type: str, header: ty.Optional[str] = None, body: ty.Optional[str] = None, footer: ty.Optional[str] = None, button_data: ty.Optional[ty.List[ty.Dict[str, str]]] = None, product_data: ty.Optional[ty.Dict] = None, catalog_id: ty.Optional[str] = None, sections: ty.Optional[ty.List[ty.Dict]] = None, latitude: ty.Optional[float] = None, longitude: ty.Optional[float] = None, media_id: ty.Optional[str] = None) -> None:
     logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
@@ -939,21 +946,26 @@ async def bot_api(request: BotMessageRequest):
         raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
 
 @app.post("/send_flow_message/")
-async def send_flow_message_api(request: FlowMessageRequest):
+async def send_flow_message_api(request: FlowMessageRequest, background_tasks: BackgroundTasks):
     try:
-        status_code, response_dict = await send_template_with_flows(
+        unique_id = generate_unique_id()
+        
+        background_tasks.add_task(
+            send_template_with_flows,
             request.token,
             request.phone_number_id,
             request.template_name,
             request.flow_id,
             request.language,
-            request.recipient_phone_number
+            request.recipient_phone_number,
+            request.request_id,
+            unique_id
         )
-        if status_code == 200:
-            return {'message': 'Flow message sent successfully', 'response': response_dict}
-        else:
-            logger.error(f"Failed to send flow message. Status code: {status_code}, Response: {response_dict}")
-            raise HTTPException(status_code=status_code, detail=f"Error sending flow message: {response_dict}")
+        return {
+            'message': 'Flow message sent successfully',
+            "unique_id": unique_id,
+            "request_id": request.request_id
+        }
     except Exception as e:
         logger.error(f"Unhandled error in send_flow_message_api: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
