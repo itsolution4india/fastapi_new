@@ -200,6 +200,7 @@ class CarouselRequest(BaseModel):
     contact_list: ty.List[str]
     media_id_list: ty.List[str]
     template_details: dict
+    request_id: Optional[str] = None
     
 class MessageRequest(BaseModel):
     token: str
@@ -749,22 +750,26 @@ async def send_messages(token: str, phone_number_id: str, template_name: str, la
                     logger.error(f"Error during batch processing: {e}")
                 await asyncio.sleep(0.2)
 
-        logger.info(f"All messages processed. Total results: {len(results)}")
+        # logger.info(f"All messages processed. Total results: {len(results)}")
         logger.info("Calling notify_user with results.")
         await notify_user(results, unique_id, request_id)
         
     return results
 
-async def send_carousels(token: str, phone_number_id: str, template_name: str, contact_list: ty.List[str], media_id_list: ty.List[str], template_details: dict) -> None:
+async def send_carousels(token: str, phone_number_id: str, template_name: str, contact_list: ty.List[str], media_id_list: ty.List[str], template_details: dict, unique_id: str, request_id: Optional[str] = None) -> None:
     logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
     results = []
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
         for batch in chunks(contact_list, 78):
             logger.info(f"Sending batch of {len(batch)} contacts")
             tasks = [send_carousel(session, token, phone_number_id, template_name, contact, media_id_list, template_details) for contact in batch]
-            batch_results = await asyncio.gather(*tasks)
-            results.extend(batch_results)
+            try:
+                batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+                results.extend(batch_results)
+            except Exception as e:
+                logger.error(f"Error during batch processing: {e}")
             await asyncio.sleep(0.2)
+    await notify_user(results, unique_id, request_id)
     logger.info("All messages processed.")
 
     return results
@@ -809,7 +814,7 @@ async def validate_numbers_async(token: str, phone_number_id: str, contact_list:
                 logger.error(f"Error during batch processing: {e}")
             await asyncio.sleep(0.2)
     
-    logger.info(f"All messages processed. Total results: {len(results)}")
+    # logger.info(f"All messages processed. Total results: {len(results)}")
     logger.info("Calling notify_user with results.")
     await notify_user(results, unique_id, report_id)
 
@@ -898,18 +903,27 @@ async def send_messages_api(request: MessageRequest, background_tasks: Backgroun
         raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
     
 @app.post("/send_carousel_messages/")
-async def send_carousel_api(request: CarouselRequest):
+async def send_carousel_api(request: CarouselRequest, background_tasks: BackgroundTasks):
     try:
-        await send_carousels(
+        unique_id = generate_unique_id()
+        
+        background_tasks.add_task(
+            send_carousels,
             token=request.token,
             phone_number_id=request.phone_number_id,
             template_name=request.template_name,
             contact_list=request.contact_list,
             media_id_list= request.media_id_list,
-            template_details = request.template_details
+            template_details = request.template_details,
+            request_id=request.request_id,
+            unique_id=unique_id
             
         )
-        return {'message': 'Carousel Messages sent successfully'}
+        return {
+            'message': 'Carousel Messages sent successfully',
+            "unique_id": unique_id,
+            "request_id": request.request_id
+        }
     except HTTPException as e:
         logger.error(f"HTTP error: {e}")
         return str(e)
