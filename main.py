@@ -1023,6 +1023,8 @@ async def send_sms_api(request: APIMessageRequest):
         logger.error(f"Coin validation failed: {e.detail}")
         return {"error code": "520","status": "failed", "detail": e.detail}
     
+    unique_id = generate_unique_id()
+    
     # Step 3: Send messages 
     try:
         results = await send_messages(
@@ -1033,7 +1035,8 @@ async def send_sms_api(request: APIMessageRequest):
             media_type=request.media_type,
             media_id=request.media_id,
             contact_list=request.contact_list,
-            variable_list=request.variable_list
+            variable_list=request.variable_list,
+            unique_id = unique_id
         )
 
         successful_sends = len([r for r in results if r['status'] == 'success'])
