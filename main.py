@@ -53,7 +53,6 @@ class APIMessageRequest(BaseModel):
     language: str
     media_type: str
     media_id: ty.Optional[str]
-    category: ty.Optional[str]
     contact_list: ty.List[str]
     variable_list: ty.Optional[ty.List[str]] = None
     
@@ -1063,6 +1062,7 @@ async def send_sms_api(request: APIMessageRequest):
                 "failed_sends": failed_sends,
                 "remaining_coins": user_data.coins - successful_sends
             },
+            "category": category,
             "report_id": report_id,
             "detailed_results": results
         }
