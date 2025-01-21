@@ -22,9 +22,16 @@ log_file = "app.log"
 if not os.path.exists(log_directory):
     os.makedirs(log_directory)
 
+# Create a custom logging handler to ensure proper logging in async applications
+class AsyncFileHandler(logging.FileHandler):
+    async def emit(self, record):
+        msg = self.format(record)
+        async with aiofiles.open(self.baseFilename, 'a') as f:
+            await f.write(msg + '\n')
+
 # Configure logging to log to both console and a file
 logging.basicConfig(
-    level=logging.INFO,  # Set to DEBUG for more verbose logging
+    level=logging.DEBUG,  # Set to DEBUG for more verbose logging
     format="%(asctime)s [%(levelname)s] %(message)s",  # Include timestamp
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[
