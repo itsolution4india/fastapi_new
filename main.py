@@ -210,6 +210,7 @@ class MessageRequest(BaseModel):
     media_id: ty.Optional[str]
     contact_list: ty.List[str]
     variable_list: ty.Optional[ty.List[str]] = None
+    csv_variables: ty.Optional[ty.List[str]] = None
     request_id: Optional[str] = None
 
 class FlowMessageRequest(BaseModel):
@@ -282,7 +283,7 @@ async def send_template_with_flow(session: aiohttp.ClientSession, token: str, ph
             logger.error(f"Error sending flow message: {e}")
             raise HTTPException(status_code=500, detail=f"Error sending flow message: {e}")
 
-async def send_message(session: aiohttp.ClientSession, token: str, phone_number_id: str, template_name: str, language: str, media_type: str, media_id: ty.Optional[str], contact: str, variables: ty.Optional[ty.List[str]] = None) -> None:
+async def send_message(session: aiohttp.ClientSession, token: str, phone_number_id: str, template_name: str, language: str, media_type: str, media_id: ty.Optional[str], contact: str, variables: ty.Optional[ty.List[str]] = None, csv_variable_list: ty.Optional[ty.List[str]] = None) -> None:
     url = f"https://graph.facebook.com/v20.0/{phone_number_id}/messages"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -298,6 +299,8 @@ async def send_message(session: aiohttp.ClientSession, token: str, phone_number_
         "type": "body",
         "parameters": []
     }
+    
+    variables = csv_variable_list if csv_variable_list else variables
     
     if variables:
         body_component["parameters"] = [
@@ -469,7 +472,7 @@ async def send_carousel(
             "error_message": str(e)
         }
 
-async def send_otp_message(session: aiohttp.ClientSession, token: str, phone_number_id: str, template_name: str, language: str, media_type: str, media_id: ty.Optional[str], contact: str, variables: ty.Optional[ty.List[str]] = None) -> None:
+async def send_otp_message(session: aiohttp.ClientSession, token: str, phone_number_id: str, template_name: str, language: str, media_type: str, media_id: ty.Optional[str], contact: str, variables: ty.Optional[ty.List[str]] = None, csv_variable_list: ty.Optional[ty.List[str]] = None) -> None:
     url = f"https://graph.facebook.com/v20.0/{phone_number_id}/messages"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -493,6 +496,8 @@ async def send_otp_message(session: aiohttp.ClientSession, token: str, phone_num
         "parameters": []
     }
 
+    variables = csv_variable_list if csv_variable_list else variables
+    
     if variables:
         body_component["parameters"] = [
             {
@@ -722,37 +727,68 @@ async def send_bot_message(session: aiohttp.ClientSession, token: str, phone_num
         logger.error(f"Error sending message to {contact}: {e}")
         return
 
-async def send_messages(token: str, phone_number_id: str, template_name: str, language: str, media_type: str, media_id: ty.Optional[str], contact_list: ty.List[str], variable_list: ty.List[str],unique_id: str, request_id: Optional[str] = None) -> None:
+async def send_messages(
+    token: str,
+    phone_number_id: str,
+    template_name: str,
+    language: str,
+    media_type: str,
+    media_id: ty.Optional[str],
+    contact_list: ty.List[str],
+    variable_list: ty.List[str],
+    csv_variables: ty.Optional[ty.List[str]] = None,
+    unique_id: str = "",
+    request_id: Optional[str] = None
+) -> ty.List[ty.Any]:
+    
     logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
     results = []
-    if media_type == "OTP":
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
-            for batch in chunks(contact_list, 78):
-                logger.info(f"Sending batch of {len(batch)} contacts")
-                tasks = [send_otp_message(session, token, phone_number_id, template_name, language, "TEXT", media_id, contact, variable_list) for contact in batch]
-                try:
-                    batch_results = await asyncio.gather(*tasks, return_exceptions=True)
-                    results.extend(batch_results)
-                except Exception as e:
-                    logger.error(f"Error during batch processing: {e}")
-                await asyncio.sleep(0.2)
-        await notify_user(results, unique_id, request_id)
-    else:
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
-            for batch in chunks(contact_list, 78):
-                logger.info(f"Sending batch of {len(batch)} contacts")
-                tasks = [send_message(session, token, phone_number_id, template_name, language, media_type, media_id, contact, variable_list) for contact in batch]
-                try:
-                    batch_results = await asyncio.gather(*tasks, return_exceptions=True)
-                    results.extend(batch_results)
-                except Exception as e:
-                    logger.error(f"Error during batch processing: {e}")
-                await asyncio.sleep(0.2)
-
-        # logger.info(f"All messages processed. Total results: {len(results)}")
-        logger.info("Calling notify_user with results.")
-        await notify_user(results, unique_id, request_id)
-        
+    
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
+        # Determine batch iterator based on presence of csv_variables
+        if csv_variables:
+            batches = zip(chunks(contact_list, 78), chunks(csv_variables, 78))
+        else:
+            batches = ((batch, None) for batch in chunks(contact_list, 78))
+            
+        for contact_batch, variable_batch in batches:
+            logger.info(f"Sending batch of {len(contact_batch)} contacts")
+            
+            # Create tasks based on message type
+            if media_type == "OTP":
+                send_func = send_otp_message
+            else:
+                send_func = send_message
+                
+            tasks = []
+            for idx, contact in enumerate(contact_batch):
+                csv_variable_list = variable_batch[idx] if variable_batch else None
+                task = send_func(
+                    session=session,
+                    token=token,
+                    phone_number_id=phone_number_id,
+                    template_name=template_name,
+                    language=language,
+                    media_type="TEXT" if media_type == "OTP" else media_type,
+                    media_id=media_id,
+                    contact=contact,
+                    variable_list=variable_list,
+                    csv_variable_list=csv_variable_list
+                )
+                tasks.append(task)
+            
+            try:
+                batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+                results.extend(batch_results)
+            except Exception as e:
+                logger.error(f"Error during batch processing: {e}", exc_info=True)
+            
+            # Rate limiting
+            await asyncio.sleep(0.2)
+    
+    logger.info(f"All messages processed. Total results: {len(results)}")
+    await notify_user(results, unique_id, request_id)
+    
     return results
 
 async def send_carousels(token: str, phone_number_id: str, template_name: str, contact_list: ty.List[str], media_id_list: ty.List[str], template_details: dict, unique_id: str, request_id: Optional[str] = None) -> None:
@@ -886,6 +922,7 @@ async def send_messages_api(request: MessageRequest, background_tasks: Backgroun
             media_id=request.media_id,
             contact_list=request.contact_list,
             variable_list=request.variable_list,
+            csv_variables=request.csv_variables,
             request_id=request.request_id,
             unique_id=unique_id
         )
