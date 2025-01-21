@@ -217,7 +217,7 @@ class MessageRequest(BaseModel):
     media_id: ty.Optional[str]
     contact_list: ty.List[str]
     variable_list: ty.Optional[ty.List[str]] = None
-    csv_variables: ty.Optional[ty.List[str]] = None
+    csv_variables: ty.Optional[ty.List[ty.List[str]]] = None
     request_id: Optional[str] = None
 
 class FlowMessageRequest(BaseModel):
