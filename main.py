@@ -291,7 +291,9 @@ async def send_template_with_flow(session: aiohttp.ClientSession, token: str, ph
             raise HTTPException(status_code=500, detail=f"Error sending flow message: {e}")
 
 async def send_message(session: aiohttp.ClientSession, token: str, phone_number_id: str, template_name: str, language: str, media_type: str, media_id: ty.Optional[str], contact: str, variables: ty.Optional[ty.List[str]] = None, csv_variable_list: ty.Optional[ty.List[str]] = None) -> None:
-    logger.info("got Send message request")
+    logger.info("got request")
+    logger.info(csv_variable_list)
+    logger.info(variables)
     url = f"https://graph.facebook.com/v20.0/{phone_number_id}/messages"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -482,6 +484,9 @@ async def send_carousel(
         }
 
 async def send_otp_message(session: aiohttp.ClientSession, token: str, phone_number_id: str, template_name: str, language: str, media_type: str, media_id: ty.Optional[str], contact: str, variables: ty.Optional[ty.List[str]] = None, csv_variable_list: ty.Optional[ty.List[str]] = None) -> None:
+    logger.info("got request")
+    logger.info(csv_variable_list)
+    logger.info(variables)
     url = f"https://graph.facebook.com/v20.0/{phone_number_id}/messages"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -548,6 +553,7 @@ async def send_otp_message(session: aiohttp.ClientSession, token: str, phone_num
     try:
         async with session.post(url, json=payload, headers=headers) as response:
             response_text = await response.text()
+            logger.info(response.json())
             if response.status == 200:
                 return {
                     "status": "success",
@@ -736,20 +742,7 @@ async def send_bot_message(session: aiohttp.ClientSession, token: str, phone_num
         logger.error(f"Error sending message to {contact}: {e}")
         return
 
-async def send_messages(
-    token: str,
-    phone_number_id: str,
-    template_name: str,
-    language: str,
-    media_type: str,
-    media_id: ty.Optional[str],
-    contact_list: ty.List[str],
-    variable_list: ty.List[str],
-    csv_variables: ty.Optional[ty.List[str]] = None,
-    unique_id: str = "",
-    request_id: Optional[str] = None
-) -> ty.List[ty.Any]:
-    
+async def send_messages(token: str,phone_number_id: str,template_name: str,language: str,media_type: str,media_id: ty.Optional[str],contact_list: ty.List[str],variable_list: ty.List[str],csv_variables: ty.Optional[ty.List[str]] = None,unique_id: str = "",request_id: Optional[str] = None) -> ty.List[ty.Any]:
     logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
     results = []
     
@@ -762,8 +755,8 @@ async def send_messages(
             
         for contact_batch, variable_batch in batches:
             logger.info(f"Sending batch of {len(contact_batch)} contacts")
+            logger.info(f"media_type {media_type}")
             
-            # Create tasks based on message type
             if media_type == "OTP":
                 send_func = send_otp_message
             else:
@@ -772,18 +765,7 @@ async def send_messages(
             tasks = []
             for idx, contact in enumerate(contact_batch):
                 csv_variable_list = variable_batch[idx] if variable_batch else None
-                task = send_func(
-                    session=session,
-                    token=token,
-                    phone_number_id=phone_number_id,
-                    template_name=template_name,
-                    language=language,
-                    media_type="TEXT" if media_type == "OTP" else media_type,
-                    media_id=media_id,
-                    contact=contact,
-                    variable_list=variable_list,
-                    csv_variable_list=csv_variable_list
-                )
+                task = send_func(session=session,token=token,phone_number_id=phone_number_id,template_name=template_name,language=language,media_type="TEXT" if media_type == "OTP" else media_type,media_id=media_id,contact=contact,variable_list=variable_list,csv_variable_list=csv_variable_list)
                 tasks.append(task)
             
             try:
