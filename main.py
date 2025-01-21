@@ -352,7 +352,6 @@ async def send_message(session: aiohttp.ClientSession, token: str, phone_number_
     try:
         async with session.post(url, json=payload, headers=headers) as response:
             response_text = await response.text()
-            logger.info(response.json())
             if response.status == 200:
                 return {
                     "status": "success",
@@ -765,7 +764,7 @@ async def send_messages(token: str,phone_number_id: str,template_name: str,langu
             tasks = []
             for idx, contact in enumerate(contact_batch):
                 csv_variable_list = variable_batch[idx] if variable_batch else None
-                task = send_func(session=session,token=token,phone_number_id=phone_number_id,template_name=template_name,language=language,media_type="TEXT" if media_type == "OTP" else media_type,media_id=media_id,contact=contact,variable_list=variable_list,csv_variable_list=csv_variable_list)
+                task = send_func(session=session,token=token,phone_number_id=phone_number_id,template_name=template_name,language=language,media_type="TEXT" if media_type == "OTP" else media_type,media_id=media_id,contact=contact,variables=variable_list,csv_variable_list=csv_variable_list)
                 tasks.append(task)
             
             try:
