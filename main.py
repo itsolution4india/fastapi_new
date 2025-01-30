@@ -291,9 +291,6 @@ async def send_template_with_flow(session: aiohttp.ClientSession, token: str, ph
             raise HTTPException(status_code=500, detail=f"Error sending flow message: {e}")
 
 async def send_message(session: aiohttp.ClientSession, token: str, phone_number_id: str, template_name: str, language: str, media_type: str, media_id: ty.Optional[str], contact: str, variables: ty.Optional[ty.List[str]] = None, csv_variable_list: ty.Optional[ty.List[str]] = None) -> None:
-    logger.info("got request")
-    logger.info(csv_variable_list)
-    logger.info(variables)
     url = f"https://graph.facebook.com/v20.0/{phone_number_id}/messages"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -485,9 +482,6 @@ async def send_carousel(
         }
 
 async def send_otp_message(session: aiohttp.ClientSession, token: str, phone_number_id: str, template_name: str, language: str, media_type: str, media_id: ty.Optional[str], contact: str, variables: ty.Optional[ty.List[str]] = None, csv_variable_list: ty.Optional[ty.List[str]] = None) -> None:
-    logger.info("got request")
-    logger.info(csv_variable_list)
-    logger.info(variables)
     url = f"https://graph.facebook.com/v20.0/{phone_number_id}/messages"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -556,7 +550,6 @@ async def send_otp_message(session: aiohttp.ClientSession, token: str, phone_num
     try:
         async with session.post(url, json=payload, headers=headers) as response:
             response_text = await response.text()
-            logger.info(response.json())
             if response.status == 200:
                 return {
                     "status": "success",
