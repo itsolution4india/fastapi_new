@@ -310,7 +310,9 @@ async def send_message(session: aiohttp.ClientSession, token: str, phone_number_
         "parameters": []
     }
     
-    variables = csv_variable_list if csv_variable_list else variables
+    if csv_variable_list:
+        variables = csv_variable_list[1:]
+        contact = str(csv_variable_list[0])
     
     if variables:
         body_component["parameters"] = [
@@ -509,7 +511,9 @@ async def send_otp_message(session: aiohttp.ClientSession, token: str, phone_num
         "parameters": []
     }
 
-    variables = csv_variable_list if csv_variable_list else variables
+    if csv_variable_list:
+        variables = csv_variable_list[1:]
+        contact = str(csv_variable_list[0])
     
     if variables:
         body_component["parameters"] = [
