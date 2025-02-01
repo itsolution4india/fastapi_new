@@ -13,8 +13,6 @@ import httpx
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import BackgroundTasks
 import random
-from fastapi import File, UploadFile
-import httpx
 
 # Directory and file for logging
 log_directory = "logs"
@@ -84,11 +82,6 @@ class UserData(BaseModel):
 class APIBalanceRequest(BaseModel):
     user_id: str
     api_token: str
-    
-class MediaID(BaseModel):
-    user_id: str
-    api_token: str
-    file_path: str
 
 class UpdateBalanceReportRequest(BaseModel):
     user_id: str
@@ -875,35 +868,6 @@ async def notify_user(results, unique_id: str, report_id):
 def chunks(lst: ty.List[str], size: int) -> ty.Generator[ty.List[str], None, None]:
     for i in range(0, len(lst), size):
         yield lst[i:i + size]
-        
-        
-async def generate_media_id(file_url: str, token: str, phone_id: str):
-    url = f"https://graph.facebook.com/v17.0/{phone_id}/media"
-    
-    data = {
-        'messaging_product': 'whatsapp'
-    }
-    
-    headers = {
-        'Authorization': f'Bearer {token}'
-    }
-
-    async with httpx.AsyncClient() as client:
-        file_response = await client.get(file_url)
-        if file_response.status_code != 200:
-            raise HTTPException(status_code=400, detail="File could not be retrieved.")
-        
-        files = {
-            'file': (file_url.split('/')[-1], file_response.content, "application/pdf")
-        }
-        
-        response = await client.post(url, data=data, files=files, headers=headers)
-    
-    if response.status_code == 200:
-        media_id = response.json().get('id')
-        return media_id
-    else:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
 
 async def get_template_details_by_name(token: str, waba_id: str, template_name: str):
     url = f"https://graph.facebook.com/v14.0/{waba_id}/message_templates"
@@ -1171,26 +1135,8 @@ async def send_sms_api(request: APIBalanceRequest):
     except HTTPException as e:
         logger.error(f"User validation failed: {e.detail}")
         return {"error code": "540","status": "failed", "detail": e.detail}
+
     
-@app.post("/media_api/")
-async def send_sms_api(file: UploadFile, request: MediaID):
-    try:
-        # Save the file temporarily
-        file_path = f"/tmp/{file.filename}"
-        with open(file_path, "wb") as f:
-            f.write(await file.read())
-
-        user_data = await fetch_user_data(request.user_id, request.api_token)
-        token = user_data.register_app__token
-        phone_id = user_data.phone_number_id
-
-        # Generate media ID using the saved file
-        media_id = await generate_media_id(file_path, token, phone_id)
-        
-        return {"media_id": media_id, "status": "success"}
-    except HTTPException as e:
-        logger.error(f"User validation or media generation failed: {e.detail}")
-        return {"error code": "540", "status": "failed", "detail": e.detail}    
 
 if __name__ == '__main__':
     logger.info("Starting the FastAPI server")
