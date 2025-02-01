@@ -88,7 +88,6 @@ class APIBalanceRequest(BaseModel):
 class MediaID(BaseModel):
     user_id: str
     api_token: str
-    file_path: str
 
 class UpdateBalanceReportRequest(BaseModel):
     user_id: str
@@ -877,7 +876,7 @@ def chunks(lst: ty.List[str], size: int) -> ty.Generator[ty.List[str], None, Non
         yield lst[i:i + size]
         
 
-async def generate_media_id(file_path: str, token: str, phone_id: str):
+async def generate_media_id(file: UploadFile, token: str, phone_id: str):
     url = f"https://graph.facebook.com/v17.0/{phone_id}/media"
 
     data = {
@@ -889,17 +888,16 @@ async def generate_media_id(file_path: str, token: str, phone_id: str):
 
     try:
         async with aiohttp.ClientSession() as session:
-            with open(file_path, 'rb') as file:
-                files = {'file': file}
-                async with session.post(url, data=data, headers=headers, files=files) as response:
-                    if response.status == 200:
-                        media_id = (await response.json()).get('id')
-                        logger.info(f"Media ID: {media_id}")
-                        return media_id
-                    else:
-                        error_text = await response.text()
-                        logger.error(f"Error: {response.status} - {error_text}")
-                        return None
+            files = {'file': (file.filename, await file.read(), file.content_type)}
+            async with session.post(url, data=data, headers=headers, files=files) as response:
+                if response.status == 200:
+                    media_id = (await response.json()).get('id')
+                    logger.info(f"Media ID: {media_id}")
+                    return media_id
+                else:
+                    error_text = await response.text()
+                    logger.error(f"Error: {response.status} - {error_text}")
+                    return None
     except Exception as e:
         logger.error(f"Exception occurred: {e}")
         return None
@@ -1172,14 +1170,13 @@ async def send_sms_api(request: APIBalanceRequest):
         return {"error code": "540","status": "failed", "detail": e.detail}
     
 @app.post("/media_api/")
-async def send_sms_api(request: MediaID):
+async def send_sms_api(file: UploadFile = File(...), request: MediaID = None):
     try:
-        file_path = request.file_path
         user_data = await fetch_user_data(request.user_id, request.api_token)
         token = user_data.register_app__token
         phone_id = user_data.phone_number_id
 
-        media_id = await generate_media_id(file_path, token, phone_id)
+        media_id = await generate_media_id(file, token, phone_id)
         if media_id:
             return {"media_id": media_id}
         else:
@@ -1189,7 +1186,7 @@ async def send_sms_api(request: MediaID):
         return {"error code": "540", "status": "failed", "detail": e.detail}
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")   
+        raise HTTPException(status_code=500, detail="Internal Server Error") 
 
 if __name__ == '__main__':
     logger.info("Starting the FastAPI server")
