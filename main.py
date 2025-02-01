@@ -20,6 +20,9 @@ import httpx
 log_directory = "logs"
 log_file = "app.log"
 
+TEMP_FOLDER = "temp_uploads"
+os.makedirs(TEMP_FOLDER, exist_ok=True)
+
 # Ensure log directory exists
 if not os.path.exists(log_directory):
     os.makedirs(log_directory)
@@ -876,7 +879,7 @@ def chunks(lst: ty.List[str], size: int) -> ty.Generator[ty.List[str], None, Non
         yield lst[i:i + size]
         
 
-async def generate_media_id(file: UploadFile, token: str, phone_id: str):
+async def generate_media_id(file_path: str, token: str, phone_id: str):
     url = f"https://graph.facebook.com/v17.0/{phone_id}/media"
 
     data = {
@@ -888,16 +891,17 @@ async def generate_media_id(file: UploadFile, token: str, phone_id: str):
 
     try:
         async with aiohttp.ClientSession() as session:
-            files = {'file': (file.filename, await file.read(), file.content_type)}
-            async with session.post(url, data=data, headers=headers, files=files) as response:
-                if response.status == 200:
-                    media_id = (await response.json()).get('id')
-                    logger.info(f"Media ID: {media_id}")
-                    return media_id
-                else:
-                    error_text = await response.text()
-                    logger.error(f"Error: {response.status} - {error_text}")
-                    return None
+            with open(file_path, 'rb') as file:
+                files = {'file': (os.path.basename(file_path), file, "application/pdf")}
+                async with session.post(url, data=data, headers=headers, files=files) as response:
+                    if response.status == 200:
+                        media_id = (await response.json()).get('id')
+                        logger.info(f"Media ID: {media_id}")
+                        return media_id
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"Error: {response.status} - {error_text}")
+                        return None
     except Exception as e:
         logger.error(f"Exception occurred: {e}")
         return None
@@ -1172,11 +1176,22 @@ async def send_sms_api(request: APIBalanceRequest):
 @app.post("/media_api/")
 async def send_sms_api(file: UploadFile = File(...), request: MediaID = None):
     try:
+        # Save the uploaded file to the temporary folder
+        file_path = os.path.join(TEMP_FOLDER, file.filename)
+        with open(file_path, "wb") as buffer:
+            buffer.write(await file.read())
+
+        # Fetch user data
         user_data = await fetch_user_data(request.user_id, request.api_token)
         token = user_data.register_app__token
         phone_id = user_data.phone_number_id
 
-        media_id = await generate_media_id(file, token, phone_id)
+        # Generate media ID using the saved file
+        media_id = await generate_media_id(file_path, token, phone_id)
+
+        # Optionally, delete the file after processing
+        os.remove(file_path)
+
         if media_id:
             return {"media_id": media_id}
         else:
@@ -1186,7 +1201,7 @@ async def send_sms_api(file: UploadFile = File(...), request: MediaID = None):
         return {"error code": "540", "status": "failed", "detail": e.detail}
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error") 
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 if __name__ == '__main__':
     logger.info("Starting the FastAPI server")
