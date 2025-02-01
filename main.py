@@ -876,34 +876,33 @@ def chunks(lst: ty.List[str], size: int) -> ty.Generator[ty.List[str], None, Non
     for i in range(0, len(lst), size):
         yield lst[i:i + size]
         
-        
-async def generate_media_id(file_url: str, token: str, phone_id: str):
+
+async def generate_media_id(file_path: str, token: str, phone_id: str):
     url = f"https://graph.facebook.com/v17.0/{phone_id}/media"
-    
+
     data = {
         'messaging_product': 'whatsapp'
     }
-    
     headers = {
         'Authorization': f'Bearer {token}'
     }
 
-    async with httpx.AsyncClient() as client:
-        file_response = await client.get(file_url)
-        if file_response.status_code != 200:
-            raise HTTPException(status_code=400, detail="File could not be retrieved.")
-        
-        files = {
-            'file': (file_url.split('/')[-1], file_response.content, "application/pdf")
-        }
-        
-        response = await client.post(url, data=data, files=files, headers=headers)
-    
-    if response.status_code == 200:
-        media_id = response.json().get('id')
-        return media_id
-    else:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
+    try:
+        async with aiohttp.ClientSession() as session:
+            with open(file_path, 'rb') as file:
+                files = {'file': file}
+                async with session.post(url, data=data, headers=headers, files=files) as response:
+                    if response.status == 200:
+                        media_id = (await response.json()).get('id')
+                        logger.info(f"Media ID: {media_id}")
+                        return media_id
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"Error: {response.status} - {error_text}")
+                        return None
+    except Exception as e:
+        logger.error(f"Exception occurred: {e}")
+        return None
 
 async def get_template_details_by_name(token: str, waba_id: str, template_name: str):
     url = f"https://graph.facebook.com/v14.0/{waba_id}/message_templates"
@@ -1173,24 +1172,24 @@ async def send_sms_api(request: APIBalanceRequest):
         return {"error code": "540","status": "failed", "detail": e.detail}
     
 @app.post("/media_api/")
-async def send_sms_api(file: UploadFile, request: MediaID):
+async def send_sms_api(request: MediaID):
     try:
-        # Save the file temporarily
-        file_path = f"/tmp/{file.filename}"
-        with open(file_path, "wb") as f:
-            f.write(await file.read())
-
+        file_path = request.file_path
         user_data = await fetch_user_data(request.user_id, request.api_token)
         token = user_data.register_app__token
         phone_id = user_data.phone_number_id
 
-        # Generate media ID using the saved file
         media_id = await generate_media_id(file_path, token, phone_id)
-        
-        return {"media_id": media_id, "status": "success"}
+        if media_id:
+            return {"media_id": media_id}
+        else:
+            raise HTTPException(status_code=400, detail="Failed to generate media ID")
     except HTTPException as e:
-        logger.error(f"User validation or media generation failed: {e.detail}")
-        return {"error code": "540", "status": "failed", "detail": e.detail}    
+        logger.error(f"User validation failed: {e.detail}")
+        return {"error code": "540", "status": "failed", "detail": e.detail}
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")   
 
 if __name__ == '__main__':
     logger.info("Starting the FastAPI server")
