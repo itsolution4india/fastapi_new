@@ -13,7 +13,7 @@ import httpx
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import BackgroundTasks
 import random
-from fastapi import File, UploadFile
+from fastapi import File, UploadFile, Form
 import httpx
 
 # Directory and file for logging
@@ -1174,7 +1174,11 @@ async def send_sms_api(request: APIBalanceRequest):
         return {"error code": "540","status": "failed", "detail": e.detail}
     
 @app.post("/media_api/")
-async def send_sms_api(file: UploadFile = File(...), request: MediaID = None):
+async def send_sms_api(
+    file: UploadFile = File(...),
+    user_id: str = Form(...),
+    api_token: str = Form(...)
+):
     try:
         # Save the uploaded file to the temporary folder
         file_path = os.path.join(TEMP_FOLDER, file.filename)
@@ -1182,7 +1186,7 @@ async def send_sms_api(file: UploadFile = File(...), request: MediaID = None):
             buffer.write(await file.read())
 
         # Fetch user data
-        user_data = await fetch_user_data(request.user_id, request.api_token)
+        user_data = await fetch_user_data(user_id, api_token)
         token = user_data.register_app__token
         phone_id = user_data.phone_number_id
 
