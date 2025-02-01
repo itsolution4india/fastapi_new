@@ -15,6 +15,7 @@ from fastapi import BackgroundTasks
 import random
 from fastapi import File, UploadFile, Form
 import httpx
+from aiohttp import FormData
 
 # Directory and file for logging
 log_directory = "logs"
@@ -882,26 +883,26 @@ def chunks(lst: ty.List[str], size: int) -> ty.Generator[ty.List[str], None, Non
 async def generate_media_id(file_path: str, token: str, phone_id: str):
     url = f"https://graph.facebook.com/v17.0/{phone_id}/media"
 
-    data = {
-        'messaging_product': 'whatsapp'
-    }
     headers = {
         'Authorization': f'Bearer {token}'
     }
 
     try:
+        # Create FormData object
+        data = FormData()
+        data.add_field('messaging_product', 'whatsapp')
+        data.add_field('file', open(file_path, 'rb'), filename=os.path.basename(file_path), content_type='application/pdf')
+
         async with aiohttp.ClientSession() as session:
-            with open(file_path, 'rb') as file:
-                files = {'file': (os.path.basename(file_path), file, "application/pdf")}
-                async with session.post(url, data=data, headers=headers, files=files) as response:
-                    if response.status == 200:
-                        media_id = (await response.json()).get('id')
-                        logger.info(f"Media ID: {media_id}")
-                        return media_id
-                    else:
-                        error_text = await response.text()
-                        logger.error(f"Error: {response.status} - {error_text}")
-                        return None
+            async with session.post(url, headers=headers, data=data) as response:
+                if response.status == 200:
+                    media_id = (await response.json()).get('id')
+                    logger.info(f"Media ID: {media_id}")
+                    return media_id
+                else:
+                    error_text = await response.text()
+                    logger.error(f"Error: {response.status} - {error_text}")
+                    return None
     except Exception as e:
         logger.error(f"Exception occurred: {e}")
         return None
