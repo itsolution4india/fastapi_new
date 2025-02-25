@@ -25,3 +25,4 @@ uvicorn==0.30.6
 yarl==1.9.4
 sqlalchemy
 httpx
+python-multipart

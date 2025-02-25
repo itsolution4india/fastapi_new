@@ -1,9 +1,9 @@
-from .utils import logger
+from utils import logger
 import aiohttp
 import typing as ty
 import asyncio
 from typing import Optional
-from .async_api_functions import send_otp_message, send_message, send_template_with_flow, notify_user, send_carousel, validate_nums, send_bot_message
+from async_api_functions import send_otp_message, send_message, send_template_with_flow, notify_user, send_carousel, validate_nums, send_bot_message
 
 def chunks(lst: ty.List[str], size: int) -> ty.Generator[ty.List[str], None, None]:
     for i in range(0, len(lst), size):
