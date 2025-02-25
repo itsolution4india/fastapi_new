@@ -7,7 +7,7 @@ from typing import List, Optional
 import re
 
 
-DATABASE_URL = "postgresql://postgres:Solution@97@localhost:5432/Admin"
+DATABASE_URL = "postgresql://itsolutions:Solution@97@localhost:5432/admin"
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
