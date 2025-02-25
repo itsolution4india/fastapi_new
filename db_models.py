@@ -27,5 +27,5 @@ class ReportInfo(Base):
     message_date = Column(Date)
     template_name = Column(String(100))
     message_delivery = Column(BigInteger)
-    start_request_id = Column(BigInteger, default=0)
-    end_request_id = Column(BigInteger, default=0)
+    start_request_id = Column(String(50), default='0')
+    end_request_id = Column(String(50), default='0')

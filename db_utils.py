@@ -32,7 +32,7 @@ async def save_wamids_to_db(
         try:
             # Check if record with this request_id exists
             report_info = db.query(ReportInfo).filter(
-                ReportInfo.start_request_id == int(request_id)
+                ReportInfo.start_request_id == request_id
             ).first()
             
             if report_info:
@@ -49,8 +49,8 @@ async def save_wamids_to_db(
                     message_date=datetime.now().date(),
                     template_name=template_name,
                     message_delivery=len(wamids),
-                    start_request_id=int(request_id),
-                    end_request_id=int(request_id)
+                    start_request_id=request_id,
+                    end_request_id=request_id
                 )
                 db.add(new_report)
             
