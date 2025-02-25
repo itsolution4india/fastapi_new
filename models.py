@@ -67,6 +67,7 @@ class MessageRequest(BaseModel):
     variable_list: ty.Optional[ty.List[str]] = None
     csv_variables: ty.Optional[ty.List[ty.List[str]]] = None
     request_id: Optional[str] = None
+    test_numbers: ty.List[str]
 
 class FlowMessageRequest(BaseModel):
     token: str

@@ -7,13 +7,20 @@ from fastapi import BackgroundTasks
 from fastapi import File, UploadFile, Form
 from models import APIMessageRequest, APIBalanceRequest, ValidateNumbers, MessageRequest, BotMessageRequest, CarouselRequest, FlowMessageRequest
 from utils import logger, generate_unique_id
+from db_models import Base, engine
+from contextlib import asynccontextmanager
 from async_api_functions import fetch_user_data, validate_coins, update_balance_and_report, get_template_details_by_name, generate_media_id
 from async_chunk_functions import send_messages, send_carousels, send_bot_messages, send_template_with_flows, validate_numbers_async
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    yield
 
 TEMP_FOLDER = "temp_uploads"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,7 +48,8 @@ async def send_messages_api(request: MessageRequest, background_tasks: Backgroun
             variable_list=request.variable_list,
             csv_variables=request.csv_variables,
             request_id=request.request_id,
-            unique_id=unique_id
+            unique_id=unique_id,
+            test_numbers=request.test_numbers
         )
         return {
             'message': 'Messages sent successfully',
@@ -257,7 +265,7 @@ async def validate_numbers_api(request: ValidateNumbers, background_tasks: Backg
         raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
 
 @app.post("/balance_check_api/")
-async def send_sms_api(request: APIBalanceRequest):
+async def balance_check_api(request: APIBalanceRequest):
     try:
         user_data = await fetch_user_data(request.user_id, request.api_token)
         logger.info(f"User validation successful for user_id: {request.user_id}")
@@ -267,7 +275,7 @@ async def send_sms_api(request: APIBalanceRequest):
         return {"error code": "540","status": "failed", "detail": e.detail}
     
 @app.post("/media_api/")
-async def send_sms_api(
+async def media_api(
     file: UploadFile = File(...),
     user_id: str = Form(...),
     api_token: str = Form(...)

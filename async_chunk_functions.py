@@ -1,50 +1,114 @@
 from utils import logger
 import aiohttp
+import json
 import typing as ty
 import asyncio
 from typing import Optional
 from async_api_functions import send_otp_message, send_message, send_template_with_flow, notify_user, send_carousel, validate_nums, send_bot_message
+from db_utils import extract_wamid, save_wamids_to_db
 
 def chunks(lst: ty.List[str], size: int) -> ty.Generator[ty.List[str], None, None]:
     for i in range(0, len(lst), size):
         yield lst[i:i + size]
         
-async def send_messages(token: str,phone_number_id: str,template_name: str,language: str,media_type: str,media_id: ty.Optional[str],contact_list: ty.List[str],variable_list: ty.List[str],csv_variables: ty.Optional[ty.List[str]] = None,unique_id: str = "",request_id: Optional[str] = None) -> ty.List[ty.Any]:
+async def send_messages(token: str, phone_number_id: str, template_name: str, language: str, 
+                        media_type: str, media_id: ty.Optional[str], contact_list: ty.List[str], 
+                        variable_list: ty.List[str], csv_variables: ty.Optional[ty.List[str]] = None, 
+                        unique_id: str = "", request_id: Optional[str] = None, 
+                        test_numbers: ty.Optional[ty.List[str]] = None) -> ty.List[ty.Any]:
+    
     logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
+    if test_numbers:
+        logger.info(f"Additionally processing {len(test_numbers)} test numbers.")
+    
     results = []
+    wamids = []
     
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
-        # Determine batch iterator based on presence of csv_variables
-        if csv_variables:
-            batches = zip(chunks(contact_list, 78), chunks(csv_variables, 78))
-        else:
-            batches = ((batch, None) for batch in chunks(contact_list, 78))
-            
-        for contact_batch, variable_batch in batches:
-            logger.info(f"Sending batch of {len(contact_batch)} contacts")
-            logger.info(f"media_type {media_type}")
-            
-            if media_type == "OTP":
-                send_func = send_otp_message
+        if contact_list:
+            if csv_variables:
+                batches = zip(chunks(contact_list, 78), chunks(csv_variables, 78))
             else:
-                send_func = send_message
+                batches = ((batch, None) for batch in chunks(contact_list, 78))
                 
-            tasks = []
-            for idx, contact in enumerate(contact_batch):
-                csv_variable_list = variable_batch[idx] if variable_batch else None
-                task = send_func(session=session,token=token,phone_number_id=phone_number_id,template_name=template_name,language=language,media_type="TEXT" if media_type == "OTP" else media_type,media_id=media_id,contact=contact,variables=variable_list,csv_variable_list=csv_variable_list)
-                tasks.append(task)
+            for contact_batch, variable_batch in batches:
+                logger.info(f"Sending batch of {len(contact_batch)} contacts")
+                logger.info(f"media_type {media_type}")
+                
+                if media_type == "OTP":
+                    send_func = send_otp_message
+                else:
+                    send_func = send_message
+                    
+                tasks = []
+                for idx, contact in enumerate(contact_batch):
+                    csv_variable_list = variable_batch[idx] if variable_batch else None
+                    task = send_func(
+                        session=session,
+                        token=token,
+                        phone_number_id=phone_number_id,
+                        template_name=template_name,
+                        language=language,
+                        media_type="TEXT" if media_type == "OTP" else media_type,
+                        media_id=media_id,
+                        contact=contact,
+                        variables=variable_list,
+                        csv_variable_list=csv_variable_list
+                    )
+                    tasks.append(task)
+                
+                try:
+                    batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+                    results.extend(batch_results)
+                    
+                    for result in batch_results:
+                        if isinstance(result, dict) and result.get("status") == "success":
+                            wamid = extract_wamid(result.get("response", ""))
+                            if wamid:
+                                wamids.append(wamid)
+                                
+                except Exception as e:
+                    logger.error(f"Error during batch processing: {e}", exc_info=True)
+                
+                await asyncio.sleep(0.2)
+        
+        if test_numbers:
+            logger.info(f"Processing test numbers for validation")
+            test_tasks = []
+            
+            for test_number in test_numbers:
+                test_task = validate_nums(
+                    session=session,
+                    token=token,
+                    phone_number_id=phone_number_id,
+                    contact=test_number,
+                    message_text=" "
+                )
+                test_tasks.append(test_task)
             
             try:
-                batch_results = await asyncio.gather(*tasks, return_exceptions=True)
-                results.extend(batch_results)
+                test_results = await asyncio.gather(*test_tasks, return_exceptions=True)
+                results.extend(test_results)
+                
+                for result in test_results:
+                    if isinstance(result, dict) and result.get("status") == "success":
+                        wamid = extract_wamid(result.get("response_text", ""))
+                        if wamid:
+                            wamids.append(wamid)
+                            
             except Exception as e:
-                logger.error(f"Error during batch processing: {e}", exc_info=True)
-            
-            # Rate limiting
-            await asyncio.sleep(0.2)
+                logger.error(f"Error during test number processing: {e}", exc_info=True)
     
     logger.info(f"All messages processed. Total results: {len(results)}")
+    
+    # Save wamids to database
+    if request_id and wamids:
+        await save_wamids_to_db(
+            wamids=wamids, 
+            request_id=request_id, 
+            template_name=template_name
+        )
+    
     await notify_user(results, unique_id, request_id)
     
     return results
