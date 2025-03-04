@@ -109,7 +109,7 @@ async def fetch_user_data(user_id: str, api_token: str) -> UserData:
     """Fetch user data from the API"""
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get("https://wtsdealnow.com/api/users/")
+            response = await client.get("https://main.wtsmessage.xyz/api/users/")
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
@@ -187,7 +187,7 @@ async def update_balance_and_report(
         
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "https://wtsdealnow.com/update-balance-report/",
+                "https://main.wtsmessage.xyz/update-balance-report/",
                 json=update_data.dict()
             )
             
@@ -850,7 +850,7 @@ async def validate_numbers_async(token: str, phone_number_id: str, contact_list:
     logger.info("Calling notify_user with results.")
     await notify_user(results, unique_id, report_id)
 
-WEBHOOK_URL = "https://wtsdealnow.com/notify_user/"
+WEBHOOK_URL = "https://main.wtsmessage.xyz/notify_user/"
 
 async def notify_user(results, unique_id: str, report_id):
     logger.info("notify_user function called")
