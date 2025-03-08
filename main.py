@@ -1,40 +1,46 @@
 import logging
 import os
 import uvicorn
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import HTTPException
 from fastapi import BackgroundTasks
 from fastapi import File, UploadFile, Form
 from models import APIMessageRequest, APIBalanceRequest, ValidateNumbers, MessageRequest, BotMessageRequest, CarouselRequest, FlowMessageRequest
 from utils import logger, generate_unique_id
-from db_models import Base, engine
-from contextlib import asynccontextmanager
 from async_api_functions import fetch_user_data, validate_coins, update_balance_and_report, get_template_details_by_name, generate_media_id
 from async_chunk_functions import send_messages, send_carousels, send_bot_messages, send_template_with_flows, validate_numbers_async
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
-    yield
+from app import app, load_tracker
+import httpx
 
 TEMP_FOLDER = "temp_uploads"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
-app = FastAPI(lifespan=lifespan)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+SECONDARY_SERVER = "http://fastapi2.wtsmessage.xyz"
+IS_PRIMARY = True
         
 
 @app.post("/send_sms/")
 async def send_messages_api(request: MessageRequest, background_tasks: BackgroundTasks):
     try:
         unique_id = generate_unique_id()
+        
+        if IS_PRIMARY and load_tracker.is_busy():
+            logger.info(f"Server busy, redirecting request {unique_id} to secondary server")
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        f"{SECONDARY_SERVER}/send_sms/",
+                        json=request.dict(),
+                        timeout=10.0
+                    )
+                    if response.status_code == 200:
+                        return response.json()
+                    else:
+                        logger.error(f"Secondary server error: {response.text}")
+                        raise HTTPException(status_code=503, detail="All servers busy")
+            except Exception as e:
+                logger.error(f"Error redirecting to secondary server: {e}")
+                raise HTTPException(status_code=503, detail="Error redirecting request")
+        
         
         background_tasks.add_task(
             send_messages,
