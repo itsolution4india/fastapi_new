@@ -38,7 +38,7 @@ async def save_wamids_to_db(
             if report_info:
                 # Update existing record
                 report_info.waba_id_list = wamid_str
-                report_info.message_delivery = len(wamids)
+                report_info.end_request_id = request_id
             else:
                 # Create new record
                 new_report = ReportInfo(
