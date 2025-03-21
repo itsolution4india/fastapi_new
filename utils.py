@@ -1,9 +1,6 @@
 import logging
 import os
 import random
-import json
-from typing import List, Optional
-import re
 
 log_directory = "logs"
 log_file = "app.log"
@@ -22,6 +19,8 @@ logging.basicConfig(
         logging.FileHandler(os.path.join(log_directory, log_file))  # Log to file
     ]
 )
+
+logging.getLogger('asyncio').setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
