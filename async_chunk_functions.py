@@ -80,6 +80,7 @@ async def send_messages(token: str, phone_number_id: str, template_name: str, la
                 test_tasks = []
                 
                 for test_number in test_numbers:
+                    logger.info(f"Sending test batch of {len(test_number)} contacts")
                     test_task = validate_nums(
                         session=session,
                         token=token,
