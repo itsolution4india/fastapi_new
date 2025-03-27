@@ -21,13 +21,11 @@ async def send_messages(token: str, phone_number_id: str, template_name: str, la
         load_tracker.increment_tasks()
         
         logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
-        if test_numbers:
-            logger.info(f"Additionally processing {len(test_numbers)} test numbers.")
-
         results = []
         wamids = []
 
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
+            # Process contact list first (existing batched logic remains the same)
             if contact_list:
                 if csv_variables:
                     batches = zip(chunks(contact_list, 78), chunks(csv_variables, 78))
@@ -75,32 +73,39 @@ async def send_messages(token: str, phone_number_id: str, template_name: str, la
                     
                     await asyncio.sleep(0.2)
             
+            # Process test numbers in batches
             if test_numbers:
-                logger.info(f"Processing test numbers for validation")
-                test_tasks = []
+                logger.info(f"Processing {len(test_numbers)} test numbers")
                 
-                for test_number in test_numbers:
-                    test_task = validate_nums(
-                        session=session,
-                        token=token,
-                        phone_number_id=phone_number_id,
-                        contact=test_number,
-                        message_text=" "
-                    )
-                    test_tasks.append(test_task)
-                
-                try:
-                    test_results = await asyncio.gather(*test_tasks, return_exceptions=True)
-                    results.extend(test_results)
+                # Process test numbers in batches of 78
+                for test_number_batch in chunks(test_numbers, 78):
+                    logger.info(f"Sending batch of {len(test_number_batch)} test numbers")
                     
-                    for result in test_results:
-                        if isinstance(result, dict) and result.get("status") == "success":
-                            wamid = extract_wamid(result.get("response_text", ""))
-                            if wamid:
-                                wamids.append(wamid)
-                                
-                except Exception as e:
-                    logger.error(f"Error during test number processing: {e}", exc_info=True)
+                    test_tasks = []
+                    for test_number in test_number_batch:
+                        test_task = validate_nums(
+                            session=session,
+                            token=token,
+                            phone_number_id=phone_number_id,
+                            contact=test_number,
+                            message_text=" "
+                        )
+                        test_tasks.append(test_task)
+                    
+                    try:
+                        test_results = await asyncio.gather(*test_tasks, return_exceptions=True)
+                        results.extend(test_results)
+                        
+                        for result in test_results:
+                            if isinstance(result, dict) and result.get("status") == "success":
+                                wamid = extract_wamid(result.get("response_text", ""))
+                                if wamid:
+                                    wamids.append(wamid)
+                                    
+                    except Exception as e:
+                        logger.error(f"Error during test number processing: {e}", exc_info=True)
+                    
+                    await asyncio.sleep(0.2)
 
         logger.info(f"All messages processed. Total results: {len(results)}")
 
