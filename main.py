@@ -15,7 +15,7 @@ TEMP_FOLDER = "temp_uploads"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
 SECONDARY_SERVER = "http://fastapi2.wtsmessage.xyz"
-IS_PRIMARY = True
+IS_PRIMARY = False
         
 
 @app.post("/send_sms/")
