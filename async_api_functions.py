@@ -4,7 +4,6 @@ import aiohttp
 import json
 from fastapi import HTTPException
 import httpx
-import httpx
 from models import UserData
 from utils import logger
 from models import UpdateBalanceReportRequest

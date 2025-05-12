@@ -4,6 +4,7 @@ import uvicorn
 from fastapi import HTTPException
 from fastapi import BackgroundTasks
 from fastapi import File, UploadFile, Form
+from typing import List, Optional
 from models import APIMessageRequest, APIBalanceRequest, ValidateNumbers, MessageRequest, BotMessageRequest, CarouselRequest, FlowMessageRequest
 from utils import logger, generate_unique_id
 from async_api_functions import fetch_user_data, validate_coins, update_balance_and_report, get_template_details_by_name, generate_media_id
@@ -158,23 +159,21 @@ def root():
 
 
 @app.post("/send_sms_api/")
-async def send_sms_api(request: APIMessageRequest):
-    # Step 1: Validate user credentials
+async def send_sms_post(request: APIMessageRequest):
     try:
         user_data = await fetch_user_data(request.user_id, request.api_token)
         logger.info(f"User validation successful for user_id: {request.user_id}")
     except HTTPException as e:
         logger.error(f"User validation failed: {e.detail}")
-        return {"error code": "510","status": "failed", "detail": e.detail}
-    
+        return {"error code": "510", "status": "failed", "detail": e.detail}
+
     try:
         template = await get_template_details_by_name(user_data.register_app__token, user_data.whatsapp_business_account_id, request.template_name)
         category = template.get('category', 'Category not found')
     except HTTPException as e:
         logger.error(f"Template validation Failed: {e.detail}")
-        return {"error code": "404 Not Found","status": "failed", "detail": e.detail} 
-    
-    # Step 2: Validate coins
+        return {"error code": "404 Not Found", "status": "failed", "detail": e.detail}
+
     try:
         total_contacts = len(request.contact_list)
         if category == "AUTHENTICATION" or category == "UTILITY":
@@ -183,16 +182,15 @@ async def send_sms_api(request: APIMessageRequest):
             user_coins = user_data.marketing_coins
         else:
             user_coins = user_data.authentication_coins + user_data.marketing_coins
-            
+
         await validate_coins(user_coins, total_contacts)
         logger.info(f"Coin validation successful. Required: {total_contacts}, Available: {user_data.coins}")
     except HTTPException as e:
         logger.error(f"Coin validation failed: {e.detail}")
-        return {"error code": "520","status": "failed", "detail": e.detail}
-    
+        return {"error code": "520", "status": "failed", "detail": e.detail}
+
     unique_id = generate_unique_id()
-    
-    # Step 3: Send messages 
+
     try:
         results = await send_messages(
             token=user_data.register_app__token,
@@ -203,25 +201,24 @@ async def send_sms_api(request: APIMessageRequest):
             media_id=request.media_id,
             contact_list=request.contact_list,
             variable_list=request.variable_list,
-            unique_id = unique_id
+            unique_id=unique_id
         )
 
         successful_sends = len([r for r in results if r['status'] == 'success'])
         failed_sends = len([r for r in results if r['status'] == 'failed'])
-        
-        # Step 4: Update balance and create report
+
         if successful_sends > 0:
             report_id = await update_balance_and_report(
                 user_id=request.user_id,
                 api_token=request.api_token,
-                coins=successful_sends,  # Only deduct coins for successful sends
+                coins=successful_sends,
                 contact_list=request.contact_list,
                 template_name=request.template_name,
-                category = category
+                category=category
             )
         else:
             report_id = None
-        
+
         return {
             "status": "completed",
             "summary": {
@@ -234,7 +231,7 @@ async def send_sms_api(request: APIMessageRequest):
             "report_id": report_id,
             "detailed_results": results
         }
-        
+
     except Exception as e:
         logger.error(f"Message sending failed: {str(e)}")
         return {
@@ -243,6 +240,35 @@ async def send_sms_api(request: APIMessageRequest):
             "detail": "Failed to send messages",
             "error": str(e)
         }
+        
+@app.get("/send_sms_api/")
+async def send_sms_get(
+    user_id: str,
+    api_token: str,
+    template_name: str,
+    language: str,
+    media_type: str,
+    media_id: Optional[str] = None,
+    contact_list: str = "",
+    variable_list: Optional[str] = None
+):
+    contact_list_parsed = contact_list.split(",") if contact_list else []
+    variable_list_parsed = variable_list.split(",") if variable_list else None
+
+    # Build the same Pydantic model to reuse the POST logic
+    request_model = APIMessageRequest(
+        user_id=user_id,
+        api_token=api_token,
+        template_name=template_name,
+        language=language,
+        media_type=media_type,
+        media_id=media_id,
+        contact_list=contact_list_parsed,
+        variable_list=variable_list_parsed
+    )
+
+    # Reuse the same logic
+    return await send_sms_post(request_model)
 
 @app.post("/validate_numbers_api/")
 async def validate_numbers_api(request: ValidateNumbers, background_tasks: BackgroundTasks):
