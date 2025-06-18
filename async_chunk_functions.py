@@ -28,9 +28,9 @@ async def send_messages(token: str, phone_number_id: str, template_name: str, la
             # Process contact list first (existing batched logic remains the same)
             if contact_list:
                 if csv_variables:
-                    batches = zip(chunks(contact_list, 40), chunks(csv_variables, 40))
+                    batches = zip(chunks(contact_list, 70), chunks(csv_variables, 70))
                 else:
-                    batches = ((batch, None) for batch in chunks(contact_list, 40))
+                    batches = ((batch, None) for batch in chunks(contact_list, 70))
                     
                 for contact_batch, variable_batch in batches:
                     logger.info(f"Sending batch of {len(contact_batch)} contacts")
@@ -77,8 +77,8 @@ async def send_messages(token: str, phone_number_id: str, template_name: str, la
             if test_numbers:
                 logger.info(f"Processing {len(test_numbers)} test numbers")
                 
-                # Process test numbers in batches of 40
-                for test_number_batch in chunks(test_numbers, 40):
+                # Process test numbers in batches of 70
+                for test_number_batch in chunks(test_numbers, 70):
                     logger.info(f"Sending batch of {len(test_number_batch)} test numbers")
                     
                     test_tasks = []
@@ -127,7 +127,7 @@ async def send_carousels(token: str, phone_number_id: str, template_name: str, c
     logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
     results = []
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
-        for batch in chunks(contact_list, 40):
+        for batch in chunks(contact_list, 70):
             logger.info(f"Sending batch of {len(batch)} contacts")
             tasks = [send_carousel(session, token, phone_number_id, template_name, contact, media_id_list, template_details) for contact in batch]
             try:
@@ -145,7 +145,7 @@ async def send_template_with_flows(token: str, phone_number_id: str, template_na
     logger.info(f"Processing {len(recipient_phone_number)} contacts for sending messages.")
     results = []
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
-        for batch in chunks(recipient_phone_number, 40):
+        for batch in chunks(recipient_phone_number, 70):
             logger.info(f"Sending batch of {len(batch)} contacts")
             tasks = [send_template_with_flow(session, token, phone_number_id, template_name, flow_id, language, contact) for contact in batch]
             try:
@@ -160,7 +160,7 @@ async def send_template_with_flows(token: str, phone_number_id: str, template_na
 async def send_bot_messages(token: str, phone_number_id: str, contact_list: ty.List[str], message_type: str, header: ty.Optional[str] = None, body: ty.Optional[str] = None, footer: ty.Optional[str] = None, button_data: ty.Optional[ty.List[ty.Dict[str, str]]] = None, product_data: ty.Optional[ty.Dict] = None, catalog_id: ty.Optional[str] = None, sections: ty.Optional[ty.List[ty.Dict]] = None, latitude: ty.Optional[float] = None, longitude: ty.Optional[float] = None, media_id: ty.Optional[str] = None) -> None:
     logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
-        for batch in chunks(contact_list, 40):
+        for batch in chunks(contact_list, 70):
             logger.info(f"Sending batch of {len(batch)} contacts")
             tasks = [send_bot_message(session, token, phone_number_id, contact, message_type, header, body, footer, button_data, product_data, catalog_id, sections, latitude, longitude, media_id) for contact in batch]
             await asyncio.gather(*tasks)
@@ -171,7 +171,7 @@ async def validate_numbers_async(token: str, phone_number_id: str, contact_list:
     results = []
     logger.info(f"Processing {len(contact_list)} contacts for sending messages.")
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
-        for batch in chunks(contact_list, 40):
+        for batch in chunks(contact_list, 70):
             logger.info(f"Sending batch of {len(batch)} contacts")
             tasks = [validate_nums(session, token, phone_number_id, contact, message_text) for contact in batch]
             try:
