@@ -303,7 +303,11 @@ async def balance_check_api(request: APIBalanceRequest):
     try:
         user_data = await fetch_user_data(request.user_id, request.api_token)
         logger.info(f"User validation successful for user_id: {request.user_id}")
-        return {"balance": user_data.coins}
+        return {
+            "Marketing coins": user_data.marketing_coins,
+            "Authentication coins": user_data.authentication_coins,
+            "Total Balance": user_data.marketing_coins + user_data.authentication_coins
+        }
     except HTTPException as e:
         logger.error(f"User validation failed: {e.detail}")
         return {"error code": "540","status": "failed", "detail": e.detail}
