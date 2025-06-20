@@ -1,7 +1,7 @@
 import logging
 import os
 import uvicorn
-from fastapi import HTTPException
+from fastapi import HTTPException, Query
 from fastapi import BackgroundTasks
 from fastapi import File, UploadFile, Form
 from typing import List, Optional
@@ -11,6 +11,8 @@ from async_api_functions import fetch_user_data, validate_coins, update_balance_
 from async_chunk_functions import send_messages, send_carousels, send_bot_messages, send_template_with_flows, validate_numbers_async
 from app import app, load_tracker
 import httpx
+
+import mysql.connector
 
 TEMP_FOLDER = "temp_uploads"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
@@ -339,6 +341,70 @@ async def media_api(
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+@app.get("/get_user_responses")
+async def get_user_responses(
+    user_id: str = Query(..., description="User ID from query string"),
+    api_token: str = Query(..., description="API Token from query string")
+):
+    try:
+       
+        user_data = await fetch_user_data(user_id, api_token)
+        app_id = user_data.register_app__app_id
+        phone_number_id = user_data.phone_number_id
+
+      
+        try:
+            connection = mysql.connector.connect(
+                host='localhost',
+                port='3306',
+                user='prashanth@itsolution4india.com',
+                password='Solution@97',
+                database='webhook_responses',
+                auth_plugin='mysql_native_password'
+            )
+            cursor = connection.cursor(dictionary=True)
+
+            query = f"""
+                SELECT `Date`,
+                       `display_phone_number`,
+                       `phone_number_id`,
+                       `waba_id`,
+                       `contact_wa_id`,
+                       `status`,
+                       `message_timestamp`,
+                       `error_code`,
+                       `error_message`,
+                       `contact_name`,
+                       `message_from`,
+                       `message_type`,
+                       `message_body`
+                FROM webhook_responses_{app_id}
+                WHERE status = 'reply' AND phone_number_id = %s
+                ORDER BY `Date` DESC
+            """
+
+            cursor.execute(query, (phone_number_id,))
+            rows = cursor.fetchall()
+
+            cursor.close()
+            connection.close()
+
+        except mysql.connector.Error as err:
+            logger.error(f"MySQL Error: {str(err)}")
+            raise HTTPException(status_code=500, detail="600, Database connection error")
+
+        # Step 3: Return structured JSON
+        return {
+            "status": "success",
+            "app_id": app_id,
+            "phone_number_id":phone_number_id,
+            "webhook_responses": rows
+        }
+
+    except Exception as e:
+        logger.exception("Error in get_user_responses")
+        raise HTTPException(status_code=500, detail=f"Error fetching user data: {e}")
 
 if __name__ == '__main__':
     logger.info("Starting the FastAPI server")
