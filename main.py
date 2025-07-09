@@ -258,7 +258,7 @@ async def get_report(request: ReportRequest):
         for row in rows:
             row_list = list(row)
             # Check if new_status is 'failed' (index 5)
-            if row_list[5] == 'failed':
+            if row_list[5] != 'failed':
                 row_list[7] = None  # error_code (index 7)
                 row_list[8] = None  # error_message (index 8)
             processed_rows.append(row_list)
