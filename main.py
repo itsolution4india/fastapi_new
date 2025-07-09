@@ -118,8 +118,7 @@ async def get_report(request: ReportRequest):
                 status, message_timestamp, error_code, error_message, contact_name,
                 message_from, message_type, message_body
             FROM webhook_responses_786158633633821_dup
-            WHERE phone_number_id IN ({placeholders_phones})
-            AND waba_id IN ({placeholders_wabas})
+            WHERE waba_id IN ({placeholders_wabas})
         """
         cursor.execute(query, contact_list + waba_id_list)
         rows = cursor.fetchall()
