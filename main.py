@@ -120,7 +120,7 @@ async def get_report(request: ReportRequest):
             FROM webhook_responses_786158633633821_dup
             WHERE waba_id IN ({placeholders_wabas})
         """
-        cursor.execute(query, contact_list + waba_id_list)
+        cursor.execute(query, waba_id_list)
         rows = cursor.fetchall()
 
         header = [
