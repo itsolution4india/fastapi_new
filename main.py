@@ -5,7 +5,7 @@ from fastapi import HTTPException, Query
 from fastapi import BackgroundTasks
 from fastapi import File, UploadFile, Form
 from typing import List, Optional
-from models import APIMessageRequest, APIBalanceRequest, ValidateNumbers, MessageRequest, BotMessageRequest, CarouselRequest, FlowMessageRequest
+from models import APIMessageRequest, APIBalanceRequest, ValidateNumbers, MessageRequest, BotMessageRequest, CarouselRequest, FlowMessageRequest, ReportRequest
 from utils import logger, generate_unique_id
 from async_api_functions import fetch_user_data, validate_coins, update_balance_and_report, get_template_details_by_name, generate_media_id
 from async_chunk_functions import send_messages, send_carousels, send_bot_messages, send_template_with_flows, validate_numbers_async
@@ -71,6 +71,86 @@ async def send_messages_api(request: MessageRequest, background_tasks: Backgroun
     except Exception as e:
         logger.error(f"Unhandled error: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
+   
+from fastapi.responses import StreamingResponse
+from db_models import SessionLocal, ReportInfo
+import pymysql
+import csv
+import io
+ 
+dbconfig = {
+    "host": "localhost",
+    "port": 3306,
+    "user": "prashanth@itsolution4india.com",
+    "password": "Solution@97",
+    "db": "webhook_responses",
+    "charset": "utf8mb4",
+}
+ 
+@app.post("/get_report/")
+async def get_report(request: ReportRequest):
+    try:
+        # Step 1: Get contact_list and waba_id_list from PostgreSQL
+        db = SessionLocal()
+        report = db.query(ReportInfo).filter(ReportInfo.id == int(request.report_id)).first()
+        if not report:
+            logger.warning(f"Report not found for ID {request.report_id}")
+            return {"error": "Report not found"}
+
+        contact_list = [x.strip() for x in report.contact_list.split(",") if x.strip()]
+        waba_id_list = [x.strip() for x in report.waba_id_list.split(",") if x.strip()]
+        db.close()
+
+        # Step 2: Fetch matching rows from MySQL
+        connection = pymysql.connect(**dbconfig)
+        cursor = connection.cursor()
+
+        if not contact_list or not waba_id_list:
+            logger.warning(f"Empty contact or waba_id list for report ID {request.report_id}")
+            return {"error": "Contact list or WABA ID list is empty"}
+
+        placeholders_phones = ','.join(['%s'] * len(contact_list))
+        placeholders_wabas = ','.join(['%s'] * len(waba_id_list))
+
+        query = f"""
+            SELECT 
+                Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
+                status, message_timestamp, error_code, error_message, contact_name,
+                message_from, message_type, message_body
+            FROM webhook_responses_786158633633821_dup
+            WHERE phone_number_id IN ({placeholders_phones})
+            AND waba_id IN ({placeholders_wabas})
+        """
+        cursor.execute(query, contact_list + waba_id_list)
+        rows = cursor.fetchall()
+
+        header = [
+            "Date", "display_phone_number", "phone_number_id", "waba_id", "contact_wa_id",
+            "status", "message_timestamp", "error_code", "error_message", "contact_name",
+            "message_from", "message_type", "message_body"
+        ]
+
+        # Step 3: Write to CSV in-memory
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(header)
+        for row in rows:
+            writer.writerow(row)
+
+        output.seek(0)
+        connection.close()
+
+        logger.info(f"Successfully generated CSV for report ID {request.report_id}")
+
+        # Step 4: Return as downloadable response
+        filename = f"report_{request.report_id}.csv"
+        return StreamingResponse(output, media_type="text/csv", headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        })
+
+    except Exception as e:
+        logger.error(f"Exception occurred during report generation: {e}", exc_info=True)
+        return {"error": "Internal server error"}
     
 @app.post("/send_carousel_messages/")
 async def send_carousel_api(request: CarouselRequest, background_tasks: BackgroundTasks):

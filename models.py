@@ -68,7 +68,12 @@ class MessageRequest(BaseModel):
     csv_variables: ty.Optional[ty.List[ty.List[str]]] = None
     request_id: Optional[str] = None
     test_numbers: ty.Optional[ty.List[str]] = None
-
+    
+class ReportRequest(BaseModel):
+    app_id: str
+    phone_id: str
+    report_id: str
+    
 class FlowMessageRequest(BaseModel):
     token: str
     phone_number_id: str
