@@ -77,6 +77,7 @@ from db_models import SessionLocal, ReportInfo
 import pymysql
 import csv
 import io
+import datetime
  
 dbconfig = {
     "host": "localhost",
@@ -90,38 +91,110 @@ dbconfig = {
 @app.post("/get_report/")
 async def get_report(request: ReportRequest):
     try:
-        # Step 1: Get contact_list and waba_id_list from PostgreSQL
         db = SessionLocal()
         report = db.query(ReportInfo).filter(ReportInfo.id == int(request.report_id)).first()
         if not report:
             logger.warning(f"Report not found for ID {request.report_id}")
             return {"error": "Report not found"}
-
+        
         contact_list = [x.strip() for x in report.contact_list.split(",") if x.strip()]
         waba_id_list = [x.strip() for x in report.waba_id_list.split(",") if x.strip()]
+        phone_id = request.phone_id
         db.close()
 
-        # Step 2: Fetch matching rows from MySQL
+        # Timezone adjustment
+        created_at = report.created_at + datetime.timedelta(hours=5, minutes=30)
+        created_at_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
+        date_filter = f"AND Date >= '{created_at_str}'"
+
+        # MySQL Connection
         connection = pymysql.connect(**dbconfig)
         cursor = connection.cursor()
 
-        if not contact_list or not waba_id_list:
-            logger.warning(f"Empty contact or waba_id list for report ID {request.report_id}")
-            return {"error": "Contact list or WABA ID list is empty"}
+        if not contact_list:
+            logger.warning(f"No contacts in report ID {request.report_id}")
+            return {"error": "Contact list is empty"}
 
         placeholders_phones = ','.join(['%s'] * len(contact_list))
-        placeholders_wabas = ','.join(['%s'] * len(waba_id_list))
 
-        query = f"""
-            SELECT 
-                Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
-                status, message_timestamp, error_code, error_message, contact_name,
-                message_from, message_type, message_body
-            FROM webhook_responses_786158633633821_dup
-            WHERE waba_id IN ({placeholders_wabas})
-        """
-        cursor.execute(query, waba_id_list)
-        rows = cursor.fetchall()
+        if waba_id_list and waba_id_list != ['0']:
+            placeholders_wabas = ','.join(['%s'] * len(waba_id_list))
+            query = f"""
+                SELECT 
+                    Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
+                    status, message_timestamp, error_code, error_message, contact_name,
+                    message_from, message_type, message_body
+                FROM webhook_responses_786158633633821_dup
+                WHERE waba_id IN ({placeholders_wabas})
+            """
+            cursor.execute(query, waba_id_list)
+            rows = cursor.fetchall()
+
+        else:
+            query = f"""
+                WITH LeastDateWaba AS (
+                    SELECT 
+                        contact_wa_id,
+                        waba_id,
+                        Date AS least_date,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY contact_wa_id 
+                            ORDER BY Date ASC
+                        ) AS rn
+                    FROM webhook_responses_786158633633821_dup
+                    WHERE 
+                        contact_wa_id IN ({placeholders_phones})
+                        AND phone_number_id = %s
+                        {date_filter}
+                ), 
+                LatestMessage AS (
+                    SELECT 
+                        wr2.Date,
+                        wr2.display_phone_number,
+                        wr2.phone_number_id,
+                        wr2.waba_id,
+                        wr2.contact_wa_id,
+                        wr2.status,
+                        wr2.message_timestamp,
+                        wr2.error_code,
+                        wr2.error_message,
+                        wr2.contact_name,
+                        wr2.message_from,
+                        wr2.message_type,
+                        wr2.message_body,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY wr2.contact_wa_id
+                            ORDER BY wr2.message_timestamp DESC
+                        ) AS rn
+                    FROM webhook_responses_786158633633821_dup wr2
+                    INNER JOIN LeastDateWaba ldw 
+                        ON wr2.contact_wa_id = ldw.contact_wa_id
+                        AND wr2.waba_id = ldw.waba_id
+                    WHERE 
+                        ldw.rn = 1
+                        {date_filter}
+                )
+                SELECT 
+                    Date,
+                    display_phone_number,
+                    phone_number_id,
+                    waba_id,
+                    contact_wa_id,
+                    status,
+                    message_timestamp,
+                    error_code,
+                    error_message,
+                    contact_name,
+                    message_from,
+                    message_type,
+                    message_body
+                FROM LatestMessage
+                WHERE rn = 1
+                ORDER BY contact_wa_id;
+            """
+            # pass contact_list + [phone_id] as parameters
+            cursor.execute(query, contact_list + [phone_id])
+            rows = cursor.fetchall()
 
         header = [
             "Date", "display_phone_number", "phone_number_id", "waba_id", "contact_wa_id",
@@ -129,7 +202,7 @@ async def get_report(request: ReportRequest):
             "message_from", "message_type", "message_body"
         ]
 
-        # Step 3: Write to CSV in-memory
+        # Generate CSV
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(header)
@@ -141,10 +214,8 @@ async def get_report(request: ReportRequest):
 
         logger.info(f"Successfully generated CSV for report ID {request.report_id}")
 
-        # Step 4: Return as downloadable response
-        filename = f"report_{request.report_id}.csv"
         return StreamingResponse(output, media_type="text/csv", headers={
-            "Content-Disposition": f"attachment; filename={filename}"
+            "Content-Disposition": f"attachment; filename=report_{request.report_id}.csv"
         })
 
     except Exception as e:
