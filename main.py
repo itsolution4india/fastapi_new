@@ -239,6 +239,11 @@ async def get_report(request: ReportRequest):
                     fallback_row[4] = missing_contact  # contact_wa_id
                     fallback_row[6] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # message_timestamp
                     
+                    # If new_status is not 'failed', set error_code and error_message to null
+                    if fallback_row[5] != 'failed':  # new_status is at index 5
+                        fallback_row[7] = None  # error_code
+                        fallback_row[8] = None  # error_message
+                    
                     modified_fallback_rows.append(tuple(fallback_row))
             
             # Combine original rows with modified fallback rows
