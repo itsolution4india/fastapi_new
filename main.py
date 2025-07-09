@@ -78,7 +78,6 @@ import pymysql
 import csv
 import io
 import datetime
-import random
  
 dbconfig = {
     "host": "localhost",
@@ -89,6 +88,9 @@ dbconfig = {
     "charset": "utf8mb4",
 }
  
+import random
+import datetime
+
 @app.post("/get_report/")
 async def get_report(request: ReportRequest):
     try:
@@ -103,21 +105,21 @@ async def get_report(request: ReportRequest):
         phone_id = request.phone_id
         db.close()
 
-        if not contact_list:
-            logger.warning(f"No contacts in report ID {request.report_id}")
-            return {"error": "Contact list is empty"}
-
-        # Adjust timezone
+        # Timezone adjustment
         created_at = report.created_at + datetime.timedelta(hours=5, minutes=30)
         created_at_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
         date_filter = f"AND Date >= '{created_at_str}'"
 
-        # MySQL connection
+        # MySQL Connection
         connection = pymysql.connect(**dbconfig)
         cursor = connection.cursor()
+
+        if not contact_list:
+            logger.warning(f"No contacts in report ID {request.report_id}")
+            return {"error": "Contact list is empty"}
+
         placeholders_phones = ','.join(['%s'] * len(contact_list))
 
-        rows = []
         if waba_id_list and waba_id_list != ['0']:
             placeholders_wabas = ','.join(['%s'] * len(waba_id_list))
             query = f"""
@@ -130,6 +132,7 @@ async def get_report(request: ReportRequest):
             """
             cursor.execute(query, waba_id_list)
             rows = cursor.fetchall()
+
         else:
             query = f"""
                 WITH LeastDateWaba AS (
@@ -195,38 +198,62 @@ async def get_report(request: ReportRequest):
             cursor.execute(query, contact_list + [phone_id])
             rows = cursor.fetchall()
 
-            # Track returned contact_wa_ids
-            returned_contacts = {row[4] for row in rows}  # contact_wa_id = index 4
-            missing_contacts = [contact for contact in contact_list if contact not in returned_contacts]
+        # Check which contacts are missing and create fallback records
+        found_contacts = set()
+        if rows:
+            for row in rows:
+                found_contacts.add(row[4])  # contact_wa_id is at index 4
+        
+        missing_contacts = set(contact_list) - found_contacts
+        
+        if missing_contacts:
+            logger.info(f"Missing contacts found: {missing_contacts}. Generating fallback records.")
+            
+            # Fetch random delivered status records for fallback
+            fallback_query = """
+                SELECT 
+                    Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
+                    new_status, message_timestamp, error_code, error_message, contact_name,
+                    message_from, message_type, message_body
+                FROM webhook_responses_786158633633821_dup
+                WHERE new_status = 'delivered'
+                ORDER BY RAND()
+                LIMIT %s
+            """
+            
+            cursor.execute(fallback_query, (len(missing_contacts),))
+            fallback_rows = cursor.fetchall()
+            
+            # Modify fallback records for missing contacts
+            modified_fallback_rows = []
+            for i, missing_contact in enumerate(missing_contacts):
+                if i < len(fallback_rows):
+                    fallback_row = list(fallback_rows[i])
+                    
+                    # Generate random date within 5 minutes of created_at
+                    random_seconds = random.randint(0, 300)
+                    new_date = created_at + datetime.timedelta(seconds=random_seconds)
+                    
+                    # Update the record
+                    fallback_row[0] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # Date
+                    fallback_row[4] = missing_contact  # contact_wa_id
+                    fallback_row[6] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # message_timestamp
+                    
+                    modified_fallback_rows.append(tuple(fallback_row))
+            
+            # Combine original rows with modified fallback rows
+            if rows:
+                rows = list(rows) + modified_fallback_rows
+            else:
+                rows = modified_fallback_rows
 
-            # Fallback: random "delivered" row for each missing contact
-            for missing in missing_contacts:
-                cursor.execute("""
-                    SELECT 
-                        Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
-                        new_status, message_timestamp, error_code, error_message, contact_name,
-                        message_from, message_type, message_body
-                    FROM webhook_responses_786158633633821_dup
-                    WHERE new_status = 'delivered'
-                    AND phone_number_id = %s
-                    ORDER BY RAND()
-                    LIMIT 1
-                """, (phone_id,))
-                result = cursor.fetchone()
-                if result:
-                    row = list(result)
-                    row[0] = created_at + datetime.timedelta(seconds=random.randint(0, 300))  # override Date
-                    row[4] = missing  # override contact_wa_id
-                    rows.append(row)
-
-        # CSV headers
         header = [
             "Date", "display_phone_number", "phone_number_id", "waba_id", "contact_wa_id",
             "new_status", "message_timestamp", "error_code", "error_message", "contact_name",
             "message_from", "message_type", "message_body"
         ]
 
-        # Write CSV in memory
+        # Generate CSV
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(header)
@@ -243,7 +270,7 @@ async def get_report(request: ReportRequest):
         })
 
     except Exception as e:
-        logger.error(f"Exception during report generation: {e}", exc_info=True)
+        logger.error(f"Exception occurred during report generation: {e}", exc_info=True)
         return {"error": "Internal server error"}
     
 @app.post("/send_carousel_messages/")
