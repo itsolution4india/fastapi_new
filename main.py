@@ -239,11 +239,6 @@ async def get_report(request: ReportRequest):
                     fallback_row[4] = missing_contact  # contact_wa_id
                     fallback_row[6] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # message_timestamp
                     
-                    # If new_status is not 'failed', set error_code and error_message to null
-                    if fallback_row[5] != 'failed':  # new_status is at index 5
-                        fallback_row[7] = None  # error_code
-                        fallback_row[8] = None  # error_message
-                    
                     modified_fallback_rows.append(tuple(fallback_row))
             
             # Combine original rows with modified fallback rows
@@ -258,11 +253,21 @@ async def get_report(request: ReportRequest):
             "message_from", "message_type", "message_body"
         ]
 
+        # Process rows to handle failed status - set error_code and error_message to null
+        processed_rows = []
+        for row in rows:
+            row_list = list(row)
+            # Check if new_status is 'failed' (index 5)
+            if row_list[5] == 'failed':
+                row_list[7] = None  # error_code (index 7)
+                row_list[8] = None  # error_message (index 8)
+            processed_rows.append(row_list)
+
         # Generate CSV
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(header)
-        for row in rows:
+        for row in processed_rows:
             writer.writerow(row)
 
         output.seek(0)
@@ -277,88 +282,6 @@ async def get_report(request: ReportRequest):
     except Exception as e:
         logger.error(f"Exception occurred during report generation: {e}", exc_info=True)
         return {"error": "Internal server error"}
-    
-@app.post("/send_carousel_messages/")
-async def send_carousel_api(request: CarouselRequest, background_tasks: BackgroundTasks):
-    try:
-        unique_id = generate_unique_id()
-        
-        background_tasks.add_task(
-            send_carousels,
-            token=request.token,
-            phone_number_id=request.phone_number_id,
-            template_name=request.template_name,
-            contact_list=request.contact_list,
-            media_id_list= request.media_id_list,
-            template_details = request.template_details,
-            request_id=request.request_id,
-            unique_id=unique_id
-            
-        )
-        return {
-            'message': 'Carousel Messages sent successfully',
-            "unique_id": unique_id,
-            "request_id": request.request_id
-        }
-    except HTTPException as e:
-        logger.error(f"HTTP error: {e}")
-        return str(e)
-    except Exception as e:
-        logger.error(f"Unhandled error: {e}")
-        return str(e)
-
-@app.post("/bot_api/")
-async def bot_api(request: BotMessageRequest):
-    logging.info(f"request {request}")
-    try:
-        await send_bot_messages(
-            token=request.token,
-            phone_number_id=request.phone_number_id,
-            contact_list=request.contact_list,
-            message_type=request.message_type,
-            header=request.header,
-            body=request.body,
-            footer=request.footer,
-            button_data=request.button_data,
-            product_data=request.product_data,
-            catalog_id=request.catalog_id,
-            sections=request.sections,
-            latitude=request.latitude,
-            longitude=request.longitude,
-            media_id=request.media_id
-        )
-        return {'message': 'Messages sent successfully'}
-    except HTTPException as e:
-        logger.error(f"HTTP error: {e}")
-        raise e
-    except Exception as e:
-        logger.error(f"Unhandled error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
-
-@app.post("/send_flow_message/")
-async def send_flow_message_api(request: FlowMessageRequest, background_tasks: BackgroundTasks):
-    try:
-        unique_id = generate_unique_id()
-        
-        background_tasks.add_task(
-            send_template_with_flows,
-            request.token,
-            request.phone_number_id,
-            request.template_name,
-            request.flow_id,
-            request.language,
-            request.recipient_phone_number,
-            request.request_id,
-            unique_id
-        )
-        return {
-            'message': 'Flow message sent successfully',
-            "unique_id": unique_id,
-            "request_id": request.request_id
-        }
-    except Exception as e:
-        logger.error(f"Unhandled error in send_flow_message_api: {e}")
-        raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
 
 @app.get("/")
 def root():
