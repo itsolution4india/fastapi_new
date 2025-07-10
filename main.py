@@ -607,7 +607,7 @@ async def lifespan(app: FastAPI):
         load_task_status()
         
         # Clean up old files and tasks
-        cleanup_old_tasks()
+        # cleanup_old_tasks()
         
         now = datetime.now()
         for filename in os.listdir(ZIP_FILES_DIR):
