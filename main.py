@@ -396,7 +396,7 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
             status, message_timestamp, error_code, error_message, contact_name,
             message_from, message_type, message_body
         FROM webhook_responses
-        WHERE new_status = 'delivered'
+        WHERE status = 'delivered'
         ORDER BY RAND()
         LIMIT %s
     """
