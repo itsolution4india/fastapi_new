@@ -11,6 +11,7 @@ from async_api_functions import fetch_user_data, validate_coins, update_balance_
 from async_chunk_functions import send_messages, send_carousels, send_bot_messages, send_template_with_flows, validate_numbers_async
 from app import app, load_tracker
 import httpx
+import threading
 from typing import Dict, Optional, Any
 
 import mysql.connector
@@ -21,9 +22,11 @@ os.makedirs(TEMP_FOLDER, exist_ok=True)
 # Task status tracking
 task_status: Dict[str, Dict[str, Any]] = {}
 ZIP_FILES_DIR = "/var/www/zip_files"
+TASK_STATUS_FILE = os.path.join(ZIP_FILES_DIR, "task_status.json")
 
 # Ensure zip files directory exists
 os.makedirs(ZIP_FILES_DIR, exist_ok=True)
+task_status_lock = threading.Lock()
 
 SECONDARY_SERVER = "http://fastapi2.wtsmessage.xyz"
 IS_PRIMARY = False
@@ -88,6 +91,7 @@ import io
 from fastapi.responses import FileResponse
 import zipfile
 import uuid
+import json
 from datetime import datetime, timedelta
  
 dbconfig = {
@@ -101,15 +105,82 @@ dbconfig = {
  
 import random
 
+def load_task_status():
+    """Load task status from file"""
+    global task_status
+    try:
+        if os.path.exists(TASK_STATUS_FILE):
+            with open(TASK_STATUS_FILE, 'r') as f:
+                task_status = json.load(f)
+            logger.info(f"Loaded {len(task_status)} tasks from file")
+        else:
+            task_status = {}
+            logger.info("No existing task status file found, starting fresh")
+    except Exception as e:
+        logger.error(f"Error loading task status: {e}")
+        task_status = {}
+
+def save_task_status():
+    """Save task status to file"""
+    try:
+        with task_status_lock:
+            with open(TASK_STATUS_FILE, 'w') as f:
+                json.dump(task_status, f, indent=2)
+        logger.debug("Task status saved to file")
+    except Exception as e:
+        logger.error(f"Error saving task status: {e}")
+
+def update_task_status(task_id: str, status_update: Dict[str, Any]):
+    """Thread-safe task status update"""
+    with task_status_lock:
+        if task_id not in task_status:
+            task_status[task_id] = {}
+        task_status[task_id].update(status_update)
+        task_status[task_id]["updated_at"] = datetime.now().isoformat()
+    save_task_status()
+    logger.info(f"Task {task_id} status updated: {status_update}")
+
+def get_task_status(task_id: str) -> Dict[str, Any]:
+    """Thread-safe task status retrieval"""
+    with task_status_lock:
+        return task_status.get(task_id, None)
+
+def cleanup_old_tasks():
+    """Clean up old completed/failed tasks (older than 24 hours)"""
+    try:
+        current_time = datetime.now()
+        tasks_to_remove = []
+        
+        with task_status_lock:
+            for task_id, status in task_status.items():
+                if status.get("status") in ["completed", "failed"]:
+                    created_at = datetime.fromisoformat(status.get("created_at", "2000-01-01T00:00:00"))
+                    if (current_time - created_at).total_seconds() > 86400:  # 24 hours
+                        tasks_to_remove.append(task_id)
+            
+            for task_id in tasks_to_remove:
+                del task_status[task_id]
+                logger.info(f"Removed old task: {task_id}")
+        
+        if tasks_to_remove:
+            save_task_status()
+            
+    except Exception as e:
+        logger.error(f"Error cleaning up old tasks: {e}")
+
+# Load existing task status on startup
+load_task_status()
+
+# Modified background task function
 async def generate_report_background(task_id: str, request: ReportRequest):
     """Background task to generate report and save as ZIP"""
     # Initialize task status first - this is crucial
-    task_status[task_id] = {
+    update_task_status(task_id, {
         "status": "processing",
         "message": "Processing report...",
         "created_at": datetime.now().isoformat(),
         "progress": 10
-    }
+    })
     
     logger.info(f"Starting background report generation for task {task_id}")
     logger.info(f"Request details: report_id={request.report_id}, phone_id={request.phone_id}")
@@ -126,14 +197,16 @@ async def generate_report_background(task_id: str, request: ReportRequest):
         
         if not report:
             logger.error(f"Report not found for report_id={request.report_id}")
-            task_status[task_id]["status"] = "failed"
-            task_status[task_id]["message"] = "Report not found"
+            update_task_status(task_id, {
+                "status": "failed",
+                "message": "Report not found"
+            })
             return
         
         logger.info(f"Found report: {report.id}")
         
         # Update progress
-        task_status[task_id]["progress"] = 30
+        update_task_status(task_id, {"progress": 30})
         
         contact_list = [x.strip() for x in report.contact_list.split(",") if x.strip()]
         waba_id_list = [x.strip() for x in report.waba_id_list.split(",") if x.strip()]
@@ -158,12 +231,14 @@ async def generate_report_background(task_id: str, request: ReportRequest):
 
         if not contact_list:
             logger.error("Contact list is empty")
-            task_status[task_id]["status"] = "failed"
-            task_status[task_id]["message"] = "Contact list is empty"
+            update_task_status(task_id, {
+                "status": "failed",
+                "message": "Contact list is empty"
+            })
             return
 
         # Update progress
-        task_status[task_id]["progress"] = 50
+        update_task_status(task_id, {"progress": 50})
         
         placeholders_phones = ','.join(['%s'] * len(contact_list))
 
@@ -185,6 +260,13 @@ async def generate_report_background(task_id: str, request: ReportRequest):
             rows = cursor.fetchall()
         else:
             logger.info("Executing query with contact list and phone ID filter")
+            
+            # Update progress during long query
+            update_task_status(task_id, {
+                "progress": 55,
+                "message": "Executing database query..."
+            })
+            
             query = f"""
                 WITH LeastDateWaba AS (
                     SELECT 
@@ -254,7 +336,10 @@ async def generate_report_background(task_id: str, request: ReportRequest):
         logger.info(f"Query executed successfully. Found {len(rows)} rows")
 
         # Update progress
-        task_status[task_id]["progress"] = 70
+        update_task_status(task_id, {
+            "progress": 70,
+            "message": "Processing query results..."
+        })
         
         # Handle missing contacts
         found_contacts = set()
@@ -267,6 +352,12 @@ async def generate_report_background(task_id: str, request: ReportRequest):
         if missing_contacts:
             logger.info(f"Missing contacts found: {len(missing_contacts)} contacts")
             logger.info(f"Missing contacts: {list(missing_contacts)}")
+            
+            # Update progress for fallback processing
+            update_task_status(task_id, {
+                "progress": 75,
+                "message": "Processing missing contacts..."
+            })
             
             # Fetch random delivered status records for fallback
             fallback_query = """
@@ -310,7 +401,10 @@ async def generate_report_background(task_id: str, request: ReportRequest):
             logger.info(f"Total rows after adding fallback: {len(rows)}")
 
         # Update progress
-        task_status[task_id]["progress"] = 90
+        update_task_status(task_id, {
+            "progress": 90,
+            "message": "Generating report file..."
+        })
         
         # Create ZIP_FILES_DIR if it doesn't exist
         if not os.path.exists(ZIP_FILES_DIR):
@@ -320,8 +414,10 @@ async def generate_report_background(task_id: str, request: ReportRequest):
         # Check directory permissions
         if not os.access(ZIP_FILES_DIR, os.W_OK):
             logger.error(f"No write permission for directory: {ZIP_FILES_DIR}")
-            task_status[task_id]["status"] = "failed"
-            task_status[task_id]["message"] = f"No write permission for directory: {ZIP_FILES_DIR}"
+            update_task_status(task_id, {
+                "status": "failed",
+                "message": f"No write permission for directory: {ZIP_FILES_DIR}"
+            })
             return
         
         # Process rows and generate CSV
@@ -370,29 +466,29 @@ async def generate_report_background(task_id: str, request: ReportRequest):
             logger.info(f"ZIP file created successfully: {zip_filepath}, size: {file_size} bytes")
         else:
             logger.error(f"ZIP file was not created: {zip_filepath}")
-            task_status[task_id]["status"] = "failed"
-            task_status[task_id]["message"] = "Failed to create ZIP file"
+            update_task_status(task_id, {
+                "status": "failed",
+                "message": "Failed to create ZIP file"
+            })
             return
         
         # Update task status to completed
-        task_status[task_id] = {
+        update_task_status(task_id, {
             "status": "completed",
             "message": "Report generated successfully",
             "file_url": f"/download-zip/{zip_filename}",
-            "created_at": datetime.now().isoformat(),
             "progress": 100
-        }
+        })
         
         logger.info(f"Successfully generated ZIP report for task {task_id}")
         
     except Exception as e:
         logger.error(f"Error in background task {task_id}: {str(e)}", exc_info=True)
-        task_status[task_id] = {
+        update_task_status(task_id, {
             "status": "failed",
             "message": f"Error generating report: {str(e)}",
-            "created_at": datetime.now().isoformat(),
             "progress": 0
-        }
+        })
     
     finally:
         # Clean up database connections
@@ -406,7 +502,7 @@ async def generate_report_background(task_id: str, request: ReportRequest):
             db.close()
             logger.info("SQLAlchemy session closed")
 
-
+# Modified endpoint functions
 @app.post("/generate_report/")
 async def generate_report(request: ReportRequest, background_tasks: BackgroundTasks):
     """Start background report generation and return task ID"""
@@ -414,14 +510,14 @@ async def generate_report(request: ReportRequest, background_tasks: BackgroundTa
     logger.info(f"Generated new task_id: {task_id}")
     
     # Initialize task status BEFORE adding background task
-    task_status[task_id] = {
+    update_task_status(task_id, {
         "status": "pending",
         "message": "Task queued for processing",
         "created_at": datetime.now().isoformat(),
         "progress": 0
-    }
+    })
     
-    logger.info(f"Task {task_id} initialized with status: {task_status[task_id]}")
+    logger.info(f"Task {task_id} initialized")
     
     # Add background task
     background_tasks.add_task(generate_report_background, task_id, request)
@@ -429,18 +525,19 @@ async def generate_report(request: ReportRequest, background_tasks: BackgroundTa
     
     return {"task_id": task_id, "message": "Report generation started"}
 
-
 @app.get("/task_status/{task_id}")
-async def get_task_status(task_id: str):
+async def get_task_status_endpoint(task_id: str):
     """Check the status of a background task"""
     logger.info(f"Checking status for task_id: {task_id}")
-    logger.info(f"Available task_ids: {list(task_status.keys())}")
     
-    if task_id not in task_status:
+    status = get_task_status(task_id)
+    if status is None:
         logger.error(f"Task not found: {task_id}")
+        with task_status_lock:
+            available_tasks = list(task_status.keys())
+        logger.info(f"Available task_ids: {available_tasks}")
         raise HTTPException(status_code=404, detail="Task not found")
     
-    status = task_status[task_id]
     logger.info(f"Task {task_id} status: {status}")
     
     return TaskStatusResponse(
@@ -475,12 +572,13 @@ async def download_zip_file(filename: str):
     )
 
 
-# Debug endpoint to check task status dictionary
 @app.get("/debug/tasks")
 async def debug_tasks():
     """Debug endpoint to see all tasks"""
-    logger.info(f"Debug: Current tasks in memory: {task_status}")
-    return {"tasks": task_status}
+    with task_status_lock:
+        current_tasks = dict(task_status)
+    logger.info(f"Debug: Current tasks in memory: {len(current_tasks)} tasks")
+    return {"tasks": current_tasks, "count": len(current_tasks)}
 
 
 # Debug endpoint to check ZIP directory
@@ -513,19 +611,28 @@ async def lifespan(app: FastAPI):
             os.makedirs(ZIP_FILES_DIR, exist_ok=True)
             logger.info(f"Created directory: {ZIP_FILES_DIR}")
         
+        # Load existing task status
+        load_task_status()
+        
+        # Clean up old files and tasks
+        cleanup_old_tasks()
+        
         now = datetime.now()
         for filename in os.listdir(ZIP_FILES_DIR):
-            file_path = os.path.join(ZIP_FILES_DIR, filename)
-            if os.path.isfile(file_path):
-                file_age = now - datetime.fromtimestamp(os.path.getctime(file_path))
-                if file_age.days >= 1:
-                    os.remove(file_path)
-                    logger.info(f"Removed old file: {filename}")
+            if filename.endswith('.zip'):
+                file_path = os.path.join(ZIP_FILES_DIR, filename)
+                if os.path.isfile(file_path):
+                    file_age = now - datetime.fromtimestamp(os.path.getctime(file_path))
+                    if file_age.days >= 1:
+                        os.remove(file_path)
+                        logger.info(f"Removed old file: {filename}")
     except Exception as e:
         logger.error(f"Error during startup: {e}")
 
     yield
     
+    # Save task status on shutdown
+    save_task_status()
     logger.info("Shutting down application...")
 
 
