@@ -127,7 +127,7 @@ async def get_report(request: ReportRequest):
                     Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
                     new_status, message_timestamp, error_code, error_message, contact_name,
                     message_from, message_type, message_body
-                FROM webhook_responses_786158633633821_dup
+                FROM webhook_responses_490892730652855_dup
                 WHERE waba_id IN ({placeholders_wabas})
             """
             cursor.execute(query, waba_id_list)
@@ -144,7 +144,7 @@ async def get_report(request: ReportRequest):
                             PARTITION BY contact_wa_id 
                             ORDER BY Date ASC
                         ) AS rn
-                    FROM webhook_responses_786158633633821_dup
+                    FROM webhook_responses_490892730652855_dup
                     WHERE 
                         contact_wa_id IN ({placeholders_phones})
                         AND phone_number_id = %s
@@ -169,7 +169,7 @@ async def get_report(request: ReportRequest):
                             PARTITION BY wr2.contact_wa_id
                             ORDER BY wr2.message_timestamp DESC
                         ) AS rn
-                    FROM webhook_responses_786158633633821_dup wr2
+                    FROM webhook_responses_490892730652855_dup wr2
                     INNER JOIN LeastDateWaba ldw 
                         ON wr2.contact_wa_id = ldw.contact_wa_id
                         AND wr2.waba_id = ldw.waba_id
@@ -215,7 +215,7 @@ async def get_report(request: ReportRequest):
                     Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
                     new_status, message_timestamp, error_code, error_message, contact_name,
                     message_from, message_type, message_body
-                FROM webhook_responses_786158633633821_dup
+                FROM webhook_responses_490892730652855_dup
                 WHERE new_status = 'delivered'
                 ORDER BY RAND()
                 LIMIT %s
