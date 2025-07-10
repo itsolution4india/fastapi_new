@@ -461,11 +461,13 @@ async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, camp
     csv_data = csv_content.getvalue()
     
     # Create ZIP file
-    zip_filename = f"report_{campaign_title}_{template_name}_{created_at.date()}.zip"
+    created_at = str(created_at)
+    created_at = created_at.split(" ")[0]
+    zip_filename = f"report_{campaign_title}_{template_name}_{created_at}.zip"
     zip_filepath = os.path.join(ZIP_FILES_DIR, zip_filename)
     
     with zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        zipf.writestr(f"report_{campaign_title}_{template_name}_{created_at.date()}.csv", csv_data)
+        zipf.writestr(f"report_{campaign_title}_{template_name}_{created_at}.csv", csv_data)
     
     # Verify ZIP file was created
     if not os.path.exists(zip_filepath):
