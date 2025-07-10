@@ -74,6 +74,14 @@ class ReportRequest(BaseModel):
     phone_id: str
     report_id: str
     
+class TaskStatusResponse(BaseModel):
+    task_id: str
+    status: str
+    message: str
+    file_url: Optional[str] = None
+    created_at: str
+    progress: Optional[int] = None
+    
 class FlowMessageRequest(BaseModel):
     token: str
     phone_number_id: str

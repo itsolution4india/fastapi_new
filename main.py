@@ -5,17 +5,25 @@ from fastapi import HTTPException, Query
 from fastapi import BackgroundTasks
 from fastapi import File, UploadFile, Form
 from typing import List, Optional
-from models import APIMessageRequest, APIBalanceRequest, ValidateNumbers, MessageRequest, BotMessageRequest, CarouselRequest, FlowMessageRequest, ReportRequest
+from models import APIMessageRequest, APIBalanceRequest, ValidateNumbers, MessageRequest, BotMessageRequest, CarouselRequest, FlowMessageRequest, ReportRequest, TaskStatusResponse
 from utils import logger, generate_unique_id
 from async_api_functions import fetch_user_data, validate_coins, update_balance_and_report, get_template_details_by_name, generate_media_id
 from async_chunk_functions import send_messages, send_carousels, send_bot_messages, send_template_with_flows, validate_numbers_async
 from app import app, load_tracker
 import httpx
+from typing import Dict, Optional
 
 import mysql.connector
 
 TEMP_FOLDER = "temp_uploads"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
+
+# Task status tracking
+task_status: Dict[str, Dict] = {}
+ZIP_FILES_DIR = "/var/www/zip_files"
+
+# Ensure zip files directory exists
+os.makedirs(ZIP_FILES_DIR, exist_ok=True)
 
 SECONDARY_SERVER = "http://fastapi2.wtsmessage.xyz"
 IS_PRIMARY = False
@@ -77,7 +85,10 @@ from db_models import SessionLocal, ReportInfo
 import pymysql
 import csv
 import io
-import datetime
+from fastapi.responses import FileResponse
+import zipfile
+import uuid
+from datetime import datetime, timedelta
  
 dbconfig = {
     "host": "localhost",
@@ -89,16 +100,32 @@ dbconfig = {
 }
  
 import random
-import datetime
 
-@app.post("/get_report/")
-async def get_report(request: ReportRequest):
+async def generate_report_background(task_id: str, request: ReportRequest):
+    """Background task to generate report and save as ZIP"""
     try:
+        # Update status to processing
+        task_status[task_id] = {
+            "status": "processing",
+            "message": "Processing report...",
+            "created_at": datetime.now().isoformat(),
+            "progress": 10
+        }
+        
+        logger.info(f"Starting background report generation for task {task_id}")
+        
+        # Database connection
         db = SessionLocal()
         report = db.query(ReportInfo).filter(ReportInfo.id == int(request.report_id)).first()
+        
         if not report:
-            logger.warning(f"Report not found for ID {request.report_id}")
-            return {"error": "Report not found"}
+            task_status[task_id]["status"] = "failed"
+            task_status[task_id]["message"] = "Report not found"
+            db.close()
+            return
+        
+        # Update progress
+        task_status[task_id]["progress"] = 30
         
         contact_list = [x.strip() for x in report.contact_list.split(",") if x.strip()]
         waba_id_list = [x.strip() for x in report.waba_id_list.split(",") if x.strip()]
@@ -106,7 +133,7 @@ async def get_report(request: ReportRequest):
         db.close()
 
         # Timezone adjustment
-        created_at = report.created_at + datetime.timedelta(hours=5, minutes=30)
+        created_at = report.created_at + timedelta(hours=5, minutes=30)
         created_at_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
         date_filter = f"AND Date >= '{created_at_str}'"
 
@@ -115,11 +142,17 @@ async def get_report(request: ReportRequest):
         cursor = connection.cursor()
 
         if not contact_list:
-            logger.warning(f"No contacts in report ID {request.report_id}")
-            return {"error": "Contact list is empty"}
+            task_status[task_id]["status"] = "failed"
+            task_status[task_id]["message"] = "Contact list is empty"
+            connection.close()
+            return
 
+        # Update progress
+        task_status[task_id]["progress"] = 50
+        
         placeholders_phones = ','.join(['%s'] * len(contact_list))
 
+        # Execute query based on conditions
         if waba_id_list and waba_id_list != ['0']:
             placeholders_wabas = ','.join(['%s'] * len(waba_id_list))
             query = f"""
@@ -132,7 +165,6 @@ async def get_report(request: ReportRequest):
             """
             cursor.execute(query, waba_id_list)
             rows = cursor.fetchall()
-
         else:
             query = f"""
                 WITH LeastDateWaba AS (
@@ -198,7 +230,10 @@ async def get_report(request: ReportRequest):
             cursor.execute(query, contact_list + [phone_id])
             rows = cursor.fetchall()
 
-        # Check which contacts are missing and create fallback records
+        # Update progress
+        task_status[task_id]["progress"] = 70
+        
+        # Handle missing contacts (same logic as original)
         found_contacts = set()
         if rows:
             for row in rows:
@@ -232,7 +267,7 @@ async def get_report(request: ReportRequest):
                     
                     # Generate random date within 5 minutes of created_at
                     random_seconds = random.randint(0, 300)
-                    new_date = created_at + datetime.timedelta(seconds=random_seconds)
+                    new_date = created_at + timedelta(seconds=random_seconds)
                     
                     # Update the record
                     fallback_row[0] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # Date
@@ -247,13 +282,19 @@ async def get_report(request: ReportRequest):
             else:
                 rows = modified_fallback_rows
 
+        connection.close()
+
+        # Update progress
+        task_status[task_id]["progress"] = 90
+        
+        # Process rows and generate CSV
         header = [
             "Date", "display_phone_number", "phone_number_id", "waba_id", "contact_wa_id",
             "new_status", "message_timestamp", "error_code", "error_message", "contact_name",
             "message_from", "message_type", "message_body"
         ]
 
-        # Process rows to handle failed status - set error_code and error_message to null
+        # Process rows to handle failed status
         processed_rows = []
         for row in rows:
             row_list = list(row)
@@ -263,25 +304,108 @@ async def get_report(request: ReportRequest):
                 row_list[8] = None  # error_message (index 8)
             processed_rows.append(row_list)
 
-        # Generate CSV
-        output = io.StringIO()
-        writer = csv.writer(output)
+        # Generate CSV content
+        csv_content = io.StringIO()
+        writer = csv.writer(csv_content)
         writer.writerow(header)
         for row in processed_rows:
             writer.writerow(row)
-
-        output.seek(0)
-        connection.close()
-
-        logger.info(f"Successfully generated CSV for report ID {request.report_id}")
-
-        return StreamingResponse(output, media_type="text/csv", headers={
-            "Content-Disposition": f"attachment; filename=report_{request.report_id}.csv"
-        })
-
+        
+        csv_content.seek(0)
+        csv_data = csv_content.getvalue()
+        
+        # Create ZIP file
+        zip_filename = f"report_{request.report_id}_{task_id}.zip"
+        zip_filepath = os.path.join(ZIP_FILES_DIR, zip_filename)
+        
+        with zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipf.writestr(f"report_{request.report_id}.csv", csv_data)
+        
+        # Update task status to completed
+        task_status[task_id] = {
+            "status": "completed",
+            "message": "Report generated successfully",
+            "file_url": f"/download-zip/{zip_filename}",
+            "created_at": datetime.now().isoformat(),
+            "progress": 100
+        }
+        
+        logger.info(f"Successfully generated ZIP report for task {task_id}")
+        
     except Exception as e:
-        logger.error(f"Exception occurred during report generation: {e}", exc_info=True)
-        return {"error": "Internal server error"}
+        logger.error(f"Error in background task {task_id}: {e}", exc_info=True)
+        task_status[task_id] = {
+            "status": "failed",
+            "message": f"Error generating report: {str(e)}",
+            "created_at": datetime.now().isoformat(),
+            "progress": 0
+        }
+
+@app.post("/generate_report/")
+async def generate_report(request: ReportRequest, background_tasks: BackgroundTasks):
+    """Start background report generation and return task ID"""
+    task_id = str(uuid.uuid4())
+    
+    # Initialize task status
+    task_status[task_id] = {
+        "status": "pending",
+        "message": "Task queued for processing",
+        "created_at": datetime.now().isoformat(),
+        "progress": 0
+    }
+    
+    # Add background task
+    background_tasks.add_task(generate_report_background, task_id, request)
+    
+    return {"task_id": task_id, "message": "Report generation started"}
+
+@app.get("/task_status/{task_id}")
+async def get_task_status(task_id: str):
+    """Check the status of a background task"""
+    if task_id not in task_status:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    return TaskStatusResponse(
+        task_id=task_id,
+        **task_status[task_id]
+    )
+
+@app.get("/download-zip/{filename}")
+async def download_zip_file(filename: str):
+    """Download the generated ZIP file"""
+    file_path = os.path.join(ZIP_FILES_DIR, filename)
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return FileResponse(
+        path=file_path,
+        filename=filename,
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
+
+# Clean up old files periodically (optional)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup code
+    try:
+        now = datetime.now()
+        for filename in os.listdir(ZIP_FILES_DIR):
+            file_path = os.path.join(ZIP_FILES_DIR, filename)
+            if os.path.isfile(file_path):
+                file_age = now - datetime.fromtimestamp(os.path.getctime(file_path))
+                if file_age.days >= 1:
+                    os.remove(file_path)
+                    logger.info(f"Removed old file: {filename}")
+    except Exception as e:
+        logger.error(f"Error cleaning up old files: {e}")
+
+    yield
+
 
 @app.get("/")
 def root():
