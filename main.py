@@ -12,7 +12,7 @@ from async_chunk_functions import send_messages, send_carousels, send_bot_messag
 from app import app, load_tracker
 import httpx
 import threading
-from typing import Dict, Optional, Any, List
+from typing import Dict, Optional, Any, Tuple
 
 import mysql.connector
 
