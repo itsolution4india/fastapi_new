@@ -207,6 +207,9 @@ async def generate_report_background(task_id: str, request: ReportRequest):
         waba_id_list = [x.strip() for x in report.waba_id_list.split(",") if x.strip()]
         phone_id = request.phone_id
         
+        campaign_title = str(report.campaign_title)
+        template_name = str(report.campaign_title)
+        
         logger.info(f"Contact list size: {len(contact_list)}")
         
         # Timezone adjustment
@@ -294,7 +297,7 @@ async def generate_report_background(task_id: str, request: ReportRequest):
         })
         
         # Generate CSV and ZIP file (same as original code)
-        zip_filename = await generate_csv_zip(all_rows, request.report_id, task_id)
+        zip_filename = await generate_csv_zip(all_rows, request.report_id, task_id, campaign_title, str(template_name), str(created_at))
         
         # Update task status to completed
         update_task_status(task_id, {
@@ -423,7 +426,7 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
     
     return modified_fallback_rows
 
-async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str) -> str:
+async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, campaign_title: str, template_name: str, created_at: str) -> str:
     """Generate CSV and ZIP file from rows"""
     
     # Create ZIP_FILES_DIR if it doesn't exist
@@ -458,11 +461,11 @@ async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str) -> s
     csv_data = csv_content.getvalue()
     
     # Create ZIP file
-    zip_filename = f"report_{report_id}_{task_id}.zip"
+    zip_filename = f"report_{campaign_title}_{template_name}_{created_at}.zip"
     zip_filepath = os.path.join(ZIP_FILES_DIR, zip_filename)
     
     with zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        zipf.writestr(f"report_{report_id}.csv", csv_data)
+        zipf.writestr(f"report_{campaign_title}_{template_name}_{created_at}.csv", csv_data)
     
     # Verify ZIP file was created
     if not os.path.exists(zip_filepath):
