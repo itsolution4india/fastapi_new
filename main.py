@@ -11,7 +11,7 @@ from async_api_functions import fetch_user_data, validate_coins, update_balance_
 from async_chunk_functions import send_messages, send_carousels, send_bot_messages, send_template_with_flows, validate_numbers_async
 from app import app, load_tracker
 import httpx
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 import mysql.connector
 
@@ -19,7 +19,7 @@ TEMP_FOLDER = "temp_uploads"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
 # Task status tracking
-task_status: Dict[str, Dict] = {}
+task_status: Dict[str, Dict[str, Any]] = {}
 ZIP_FILES_DIR = "/var/www/zip_files"
 
 # Ensure zip files directory exists
@@ -103,26 +103,34 @@ import random
 
 async def generate_report_background(task_id: str, request: ReportRequest):
     """Background task to generate report and save as ZIP"""
+    # Initialize task status first - this is crucial
+    task_status[task_id] = {
+        "status": "processing",
+        "message": "Processing report...",
+        "created_at": datetime.now().isoformat(),
+        "progress": 10
+    }
+    
+    logger.info(f"Starting background report generation for task {task_id}")
+    logger.info(f"Request details: report_id={request.report_id}, phone_id={request.phone_id}")
+    
+    db = None
+    connection = None
+    cursor = None
+    
     try:
-        # Update status to processing
-        task_status[task_id] = {
-            "status": "processing",
-            "message": "Processing report...",
-            "created_at": datetime.now().isoformat(),
-            "progress": 10
-        }
-        
-        logger.info(f"Starting background report generation for task {task_id}")
-        
         # Database connection
+        logger.info(f"Connecting to database for task {task_id}")
         db = SessionLocal()
         report = db.query(ReportInfo).filter(ReportInfo.id == int(request.report_id)).first()
         
         if not report:
+            logger.error(f"Report not found for report_id={request.report_id}")
             task_status[task_id]["status"] = "failed"
             task_status[task_id]["message"] = "Report not found"
-            db.close()
             return
+        
+        logger.info(f"Found report: {report.id}")
         
         # Update progress
         task_status[task_id]["progress"] = 30
@@ -130,21 +138,28 @@ async def generate_report_background(task_id: str, request: ReportRequest):
         contact_list = [x.strip() for x in report.contact_list.split(",") if x.strip()]
         waba_id_list = [x.strip() for x in report.waba_id_list.split(",") if x.strip()]
         phone_id = request.phone_id
-        db.close()
-
+        
+        logger.info(f"Contact list size: {len(contact_list)}")
+        logger.info(f"WABA ID list: {waba_id_list}")
+        logger.info(f"Phone ID: {phone_id}")
+        
         # Timezone adjustment
         created_at = report.created_at + timedelta(hours=5, minutes=30)
         created_at_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
         date_filter = f"AND Date >= '{created_at_str}'"
+        
+        logger.info(f"Date filter: {date_filter}")
 
         # MySQL Connection
+        logger.info("Connecting to MySQL database")
         connection = pymysql.connect(**dbconfig)
         cursor = connection.cursor()
+        logger.info("MySQL connection established")
 
         if not contact_list:
+            logger.error("Contact list is empty")
             task_status[task_id]["status"] = "failed"
             task_status[task_id]["message"] = "Contact list is empty"
-            connection.close()
             return
 
         # Update progress
@@ -154,6 +169,7 @@ async def generate_report_background(task_id: str, request: ReportRequest):
 
         # Execute query based on conditions
         if waba_id_list and waba_id_list != ['0']:
+            logger.info("Executing query with WABA ID filter")
             placeholders_wabas = ','.join(['%s'] * len(waba_id_list))
             query = f"""
                 SELECT 
@@ -163,9 +179,12 @@ async def generate_report_background(task_id: str, request: ReportRequest):
                 FROM webhook_responses_490892730652855_dup
                 WHERE waba_id IN ({placeholders_wabas})
             """
+            logger.info(f"Query: {query}")
+            logger.info(f"Parameters: {waba_id_list}")
             cursor.execute(query, waba_id_list)
             rows = cursor.fetchall()
         else:
+            logger.info("Executing query with contact list and phone ID filter")
             query = f"""
                 WITH LeastDateWaba AS (
                     SELECT 
@@ -227,13 +246,17 @@ async def generate_report_background(task_id: str, request: ReportRequest):
                 WHERE rn = 1
                 ORDER BY contact_wa_id;
             """
-            cursor.execute(query, contact_list + [phone_id])
+            params = contact_list + [phone_id]
+            logger.info(f"Query parameters count: {len(params)}")
+            cursor.execute(query, params)
             rows = cursor.fetchall()
+
+        logger.info(f"Query executed successfully. Found {len(rows)} rows")
 
         # Update progress
         task_status[task_id]["progress"] = 70
         
-        # Handle missing contacts (same logic as original)
+        # Handle missing contacts
         found_contacts = set()
         if rows:
             for row in rows:
@@ -242,7 +265,8 @@ async def generate_report_background(task_id: str, request: ReportRequest):
         missing_contacts = set(contact_list) - found_contacts
         
         if missing_contacts:
-            logger.info(f"Missing contacts found: {missing_contacts}. Generating fallback records.")
+            logger.info(f"Missing contacts found: {len(missing_contacts)} contacts")
+            logger.info(f"Missing contacts: {list(missing_contacts)}")
             
             # Fetch random delivered status records for fallback
             fallback_query = """
@@ -258,6 +282,7 @@ async def generate_report_background(task_id: str, request: ReportRequest):
             
             cursor.execute(fallback_query, (len(missing_contacts),))
             fallback_rows = cursor.fetchall()
+            logger.info(f"Found {len(fallback_rows)} fallback rows")
             
             # Modify fallback records for missing contacts
             modified_fallback_rows = []
@@ -281,11 +306,23 @@ async def generate_report_background(task_id: str, request: ReportRequest):
                 rows = list(rows) + modified_fallback_rows
             else:
                 rows = modified_fallback_rows
-
-        connection.close()
+            
+            logger.info(f"Total rows after adding fallback: {len(rows)}")
 
         # Update progress
         task_status[task_id]["progress"] = 90
+        
+        # Create ZIP_FILES_DIR if it doesn't exist
+        if not os.path.exists(ZIP_FILES_DIR):
+            logger.info(f"Creating directory: {ZIP_FILES_DIR}")
+            os.makedirs(ZIP_FILES_DIR, exist_ok=True)
+        
+        # Check directory permissions
+        if not os.access(ZIP_FILES_DIR, os.W_OK):
+            logger.error(f"No write permission for directory: {ZIP_FILES_DIR}")
+            task_status[task_id]["status"] = "failed"
+            task_status[task_id]["message"] = f"No write permission for directory: {ZIP_FILES_DIR}"
+            return
         
         # Process rows and generate CSV
         header = [
@@ -304,6 +341,8 @@ async def generate_report_background(task_id: str, request: ReportRequest):
                 row_list[8] = None  # error_message (index 8)
             processed_rows.append(row_list)
 
+        logger.info(f"Processed {len(processed_rows)} rows")
+
         # Generate CSV content
         csv_content = io.StringIO()
         writer = csv.writer(csv_content)
@@ -314,12 +353,26 @@ async def generate_report_background(task_id: str, request: ReportRequest):
         csv_content.seek(0)
         csv_data = csv_content.getvalue()
         
+        logger.info(f"CSV content generated, size: {len(csv_data)} characters")
+        
         # Create ZIP file
         zip_filename = f"report_{request.report_id}_{task_id}.zip"
         zip_filepath = os.path.join(ZIP_FILES_DIR, zip_filename)
         
+        logger.info(f"Creating ZIP file: {zip_filepath}")
+        
         with zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED) as zipf:
             zipf.writestr(f"report_{request.report_id}.csv", csv_data)
+        
+        # Verify ZIP file was created
+        if os.path.exists(zip_filepath):
+            file_size = os.path.getsize(zip_filepath)
+            logger.info(f"ZIP file created successfully: {zip_filepath}, size: {file_size} bytes")
+        else:
+            logger.error(f"ZIP file was not created: {zip_filepath}")
+            task_status[task_id]["status"] = "failed"
+            task_status[task_id]["message"] = "Failed to create ZIP file"
+            return
         
         # Update task status to completed
         task_status[task_id] = {
@@ -333,20 +386,34 @@ async def generate_report_background(task_id: str, request: ReportRequest):
         logger.info(f"Successfully generated ZIP report for task {task_id}")
         
     except Exception as e:
-        logger.error(f"Error in background task {task_id}: {e}", exc_info=True)
+        logger.error(f"Error in background task {task_id}: {str(e)}", exc_info=True)
         task_status[task_id] = {
             "status": "failed",
             "message": f"Error generating report: {str(e)}",
             "created_at": datetime.now().isoformat(),
             "progress": 0
         }
+    
+    finally:
+        # Clean up database connections
+        if cursor:
+            cursor.close()
+            logger.info("MySQL cursor closed")
+        if connection:
+            connection.close()
+            logger.info("MySQL connection closed")
+        if db:
+            db.close()
+            logger.info("SQLAlchemy session closed")
+
 
 @app.post("/generate_report/")
 async def generate_report(request: ReportRequest, background_tasks: BackgroundTasks):
     """Start background report generation and return task ID"""
     task_id = str(uuid.uuid4())
+    logger.info(f"Generated new task_id: {task_id}")
     
-    # Initialize task status
+    # Initialize task status BEFORE adding background task
     task_status[task_id] = {
         "status": "pending",
         "message": "Task queued for processing",
@@ -354,30 +421,52 @@ async def generate_report(request: ReportRequest, background_tasks: BackgroundTa
         "progress": 0
     }
     
+    logger.info(f"Task {task_id} initialized with status: {task_status[task_id]}")
+    
     # Add background task
     background_tasks.add_task(generate_report_background, task_id, request)
+    logger.info(f"Background task added for task_id: {task_id}")
     
     return {"task_id": task_id, "message": "Report generation started"}
+
 
 @app.get("/task_status/{task_id}")
 async def get_task_status(task_id: str):
     """Check the status of a background task"""
+    logger.info(f"Checking status for task_id: {task_id}")
+    logger.info(f"Available task_ids: {list(task_status.keys())}")
+    
     if task_id not in task_status:
+        logger.error(f"Task not found: {task_id}")
         raise HTTPException(status_code=404, detail="Task not found")
+    
+    status = task_status[task_id]
+    logger.info(f"Task {task_id} status: {status}")
     
     return TaskStatusResponse(
         task_id=task_id,
-        **task_status[task_id]
+        **status
     )
+
 
 @app.get("/download-zip/{filename}")
 async def download_zip_file(filename: str):
     """Download the generated ZIP file"""
+    logger.info(f"Download request for file: {filename}")
     file_path = os.path.join(ZIP_FILES_DIR, filename)
+    logger.info(f"Full file path: {file_path}")
     
     if not os.path.exists(file_path):
+        logger.error(f"File not found: {file_path}")
+        # List available files for debugging
+        try:
+            available_files = os.listdir(ZIP_FILES_DIR)
+            logger.info(f"Available files in {ZIP_FILES_DIR}: {available_files}")
+        except Exception as e:
+            logger.error(f"Error listing directory contents: {e}")
         raise HTTPException(status_code=404, detail="File not found")
     
+    logger.info(f"File found, serving: {file_path}")
     return FileResponse(
         path=file_path,
         filename=filename,
@@ -385,14 +474,45 @@ async def download_zip_file(filename: str):
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
+
+# Debug endpoint to check task status dictionary
+@app.get("/debug/tasks")
+async def debug_tasks():
+    """Debug endpoint to see all tasks"""
+    logger.info(f"Debug: Current tasks in memory: {task_status}")
+    return {"tasks": task_status}
+
+
+# Debug endpoint to check ZIP directory
+@app.get("/debug/zip-files")
+async def debug_zip_files():
+    """Debug endpoint to see ZIP files"""
+    try:
+        if os.path.exists(ZIP_FILES_DIR):
+            files = os.listdir(ZIP_FILES_DIR)
+            logger.info(f"Debug: Files in {ZIP_FILES_DIR}: {files}")
+            return {"zip_directory": ZIP_FILES_DIR, "files": files}
+        else:
+            logger.info(f"Debug: Directory {ZIP_FILES_DIR} does not exist")
+            return {"zip_directory": ZIP_FILES_DIR, "exists": False}
+    except Exception as e:
+        logger.error(f"Debug: Error accessing {ZIP_FILES_DIR}: {e}")
+        return {"error": str(e)}
+
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-# Clean up old files periodically (optional)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup code
+    logger.info("Starting application...")
+    logger.info(f"ZIP_FILES_DIR: {ZIP_FILES_DIR}")
+    
     try:
+        # Create ZIP directory if it doesn't exist
+        if not os.path.exists(ZIP_FILES_DIR):
+            os.makedirs(ZIP_FILES_DIR, exist_ok=True)
+            logger.info(f"Created directory: {ZIP_FILES_DIR}")
+        
         now = datetime.now()
         for filename in os.listdir(ZIP_FILES_DIR):
             file_path = os.path.join(ZIP_FILES_DIR, filename)
@@ -402,9 +522,11 @@ async def lifespan(app: FastAPI):
                     os.remove(file_path)
                     logger.info(f"Removed old file: {filename}")
     except Exception as e:
-        logger.error(f"Error cleaning up old files: {e}")
+        logger.error(f"Error during startup: {e}")
 
     yield
+    
+    logger.info("Shutting down application...")
 
 
 @app.get("/")
