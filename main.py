@@ -393,9 +393,9 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
     fallback_query = """
         SELECT 
             Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
-            new_status, message_timestamp, error_code, error_message, contact_name,
+            status, message_timestamp, error_code, error_message, contact_name,
             message_from, message_type, message_body
-        FROM webhook_responses_490892730652855_dup
+        FROM webhook_responses
         WHERE new_status = 'delivered'
         ORDER BY RAND()
         LIMIT %s
