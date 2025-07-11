@@ -5,7 +5,7 @@ from datetime import datetime
 import json
 from typing import List, Optional
 import re
-
+from sqlalchemy.sql import func
 
 
 
@@ -20,6 +20,12 @@ class ReportInfo(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(
+        DateTime,
+        default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
     email = Column(String(100))
     campaign_title = Column(String(50))
     contact_list = Column(Text)
@@ -29,3 +35,9 @@ class ReportInfo(Base):
     message_delivery = Column(BigInteger)
     start_request_id = Column(String(50), default='0')
     end_request_id = Column(String(50), default='0')
+    deliver_count = Column(Integer, default=0, nullable=False)
+    sent_count = Column(Integer, default=0, nullable=False)
+    read_count = Column(Integer, default=0, nullable=False)
+    failed_count = Column(Integer, default=0, nullable=False)
+    reply_count = Column(Integer, default=0, nullable=False)
+    total_count = Column(Integer, default=0, nullable=False)

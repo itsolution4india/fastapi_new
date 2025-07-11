@@ -83,6 +83,279 @@ async def send_messages_api(request: MessageRequest, background_tasks: Backgroun
         logger.error(f"Unhandled error: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
    
+import asyncio
+   
+@app.post("/get_insights/")
+async def get_insights(request: ReportRequest):
+    """Generate insights and update ReportInfo with statistics"""
+    db = None
+    try:
+        # Generate unique task ID
+        task_id = str(uuid.uuid4())
+        
+        # Initialize task status
+        update_task_status(task_id, {
+            "status": "processing",
+            "message": "Starting insights generation...",
+            "created_at": datetime.now().isoformat(),
+            "progress": 10
+        })
+        
+        # Start background task for insights
+        asyncio.create_task(generate_insights_background(task_id, request))
+        
+        return {
+            "success": True,
+            "task_id": task_id,
+            "message": "Insights generation started"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in get_insights: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing insights request: {e}")
+
+async def generate_insights_background(task_id: str, request: ReportRequest):
+    """Background task to generate insights and update ReportInfo"""
+    
+    update_task_status(task_id, {
+        "status": "processing",
+        "message": "Processing insights...",
+        "progress": 20
+    })
+    
+    logger.info(f"Starting insights generation for task {task_id}")
+    
+    db = None
+    connection = None
+    cursor = None
+    
+    try:
+        # Database connections
+        db = SessionLocal()
+        report = db.query(ReportInfo).filter(ReportInfo.id == int(request.report_id)).first()
+        
+        if not report:
+            logger.error(f"Report not found for report_id={request.report_id}")
+            update_task_status(task_id, {
+                "status": "failed",
+                "message": "Report not found"
+            })
+            return
+        
+        contact_list = [x.strip() for x in report.contact_list.split(",") if x.strip()]
+        waba_id_list = [x.strip() for x in report.waba_id_list.split(",") if x.strip()]
+        phone_id = request.phone_id
+        
+        logger.info(f"Processing insights for {len(contact_list)} contacts")
+        
+        # Timezone adjustment
+        created_at = report.created_at + timedelta(hours=5, minutes=30)
+        created_at_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
+        
+        # MySQL Connection
+        connection = pymysql.connect(**dbconfig)
+        cursor = connection.cursor()
+        
+        update_task_status(task_id, {
+            "progress": 40,
+            "message": "Analyzing message statuses..."
+        })
+        
+        if not contact_list:
+            logger.error("Contact list is empty")
+            update_task_status(task_id, {
+                "status": "failed",
+                "message": "Contact list is empty"
+            })
+            return
+        
+        # Get all message data (similar to report generation but focus on status)
+        all_rows = []
+        
+        # BATCH PROCESSING for insights
+        batch_size = 1000
+        total_batches = math.ceil(len(contact_list) / batch_size)
+        
+        logger.info(f"Processing {len(contact_list)} contacts in {total_batches} batches")
+        
+        for batch_num in range(total_batches):
+            start_idx = batch_num * batch_size
+            end_idx = min((batch_num + 1) * batch_size, len(contact_list))
+            batch_contacts = contact_list[start_idx:end_idx]
+            
+            logger.info(f"Processing batch {batch_num + 1}/{total_batches}")
+            
+            # Update progress
+            base_progress = 40
+            batch_progress = int((batch_num / total_batches) * 40)  # 40% for batch processing
+            current_progress = base_progress + batch_progress
+            
+            update_task_status(task_id, {
+                "progress": current_progress,
+                "message": f"Processing batch {batch_num + 1}/{total_batches}..."
+            })
+            
+            # Execute batch query for insights
+            batch_rows = await execute_insights_batch_query(
+                cursor, batch_contacts, phone_id, created_at_str, waba_id_list
+            )
+            
+            if batch_rows:
+                all_rows.extend(batch_rows)
+                logger.info(f"Batch {batch_num + 1} completed: {len(batch_rows)} rows")
+        
+        update_task_status(task_id, {
+            "progress": 80,
+            "message": "Calculating statistics..."
+        })
+        
+        # Calculate statistics from the data
+        stats = calculate_message_statistics(all_rows, contact_list)
+        
+        # Update ReportInfo with calculated statistics
+        report.deliver_count = stats['delivered']
+        report.sent_count = stats['sent']
+        report.read_count = stats['read']
+        report.failed_count = stats['failed']
+        report.reply_count = stats['reply']
+        report.total_count = len(contact_list)
+        
+        # Commit the changes
+        db.commit()
+        
+        update_task_status(task_id, {
+            "status": "completed",
+            "message": "Insights generated successfully",
+            "progress": 100,
+            "stats": stats
+        })
+        
+        logger.info(f"Successfully generated insights for task {task_id}: {stats}")
+        
+    except Exception as e:
+        logger.error(f"Error in insights background task {task_id}: {str(e)}", exc_info=True)
+        update_task_status(task_id, {
+            "status": "failed",
+            "message": f"Error generating insights: {str(e)}",
+            "progress": 0
+        })
+        
+        # Rollback any partial changes
+        if db:
+            db.rollback()
+    
+    finally:
+        # Clean up database connections
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+        if db:
+            db.close()
+
+
+async def execute_insights_batch_query(cursor, batch_contacts: List[str], phone_id: str, 
+                                     created_at_str: str, waba_id_list: List[str]) -> List[Tuple]:
+    """Execute optimized query for insights - focus on status information"""
+    
+    placeholders_contacts = ','.join(['%s'] * len(batch_contacts))
+    
+    # Query to get latest status for each contact
+    base_query = f"""
+        SELECT 
+            wr1.contact_wa_id,
+            wr1.status,
+            wr1.message_type,
+            wr1.error_code,
+            wr1.message_from
+        FROM webhook_responses_490892730652855_dup wr1
+        WHERE wr1.contact_wa_id IN ({placeholders_contacts})
+        AND wr1.phone_number_id = %s
+        AND wr1.Date >= %s
+        {"AND wr1.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
+        AND wr1.message_timestamp = (
+            SELECT MAX(wr2.message_timestamp)
+            FROM webhook_responses_490892730652855_dup wr2
+            WHERE wr2.contact_wa_id = wr1.contact_wa_id
+            AND wr2.phone_number_id = wr1.phone_number_id
+            AND wr2.Date >= %s
+            {"AND wr2.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
+        )
+        ORDER BY wr1.contact_wa_id
+    """
+    
+    # Prepare parameters
+    params = batch_contacts + [phone_id, created_at_str]
+    if waba_id_list and waba_id_list != ['0']:
+        params += waba_id_list
+    params.append(created_at_str)
+    if waba_id_list and waba_id_list != ['0']:
+        params += waba_id_list
+    
+    try:
+        cursor.execute(base_query, params)
+        return cursor.fetchall()
+    except Exception as e:
+        logger.error(f"Error executing insights batch query: {str(e)}")
+        return []
+
+
+def calculate_message_statistics(rows: List[Tuple], contact_list: List[str]) -> dict:
+    """Calculate message delivery statistics"""
+    
+    stats = {
+        'delivered': 0,
+        'sent': 0,
+        'read': 0,
+        'failed': 0,
+        'reply': 0,
+        'no_data': 0
+    }
+    
+    # Track processed contacts
+    processed_contacts = set()
+    
+    for row in rows:
+        contact_wa_id = row[0]  # contact_wa_id
+        status = row[1]         # status
+        message_type = row[2]   # message_type
+        error_code = row[3]     # error_code
+        message_from = row[4]   # message_from
+        
+        processed_contacts.add(contact_wa_id)
+        
+        # Categorize based on status
+        if status:
+            status_lower = status.lower()
+            
+            if status_lower == 'delivered':
+                stats['delivered'] += 1
+            elif status_lower == 'sent':
+                stats['sent'] += 1
+            elif status_lower == 'read':
+                stats['read'] += 1
+            elif status_lower in ['failed', 'error', 'rejected']:
+                stats['failed'] += 1
+            elif message_type == 'text' and message_from and message_from != 'system':
+                # This indicates a reply from the contact
+                stats['reply'] += 1
+            else:
+                # Default to sent if status exists but doesn't match known categories
+                stats['sent'] += 1
+        else:
+            # No status means failed
+            stats['failed'] += 1
+    
+    # Count contacts with no data
+    missing_contacts = set(contact_list) - processed_contacts
+    stats['no_data'] = len(missing_contacts)
+    
+    # Add missing contacts to failed count (assuming they failed to deliver)
+    stats['failed'] += stats['no_data']
+    
+    logger.info(f"Statistics calculated: {stats}")
+    return stats
+
 from fastapi.responses import StreamingResponse
 from db_models import SessionLocal, ReportInfo
 import pymysql
@@ -172,7 +445,7 @@ def cleanup_old_tasks():
 # Load existing task status on startup
 load_task_status()
 
-async def generate_report_background(task_id: str, request: ReportRequest):
+async def generate_report_background(task_id: str, request: ReportRequest, insight=False):
     """Optimized background task with batch processing"""
     
     # Initialize task status
