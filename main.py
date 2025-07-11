@@ -329,58 +329,49 @@ async def generate_report_background(task_id: str, request: ReportRequest):
 async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str, 
                              created_at_str: str, waba_id_list: List[str]) -> List[Tuple]:
     """Execute optimized query for a batch of contacts"""
-    
-    placeholders = ','.join(['%s'] * len(batch_contacts))
-    
+
+    placeholders_contacts = ','.join(['%s'] * len(batch_contacts))
+    base_query = f"""
+        SELECT 
+            wr1.Date,
+            wr1.display_phone_number,
+            wr1.phone_number_id,
+            wr1.waba_id,
+            wr1.contact_wa_id,
+            wr1.new_status,
+            wr1.message_timestamp,
+            wr1.error_code,
+            wr1.error_message,
+            wr1.contact_name,
+            wr1.message_from,
+            wr1.message_type,
+            wr1.message_body
+        FROM webhook_responses_490892730652855_dup wr1
+        WHERE wr1.contact_wa_id IN ({placeholders_contacts})
+        AND wr1.phone_number_id = %s
+        AND wr1.Date >= %s
+        {"AND wr1.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
+        AND wr1.message_timestamp = (
+            SELECT MAX(wr2.message_timestamp)
+            FROM webhook_responses_490892730652855_dup wr2
+            WHERE wr2.contact_wa_id = wr1.contact_wa_id
+            AND wr2.phone_number_id = wr1.phone_number_id
+            AND wr2.Date >= %s
+            {"AND wr2.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
+        )
+        ORDER BY wr1.contact_wa_id
+    """
+
+    # Prepare parameters
+    params = batch_contacts + [phone_id, created_at_str]
     if waba_id_list and waba_id_list != ['0']:
-        # WABA ID filter query (simpler)
-        placeholders_wabas = ','.join(['%s'] * len(waba_id_list))
-        query = f"""
-            SELECT 
-                Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
-                new_status, message_timestamp, error_code, error_message, contact_name,
-                message_from, message_type, message_body
-            FROM webhook_responses_490892730652855_dup
-            WHERE waba_id IN ({placeholders_wabas})
-            AND Date >= %s
-            ORDER BY contact_wa_id, message_timestamp DESC
-        """
-        params = waba_id_list + [created_at_str]
-        
-    else:
-        # OPTIMIZED QUERY - Much faster than the original CTE approach
-        query = f"""
-            SELECT 
-                wr1.Date,
-                wr1.display_phone_number,
-                wr1.phone_number_id,
-                wr1.waba_id,
-                wr1.contact_wa_id,
-                wr1.new_status,
-                wr1.message_timestamp,
-                wr1.error_code,
-                wr1.error_message,
-                wr1.contact_name,
-                wr1.message_from,
-                wr1.message_type,
-                wr1.message_body
-            FROM webhook_responses_490892730652855_dup wr1
-            WHERE wr1.contact_wa_id IN ({placeholders})
-            AND wr1.phone_number_id = %s
-            AND wr1.Date >= %s
-            AND wr1.message_timestamp = (
-                SELECT MAX(wr2.message_timestamp)
-                FROM webhook_responses_490892730652855_dup wr2
-                WHERE wr2.contact_wa_id = wr1.contact_wa_id
-                AND wr2.phone_number_id = wr1.phone_number_id
-                AND wr2.Date >= %s
-            )
-            ORDER BY wr1.contact_wa_id
-        """
-        params = batch_contacts + [phone_id, created_at_str, created_at_str]
-    
+        params += waba_id_list  # for wr1.waba_id
+    params.append(created_at_str)
+    if waba_id_list and waba_id_list != ['0']:
+        params += waba_id_list  # for wr2.waba_id
+
     try:
-        cursor.execute(query, params)
+        cursor.execute(base_query, params)
         return cursor.fetchall()
     except Exception as e:
         logger.error(f"Error executing batch query: {str(e)}")
