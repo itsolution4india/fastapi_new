@@ -305,42 +305,50 @@ async def generate_report_background(task_id: str, request: ReportRequest):
         if db:
             db.close()
 
-
+import time
 async def process_waba_ids_in_batches(cursor, waba_id_list: List[str], 
                                      created_at_str: str, task_id: str) -> List[Tuple]:
     """Process WABA IDs in batches with optimized query"""
     
-    batch_size = 50  # Smaller batch size for WABA IDs as they typically return more data
+    batch_size = 20  # Even smaller batch size to avoid query timeouts
     total_batches = math.ceil(len(waba_id_list) / batch_size)
     all_rows = []
     
     logger.info(f"Processing {len(waba_id_list)} WABA IDs in {total_batches} batches of {batch_size}")
     
     for batch_num in range(total_batches):
-        start_idx = batch_num * batch_size
-        end_idx = min((batch_num + 1) * batch_size, len(waba_id_list))
-        batch_waba_ids = waba_id_list[start_idx:end_idx]
-        
-        logger.info(f"Processing WABA batch {batch_num + 1}/{total_batches} with {len(batch_waba_ids)} WABA IDs")
-        
-        # Update progress
-        base_progress = 30
-        batch_progress = int((batch_num / total_batches) * 50)  # 50% for batch processing
-        current_progress = base_progress + batch_progress
-        
-        update_task_status(task_id, {
-            "progress": current_progress,
-            "message": f"Processing WABA batch {batch_num + 1}/{total_batches}..."
-        })
-        
-        # Execute batch query for WABA IDs
-        batch_rows = await execute_waba_batch_query(cursor, batch_waba_ids, created_at_str)
-        
-        if batch_rows:
-            all_rows.extend(batch_rows)
-            logger.info(f"WABA batch {batch_num + 1} completed: {len(batch_rows)} rows")
-        else:
-            logger.info(f"WABA batch {batch_num + 1} completed: 0 rows")
+        try:
+            start_idx = batch_num * batch_size
+            end_idx = min((batch_num + 1) * batch_size, len(waba_id_list))
+            batch_waba_ids = waba_id_list[start_idx:end_idx]
+            
+            logger.info(f"Processing WABA batch {batch_num + 1}/{total_batches} with {len(batch_waba_ids)} WABA IDs")
+            
+            # Update progress
+            base_progress = 30
+            batch_progress = int((batch_num / total_batches) * 50)  # 50% for batch processing
+            current_progress = base_progress + batch_progress
+            
+            update_task_status(task_id, {
+                "progress": current_progress,
+                "message": f"Processing WABA batch {batch_num + 1}/{total_batches}..."
+            })
+            
+            # Execute batch query for WABA IDs
+            batch_start_time = time.time()
+            batch_rows = await execute_waba_batch_query(cursor, batch_waba_ids, created_at_str)
+            batch_execution_time = time.time() - batch_start_time
+            
+            if batch_rows:
+                all_rows.extend(batch_rows)
+                logger.info(f"WABA batch {batch_num + 1} completed in {batch_execution_time:.2f}s: {len(batch_rows)} rows")
+            else:
+                logger.info(f"WABA batch {batch_num + 1} completed in {batch_execution_time:.2f}s: 0 rows")
+                
+        except Exception as e:
+            logger.error(f"Error processing WABA batch {batch_num + 1}: {str(e)}")
+            # Continue with next batch instead of failing completely
+            continue
     
     return all_rows
 
@@ -389,50 +397,66 @@ async def process_contacts_in_batches(cursor, contact_list: List[str], phone_id:
 async def execute_waba_batch_query(cursor, batch_waba_ids: List[str], 
                                   created_at_str: str) -> List[Tuple]:
     """Execute optimized query for a batch of WABA IDs with proper indexing"""
+    import time
     
     placeholders = ','.join(['%s'] * len(batch_waba_ids))
     
-    # OPTIMIZED WABA QUERY - Using subquery to get latest record per contact
+    # SIMPLIFIED WABA QUERY - More efficient and less prone to deadlocks
     query = f"""
         SELECT 
-            wr1.Date,
-            wr1.display_phone_number,
-            wr1.phone_number_id,
-            wr1.waba_id,
-            wr1.contact_wa_id,
-            wr1.new_status,
-            wr1.message_timestamp,
-            wr1.error_code,
-            wr1.error_message,
-            wr1.contact_name,
-            wr1.message_from,
-            wr1.message_type,
-            wr1.message_body
-        FROM webhook_responses_490892730652855_dup wr1
-        INNER JOIN (
-            SELECT 
-                contact_wa_id, 
-                waba_id,
-                MAX(message_timestamp) as max_timestamp
-            FROM webhook_responses_490892730652855_dup
-            WHERE waba_id IN ({placeholders})
-            AND Date >= %s
-            GROUP BY contact_wa_id, waba_id
-        ) wr2 ON wr1.contact_wa_id = wr2.contact_wa_id 
-               AND wr1.waba_id = wr2.waba_id
-               AND wr1.message_timestamp = wr2.max_timestamp
-        WHERE wr1.waba_id IN ({placeholders})
-        AND wr1.Date >= %s
-        ORDER BY wr1.waba_id, wr1.contact_wa_id
+            Date,
+            display_phone_number,
+            phone_number_id,
+            waba_id,
+            contact_wa_id,
+            new_status,
+            message_timestamp,
+            error_code,
+            error_message,
+            contact_name,
+            message_from,
+            message_type,
+            message_body
+        FROM webhook_responses_490892730652855_dup
+        WHERE waba_id IN ({placeholders})
+        AND Date >= %s
+        ORDER BY waba_id, contact_wa_id, message_timestamp DESC
     """
     
-    params = batch_waba_ids + [created_at_str] + batch_waba_ids + [created_at_str]
+    params = batch_waba_ids + [created_at_str]
     
     try:
+        logger.info(f"Executing WABA query for {len(batch_waba_ids)} WABA IDs")
+        start_time = time.time()
+        
         cursor.execute(query, params)
-        return cursor.fetchall()
+        raw_results = cursor.fetchall()
+        
+        execution_time = time.time() - start_time
+        logger.info(f"WABA query executed in {execution_time:.2f} seconds, got {len(raw_results)} raw results")
+        
+        # Post-process to get only the latest record per contact
+        if not raw_results:
+            return []
+        
+        # Group by contact_wa_id and get the latest record for each
+        contact_latest = {}
+        for row in raw_results:
+            contact_wa_id = row[4]  # contact_wa_id is at index 4
+            message_timestamp = row[6]  # message_timestamp is at index 6
+            
+            if contact_wa_id not in contact_latest or message_timestamp > contact_latest[contact_wa_id][6]:
+                contact_latest[contact_wa_id] = row
+        
+        result = list(contact_latest.values())
+        logger.info(f"After deduplication: {len(result)} unique contacts")
+        
+        return result
+        
     except Exception as e:
         logger.error(f"Error executing WABA batch query: {str(e)}")
+        logger.error(f"Query: {query}")
+        logger.error(f"Params: {params}")
         return []
 
 
