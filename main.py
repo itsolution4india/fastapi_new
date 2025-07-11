@@ -255,43 +255,50 @@ async def generate_insights_background(task_id: str, request: ReportRequest):
 
 
 async def execute_insights_batch_query(cursor, batch_contacts: List[str], phone_id: str, 
-                                     created_at_str: str, waba_id_list: List[str]) -> List[Tuple]:
-    """Execute optimized query for insights - focus on status information"""
+                                       created_at_str: str, waba_id_list: List[str]) -> List[Tuple]:
+    """Execute optimized query for insights - focus on latest status per waba_id and contact"""
     
     placeholders_contacts = ','.join(['%s'] * len(batch_contacts))
+    placeholders_waba = ','.join(['%s'] * len(waba_id_list)) if waba_id_list and waba_id_list != ['0'] else ''
     
-    # Query to get latest status for each contact
     base_query = f"""
         SELECT 
             wr1.contact_wa_id,
+            wr1.waba_id,
             wr1.new_status,
             wr1.message_type,
             wr1.error_code,
             wr1.message_from
         FROM webhook_responses_490892730652855_dup wr1
-        WHERE wr1.contact_wa_id IN ({placeholders_contacts})
-        AND wr1.phone_number_id = %s
-        AND wr1.Date >= %s
-        {"AND wr1.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
-        AND wr1.message_timestamp = (
-            SELECT MAX(wr2.message_timestamp)
-            FROM webhook_responses_490892730652855_dup wr2
-            WHERE wr2.contact_wa_id = wr1.contact_wa_id
-            AND wr2.phone_number_id = wr1.phone_number_id
-            AND wr2.Date >= %s
-            {"AND wr2.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
-        )
+        INNER JOIN (
+            SELECT 
+                contact_wa_id,
+                waba_id,
+                MAX(message_timestamp) AS max_ts
+            FROM webhook_responses_490892730652855_dup
+            WHERE contact_wa_id IN ({placeholders_contacts})
+              AND phone_number_id = %s
+              AND Date >= %s
+              {"AND waba_id IN (" + placeholders_waba + ")" if placeholders_waba else ""}
+            GROUP BY contact_wa_id, waba_id
+        ) latest
+        ON wr1.contact_wa_id = latest.contact_wa_id
+           AND wr1.waba_id = latest.waba_id
+           AND wr1.message_timestamp = latest.max_ts
+        WHERE wr1.phone_number_id = %s
+          AND wr1.Date >= %s
+          {"AND wr1.waba_id IN (" + placeholders_waba + ")" if placeholders_waba else ""}
         ORDER BY wr1.contact_wa_id
     """
     
-    # Prepare parameters
+    # Build parameter list
     params = batch_contacts + [phone_id, created_at_str]
-    if waba_id_list and waba_id_list != ['0']:
+    if placeholders_waba:
         params += waba_id_list
-    params.append(created_at_str)
-    if waba_id_list and waba_id_list != ['0']:
+    params += [phone_id, created_at_str]
+    if placeholders_waba:
         params += waba_id_list
-    
+
     try:
         cursor.execute(base_query, params)
         return cursor.fetchall()
