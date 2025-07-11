@@ -268,14 +268,14 @@ async def execute_insights_batch_query(cursor, batch_contacts: List[str], phone_
             wr1.message_type,
             wr1.error_code,
             wr1.message_from
-        FROM webhook_responses_490892730652855_dup wr1
+        FROM webhook_responses_786158633633821_dup wr1
         WHERE wr1.contact_wa_id IN ({placeholders_contacts})
         AND wr1.phone_number_id = %s
         AND wr1.Date >= %s
         {"AND wr1.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
         AND wr1.message_timestamp = (
             SELECT MAX(wr2.message_timestamp)
-            FROM webhook_responses_490892730652855_dup wr2
+            FROM webhook_responses_786158633633821_dup wr2
             WHERE wr2.contact_wa_id = wr1.contact_wa_id
             AND wr2.phone_number_id = wr1.phone_number_id
             AND wr2.Date >= %s
@@ -619,14 +619,14 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
             wr1.message_from,
             wr1.message_type,
             wr1.message_body
-        FROM webhook_responses_490892730652855_dup wr1
+        FROM webhook_responses_786158633633821_dup wr1
         WHERE wr1.contact_wa_id IN ({placeholders_contacts})
         AND wr1.phone_number_id = %s
         AND wr1.Date >= %s
         {"AND wr1.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
         AND wr1.message_timestamp = (
             SELECT MAX(wr2.message_timestamp)
-            FROM webhook_responses_490892730652855_dup wr2
+            FROM webhook_responses_786158633633821_dup wr2
             WHERE wr2.contact_wa_id = wr1.contact_wa_id
             AND wr2.phone_number_id = wr1.phone_number_id
             AND wr2.Date >= %s
