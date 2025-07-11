@@ -305,12 +305,84 @@ async def generate_report_background(task_id: str, request: ReportRequest):
         if db:
             db.close()
 
+
+async def execute_waba_batch_query_alternative(cursor, batch_waba_ids: List[str], 
+                                           created_at_str: str) -> List[Tuple]:
+    """Alternative approach using window functions (if MySQL 8.0+)"""
+    import time
+    
+    placeholders = ','.join(['%s'] * len(batch_waba_ids))
+    
+    try:
+        logger.info(f"Executing alternative WABA query for {len(batch_waba_ids)} WABA IDs")
+        start_time = time.time()
+        
+        # Using ROW_NUMBER() window function - most efficient for getting latest records
+        # This should leverage your idx_webhook_contact_timestamp index optimally
+        query = f"""
+            SELECT 
+                Date,
+                display_phone_number,
+                phone_number_id,
+                waba_id,
+                contact_wa_id,
+                new_status,
+                message_timestamp,
+                error_code,
+                error_message,
+                contact_name,
+                message_from,
+                message_type,
+                message_body
+            FROM (
+                SELECT 
+                    Date,
+                    display_phone_number,
+                    phone_number_id,
+                    waba_id,
+                    contact_wa_id,
+                    new_status,
+                    message_timestamp,
+                    error_code,
+                    error_message,
+                    contact_name,
+                    message_from,
+                    message_type,
+                    message_body,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY contact_wa_id 
+                        ORDER BY message_timestamp DESC
+                    ) as rn
+                FROM webhook_responses_490892730652855_dup
+                WHERE waba_id IN ({placeholders})
+                AND Date >= %s
+            ) ranked
+            WHERE rn = 1
+            ORDER BY contact_wa_id
+        """
+        
+        params = batch_waba_ids + [created_at_str]
+        
+        cursor.execute(query, params)
+        results = cursor.fetchall()
+        
+        execution_time = time.time() - start_time
+        logger.info(f"Alternative WABA query completed in {execution_time:.2f} seconds, got {len(results)} results")
+        
+        return results
+        
+    except Exception as e:
+        logger.error(f"Error executing alternative WABA batch query: {str(e)}")
+        # Fall back to the previous method
+        return await execute_waba_batch_query(cursor, batch_waba_ids, created_at_str)
+
 import time
+# You can replace the call in process_waba_ids_in_batches with this alternative:
 async def process_waba_ids_in_batches(cursor, waba_id_list: List[str], 
                                      created_at_str: str, task_id: str) -> List[Tuple]:
     """Process WABA IDs in batches with optimized query"""
     
-    batch_size = 20  # Even smaller batch size to avoid query timeouts
+    batch_size = 30  # Increased slightly as the new query should be faster
     total_batches = math.ceil(len(waba_id_list) / batch_size)
     all_rows = []
     
@@ -334,9 +406,14 @@ async def process_waba_ids_in_batches(cursor, waba_id_list: List[str],
                 "message": f"Processing WABA batch {batch_num + 1}/{total_batches}..."
             })
             
-            # Execute batch query for WABA IDs
+            # Execute batch query for WABA IDs - try alternative first
             batch_start_time = time.time()
-            batch_rows = await execute_waba_batch_query(cursor, batch_waba_ids, created_at_str)
+            try:
+                batch_rows = await execute_waba_batch_query_alternative(cursor, batch_waba_ids, created_at_str)
+            except:
+                # Fallback to the original method if window functions aren't supported
+                batch_rows = await execute_waba_batch_query(cursor, batch_waba_ids, created_at_str)
+            
             batch_execution_time = time.time() - batch_start_time
             
             if batch_rows:
@@ -396,67 +473,91 @@ async def process_contacts_in_batches(cursor, contact_list: List[str], phone_id:
 
 async def execute_waba_batch_query(cursor, batch_waba_ids: List[str], 
                                   created_at_str: str) -> List[Tuple]:
-    """Execute optimized query for a batch of WABA IDs with proper indexing"""
+    """Execute optimized query leveraging existing indexes"""
     import time
     
+    # Strategy: Get unique contacts first, then get their latest records
+    # This leverages your idx_webhook_contact_phone_date index efficiently
+    
     placeholders = ','.join(['%s'] * len(batch_waba_ids))
-    
-    # SIMPLIFIED WABA QUERY - More efficient and less prone to deadlocks
-    query = f"""
-        SELECT 
-            Date,
-            display_phone_number,
-            phone_number_id,
-            waba_id,
-            contact_wa_id,
-            new_status,
-            message_timestamp,
-            error_code,
-            error_message,
-            contact_name,
-            message_from,
-            message_type,
-            message_body
-        FROM webhook_responses_490892730652855_dup
-        WHERE waba_id IN ({placeholders})
-        AND Date >= %s
-        ORDER BY waba_id, contact_wa_id, message_timestamp DESC
-    """
-    
-    params = batch_waba_ids + [created_at_str]
     
     try:
         logger.info(f"Executing WABA query for {len(batch_waba_ids)} WABA IDs")
         start_time = time.time()
         
-        cursor.execute(query, params)
-        raw_results = cursor.fetchall()
+        # Step 1: Get unique contacts for these WABA IDs (fast with existing index)
+        unique_contacts_query = f"""
+            SELECT DISTINCT contact_wa_id, waba_id
+            FROM webhook_responses_490892730652855_dup
+            WHERE waba_id IN ({placeholders})
+            AND Date >= %s
+        """
         
-        execution_time = time.time() - start_time
-        logger.info(f"WABA query executed in {execution_time:.2f} seconds, got {len(raw_results)} raw results")
+        cursor.execute(unique_contacts_query, batch_waba_ids + [created_at_str])
+        unique_contacts = cursor.fetchall()
         
-        # Post-process to get only the latest record per contact
-        if not raw_results:
+        step1_time = time.time() - start_time
+        logger.info(f"Step 1 completed in {step1_time:.2f}s: Found {len(unique_contacts)} unique contacts")
+        
+        if not unique_contacts:
             return []
         
-        # Group by contact_wa_id and get the latest record for each
-        contact_latest = {}
-        for row in raw_results:
-            contact_wa_id = row[4]  # contact_wa_id is at index 4
-            message_timestamp = row[6]  # message_timestamp is at index 6
+        # Step 2: Get latest record for each contact using the timestamp index
+        # This query will use idx_webhook_contact_timestamp efficiently
+        all_results = []
+        
+        # Process contacts in smaller chunks to avoid huge IN clauses
+        contact_chunk_size = 500
+        contact_chunks = [unique_contacts[i:i + contact_chunk_size] 
+                         for i in range(0, len(unique_contacts), contact_chunk_size)]
+        
+        for chunk_idx, contact_chunk in enumerate(contact_chunks):
+            contact_placeholders = ','.join(['%s'] * len(contact_chunk))
             
-            if contact_wa_id not in contact_latest or message_timestamp > contact_latest[contact_wa_id][6]:
-                contact_latest[contact_wa_id] = row
+            # This query leverages idx_webhook_contact_timestamp (contact_wa_id, message_timestamp DESC)
+            latest_records_query = f"""
+                SELECT 
+                    wr1.Date,
+                    wr1.display_phone_number,
+                    wr1.phone_number_id,
+                    wr1.waba_id,
+                    wr1.contact_wa_id,
+                    wr1.new_status,
+                    wr1.message_timestamp,
+                    wr1.error_code,
+                    wr1.error_message,
+                    wr1.contact_name,
+                    wr1.message_from,
+                    wr1.message_type,
+                    wr1.message_body
+                FROM webhook_responses_490892730652855_dup wr1
+                WHERE wr1.contact_wa_id IN ({contact_placeholders})
+                AND wr1.Date >= %s
+                AND wr1.message_timestamp = (
+                    SELECT MAX(message_timestamp)
+                    FROM webhook_responses_490892730652855_dup wr2
+                    WHERE wr2.contact_wa_id = wr1.contact_wa_id
+                    AND wr2.Date >= %s
+                )
+                ORDER BY wr1.contact_wa_id
+            """
+            
+            chunk_contacts = [contact[0] for contact in contact_chunk]  # Extract contact_wa_id
+            chunk_params = chunk_contacts + [created_at_str, created_at_str]
+            
+            cursor.execute(latest_records_query, chunk_params)
+            chunk_results = cursor.fetchall()
+            all_results.extend(chunk_results)
+            
+            logger.info(f"Contact chunk {chunk_idx + 1}/{len(contact_chunks)} processed: {len(chunk_results)} records")
         
-        result = list(contact_latest.values())
-        logger.info(f"After deduplication: {len(result)} unique contacts")
+        execution_time = time.time() - start_time
+        logger.info(f"WABA query completed in {execution_time:.2f} seconds, got {len(all_results)} final results")
         
-        return result
+        return all_results
         
     except Exception as e:
         logger.error(f"Error executing WABA batch query: {str(e)}")
-        logger.error(f"Query: {query}")
-        logger.error(f"Params: {params}")
         return []
 
 
