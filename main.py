@@ -209,6 +209,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
     connection = None
     cursor = None
     all_rows = []
+    app_id = request.app_id
     
     try:
         # Database connection
@@ -279,7 +280,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             
             # Execute batch query
             batch_rows = await execute_batch_query(
-                cursor, batch_contacts, phone_id, created_at_str, waba_id_list
+                cursor, batch_contacts, phone_id, created_at_str, waba_id_list, app_id
             )
             
             if batch_rows:
@@ -368,7 +369,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             db.close()
 
 async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str, 
-                             created_at_str: str, waba_id_list: List[str]) -> List[Tuple]:
+                             created_at_str: str, waba_id_list: List[str], app_id: str) -> List[Tuple]:
     """Execute optimized query for a batch of contacts"""
 
     placeholders_contacts = ','.join(['%s'] * len(batch_contacts))
@@ -379,7 +380,7 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
             wr1.phone_number_id,
             wr1.waba_id,
             wr1.contact_wa_id,
-            wr1.new_status,
+            wr1.status,
             wr1.message_timestamp,
             wr1.error_code,
             wr1.error_message,
@@ -387,14 +388,14 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
             wr1.message_from,
             wr1.message_type,
             wr1.message_body
-        FROM webhook_responses_490892730652855_dup wr1
+        FROM webhook_responses_{app_id} wr1
         WHERE wr1.contact_wa_id IN ({placeholders_contacts})
         AND wr1.phone_number_id = %s
         AND wr1.Date >= %s
         {"AND wr1.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
         AND wr1.message_timestamp = (
             SELECT MAX(wr2.message_timestamp)
-            FROM webhook_responses_490892730652855_dup wr2
+            FROM webhook_responses_{app_id} wr2
             WHERE wr2.contact_wa_id = wr1.contact_wa_id
             AND wr2.phone_number_id = wr1.phone_number_id
             AND wr2.Date >= %s
@@ -463,62 +464,66 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
     return modified_fallback_rows
 
 async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, campaign_title: str, template_name: str, created_at: str) -> str:
-    """Generate CSV and ZIP file from rows"""
-    
-    # Create ZIP_FILES_DIR if it doesn't exist
-    if not os.path.exists(ZIP_FILES_DIR):
-        os.makedirs(ZIP_FILES_DIR, exist_ok=True)
-    
-    # Process rows and generate CSV
-    header = [
-        "Date", "display_phone_number", "phone_number_id", "waba_id", "contact_wa_id",
-        "new_status", "message_timestamp", "error_code", "error_message", "contact_name",
-        "message_from", "message_type", "message_body"
-    ]
-
-    seen_contacts = set()
-    processed_rows = []
-    
-    for row in rows:
-        row_list = list(row)
-        contact_wa_id = row_list[4]
-        if contact_wa_id in seen_contacts:
-            continue
-            
-        seen_contacts.add(contact_wa_id)
+    """Generate CSV and ZIP file from rows""" 
+     
+    if not os.path.exists(ZIP_FILES_DIR): 
+        os.makedirs(ZIP_FILES_DIR, exist_ok=True) 
+     
+    # Process rows and generate CSV 
+    header = [ 
+        "Date", "display_phone_number", "phone_number_id", "waba_id", "contact_wa_id", 
+        "status", "message_timestamp", "error_code", "error_message", "contact_name", 
+        "message_from", "message_type", "message_body" 
+    ] 
+ 
+    seen_contacts = set() 
+    processed_rows = [] 
+     
+    for row in rows: 
+        row_list = list(row) 
+        contact_wa_id = row_list[4] 
+        if contact_wa_id in seen_contacts: 
+            continue 
+             
+        seen_contacts.add(contact_wa_id) 
         
-        if row_list[5] != 'failed':
-            row_list[7] = None
-            row_list[8] = None
-        
-        processed_rows.append(row_list)
-
-    # Generate CSV content
-    csv_content = io.StringIO()
-    writer = csv.writer(csv_content)
-    writer.writerow(header)
-    for row in processed_rows:
-        writer.writerow(row)
-    
-    csv_content.seek(0)
-    csv_data = csv_content.getvalue()
-    
-    # Create ZIP file
-    if isinstance(created_at, str):
-        created_at = datetime.fromisoformat(created_at)  # Or use strptime()
-
-    # Now create filename with only the date part
-    created_str = created_at.strftime('%Y-%m-%d')
-    zip_filename = f"report_{campaign_title}_{template_name}_{created_str}_{report_id}.zip"
-    zip_filepath = os.path.join(ZIP_FILES_DIR, zip_filename)
-
-    with zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        zipf.writestr(f"report_{campaign_title}_{template_name}_{created_str}_{report_id}.csv", csv_data)
-    
-    # Verify ZIP file was created
-    if not os.path.exists(zip_filepath):
-        raise Exception("Failed to create ZIP file")
-    
+        # Handle error code 131047 - treat as delivered
+        error_code = row_list[7]
+        if error_code == 131047 or error_code == '131047':
+            row_list[5] = 'delivered'  # status
+            row_list[7] = None         # error_code
+            row_list[8] = None         # error_message
+        elif row_list[5] != 'failed': 
+            row_list[7] = None 
+            row_list[8] = None 
+         
+        processed_rows.append(row_list) 
+ 
+    # Generate CSV content 
+    csv_content = io.StringIO() 
+    writer = csv.writer(csv_content) 
+    writer.writerow(header) 
+    for row in processed_rows: 
+        writer.writerow(row) 
+     
+    csv_content.seek(0) 
+    csv_data = csv_content.getvalue() 
+     
+    # Create ZIP file 
+    if isinstance(created_at, str): 
+        created_at = datetime.fromisoformat(created_at)  # Or use strptime() 
+ 
+    # Now create filename with only the date part 
+    created_str = created_at.strftime('%Y-%m-%d') 
+    zip_filename = f"report_{campaign_title}_{template_name}_{created_str}_{report_id}.zip" 
+    zip_filepath = os.path.join(ZIP_FILES_DIR, zip_filename) 
+ 
+    with zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED) as zipf: 
+        zipf.writestr(f"report_{campaign_title}_{template_name}_{created_str}_{report_id}.csv", csv_data) 
+     
+    if not os.path.exists(zip_filepath): 
+        raise Exception("Failed to create ZIP file") 
+     
     return zip_filename
 
 # Alternative: Even more aggressive optimization with connection pooling
