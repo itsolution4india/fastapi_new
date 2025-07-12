@@ -1,0 +1,1000 @@
+2025-07-12 12:56:44 [ERROR] Error in background task fcd43d9f-5860-4a2f-8f2f-54ecb4e12adf: cannot access local variable 'zip_filename' where it is not associated with a value
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/main.py", line 604, in generate_report_background
+    "file_url": f"/download-zip/{zip_filename}",
+                                 ^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'zip_filename' where it is not associated with a value
+2025-07-12 12:56:44 [DEBUG] Task status saved to file
+2025-07-12 12:56:44 [INFO] Task fcd43d9f-5860-4a2f-8f2f-54ecb4e12adf status updated: {'status': 'failed', 'message': "Error generating report: cannot access local variable 'zip_filename' where it is not associated with a value", 'progress': 0}
+2025-07-12 12:57:09 [INFO] Generated new task_id: b5c5982e-5828-4105-b793-0a67271e2e09
+2025-07-12 12:57:09 [DEBUG] Task status saved to file
+2025-07-12 12:57:09 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'status': 'pending', 'message': 'Task queued for processing', 'created_at': '2025-07-12T12:57:09.886970', 'progress': 0}
+2025-07-12 12:57:09 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 initialized
+2025-07-12 12:57:09 [INFO] Background task added for task_id: b5c5982e-5828-4105-b793-0a67271e2e09
+2025-07-12 12:57:09 [DEBUG] Task status saved to file
+2025-07-12 12:57:09 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'status': 'processing', 'message': 'Processing report...', 'created_at': '2025-07-12T12:57:09.890452', 'progress': 10}
+2025-07-12 12:57:09 [INFO] Starting optimized background report generation for task b5c5982e-5828-4105-b793-0a67271e2e09
+2025-07-12 12:57:09 [INFO] Contact list size: 14504
+2025-07-12 12:57:09 [DEBUG] Task status saved to file
+2025-07-12 12:57:09 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 30, 'message': 'Database connected, starting batch processing...'}
+2025-07-12 12:57:09 [INFO] Processing 14504 contacts in 15 batches of 1000
+2025-07-12 12:57:09 [INFO] Processing batch 1/15 with 1000 contacts
+2025-07-12 12:57:09 [DEBUG] Task status saved to file
+2025-07-12 12:57:09 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 30, 'message': 'Processing batch 1/15...'}
+2025-07-12 12:57:09 [INFO] Checking status for task_id: b5c5982e-5828-4105-b793-0a67271e2e09
+2025-07-12 12:57:09 [ERROR] Task not found: b5c5982e-5828-4105-b793-0a67271e2e09
+2025-07-12 12:57:09 [INFO] Available task_ids: ['a58ed193-b6d3-417c-b700-05f1b4366883', '643c34ab-a570-4efa-bd6e-f396c0dfde67', '1d0f13d5-7a80-4b19-aabb-a7025cb07e23', '6c7cc33f-bc70-4b97-bd1f-3a3612bcee18', 'd92fbe8f-12fa-42d4-a853-5853b63f2e55', '0f65d732-d587-4405-a5b7-c046baaf6f6a', '827f92af-b931-4379-848c-a291bff77edd', 'e1d0bfb2-deb0-4c6a-9363-ec54fe244747', '7005cb77-9b51-4842-b074-ea899049e79a', 'eb21f755-dd86-4c34-ab3e-ba70a30cc1f3', '50d460a0-c15b-4c59-aafd-60f3e2d363bb', 'd6a29cc4-8f31-4abc-989c-a36347bd2eb1', '7f18d29f-c204-4e7e-9401-b212de3726ab', '611aba7f-f17e-4100-bdb3-0378dfbb585a', '526c6d4a-ed88-42a0-a80b-fce7d1eee4b9', 'f4e77a2b-8643-44d9-8b7a-82593b34b46c', '25ccf826-bc71-4d55-ba4c-459e4ecf3151', 'face138b-0084-48ce-95a3-0c365e0932d1', '824493e3-49e8-4f85-b35e-9c35f69c76cd', '2cbc9898-88cb-44fe-9ad6-69b4bbf8797c', '0b70d805-ecbf-4e84-86b7-609d6e8a6496', '3d7c0c03-d6fd-4d3b-8662-198cdf13f45a', 'd56af78e-3bb9-49b0-b25b-569fb1aaab33', '46390e7a-c031-4511-8f5e-dc7772a6c61d', '70d17fae-75f1-4a49-9782-7196d106dc04', '455c6f0a-f308-46b7-b624-3b39eaccf20c', 'ac26329c-e37e-44f9-9715-d7eed5549fe2', 'c67a1185-be92-420f-a9a4-af7562129c17', '288b9dd8-edbc-49d6-a433-d6f71bafc92d', '1d65368a-473f-4e3e-966b-8c9cd4157960', '1a20fd01-b176-466a-8d77-153b89596921', '31900f87-e0d7-4284-b6e1-6a46f3e8bb6e', '841e9427-54f8-47a4-a09d-c9cfcb894afc', '7fc7a818-7498-4f78-87bc-ff723122cf1a', 'ffa2f0e7-1868-4354-b597-6985fb9dfbdb', 'c6a1320f-07bf-471b-a121-4ad702c2bf38', 'b5830476-8a8c-468d-958c-76c8ca3c7863', '14e3c464-f7c8-4dfd-a7fe-341c2231f500', '0e7953c1-f3cc-415b-90aa-90e187d3da72', 'e695a202-cb72-4f8c-8f73-e38dfd835c45', '3b6c211d-31e0-45d8-b37f-74fe5ca6f067', 'fad08163-98ce-4436-80b7-6172f0d6e438', 'bcab7fec-db5e-426a-81bc-425a023fbdba', '381ca08f-0dd1-4d9a-a740-43f0d29ea647', 'fe0de084-8e6f-49df-b0e1-90a195be6d92', '3c9d7060-0ea6-423e-9dbd-90800228ced6', 'e41be12d-32ba-4f04-b767-e8272233f6ed', '946d7ebe-b237-42b2-af7f-01f1e088a487', '77db5781-5d2a-4f50-9251-f937c41cd406', '8b8dda60-1584-406a-9f87-f261b640b0d7', '4792e7bd-a262-479a-9be1-c2e705d329e3', '4bba1042-797d-47f3-a907-1e6909e66302', 'c22f69ee-749d-4afd-b3b7-4cfe5fc6fd36', '72de2b4d-d625-45a3-9c91-f7a98cc4e93a', '34b124fd-b0ff-44d6-acd0-71d6e6f875fa', '0564205a-be6b-4739-9a8f-6cac386ec41d', '00b2d0ae-654a-4131-9c68-f80991944834', 'a3a21732-1235-4e93-a1f9-8a2fd20fda6f', '55fa41eb-fac8-4e4f-aaaf-4b36f4cf40d1', 'cf21eb4a-0f7b-44b6-853e-f73c4b84f764', '9dde9294-c0f8-4c6e-b907-8f6cb200cd96', '29996fee-c1f0-4d1d-8dd3-8819beb5af07', '91fc42d0-879b-4952-a139-0aad03cec12c', 'bc2f4493-27f3-43ca-abe2-81ef9a124e1d', '77080089-d742-4446-a47f-9e9aadcd376c', '9a72a803-0c0b-4321-b9ac-55b5a9002e4d', 'a1ff6d99-7dc7-4329-99d3-fa9ea345ad0c', 'dd52f2b7-cf5e-44eb-8e05-654654289a66', '2fd66ee0-7e18-4ef1-858f-72c772a5ef63', 'd1252d57-f88b-4a0e-89bf-b52430bf42f3', '90475a6b-8f9b-4282-97af-a4ba56a5c924', 'e0a1abb3-3d60-423e-b9b1-0113ac22c6dc', '294009ef-f41f-431d-b21f-2b79202d8bd5', '45ca28b7-23a0-44bd-80dd-3d92a39eb467', '1eb0997d-830c-478c-84ac-f32d5d945cab', '9733de20-19ae-404d-b4ff-0bf734178c07', '3dc57a74-7438-4cbf-8c59-cde8bac423fa', '9b8810e9-2bd8-4085-8de9-06f652e822d6', '7f9e7d34-b0a9-4018-90de-f3b0fc4de6cf', 'e7ca29e8-11c3-42da-a7f7-837528e7b99e', 'b8abdbc1-410d-46e8-b9c6-82f0997d1070', 'c5b70011-9c93-46ed-9f69-957edcb43048', '274118a3-44a0-46a7-8fe5-96c68d562cf0', 'd1b826cf-c75e-4db6-a7ed-73a2cc3f121c', '7ceaf35b-4569-43d9-8d26-804080a3c73a', '3f3ca49a-8643-4d16-9a8f-862b0a3cb53e', '0ae935b8-5b1c-41ae-aa76-d60a7010d596', 'cf2fc873-3dc5-440f-b3c7-6f50eb0cc918', '0e2e27f8-1b32-437c-b091-ea98129560d8', '141c1a19-8676-4c8e-9ce4-ce8420070499', '4870c167-333f-40d1-a4a9-c5959d4a69f6', 'c8bbd3db-9bea-4661-8486-09e59ce2910c', '6d5d46e3-bfa5-424d-8707-7f873bb89222', '6bb642f4-276a-47f8-9638-67f8ebb24601', 'ab3c9d32-df64-481a-a6f3-c952fb076812', '1bffded1-d51d-4478-a0f5-3eccef167c56', 'cc5e7f9e-42e4-43f7-80d6-9b0cbaa98bfc', 'c8690c33-dd16-4971-bffd-309b65af8f9c', '0aaedfb6-8bfc-43b4-ab2d-8e7768e3240c', '27d63234-0572-4d75-96b9-b4d3807787e8', 'f089a86d-11f0-4f60-9509-e581534e0aa9', '37272a33-5fc9-4867-ac27-fac58bf4def5', '89cf2921-3962-4c7e-b529-e190547afaed', '2bb3771a-f260-4849-9302-5859c31efa4c', 'ddf9cc89-e0a9-4306-8919-9500200016ea', 'c97d5d6a-50c1-4397-844d-d3641bffe0e1', 'a55022cb-47d6-44d3-98e4-1e67573519af', 'e178a5a2-a5d2-4b02-b8e1-7bbcc16aa5cd', '9fefcf8b-b61c-446a-a6ef-bab233971f84', '6df50c52-b511-40d3-a9af-793cf6a58e5f', 'ee577970-5318-47f8-a0d9-9079364ef27a', '6c41e32f-63e1-4fb8-9213-e7d70a83514a', '23d35047-823c-4f5a-96af-ea387fe4ec41', 'dcccb4f4-d8b2-47ee-8895-aedc7c646f80', '3f6e03a2-2bc8-4fd2-ac6b-794da7225d9c', '815b6c3e-3fbb-432b-a490-55600b8b8af7', 'd94fe9df-4277-42b3-985d-242a233cc67f', 'e897d9f3-204f-481d-a77c-b15ccf9918c5', 'b7511c02-a0cd-4d16-a0dd-e296dbb839a6', 'a23acd04-ce00-4466-8458-356e45557157', 'c7b19bc5-2002-4623-817f-e58779ef7441', '5c19bd71-298d-484b-a82b-b4d91d10becd', '1addc9fc-f264-42b6-b860-68745f1cff25', '366c3921-e64b-451a-a517-dd827cbc1a9d', '4dd9299b-a621-4367-a0e0-3ac5d2fe3201', 'd816dd26-065d-4800-ae76-19144a9aa627', '54ff09dc-9c0d-4f0e-aee6-213a1f6d8bf2', '20a9f47e-05b6-4daa-895c-1452fed7b9f8', '316e0e42-3786-4b16-9f6e-8fedad3e9c7f', '097ef007-989b-4b92-af45-2f58a5f32a58', 'a595a9ab-cdb5-4a2c-8673-d0d18a2b5fc3', '4d679804-0e5a-477c-99e3-0f9e2f0752ae', 'db6f2078-c18d-4b0a-b1cd-e1440599e4fe', 'fc454b77-b874-43a0-9fd5-54ff563e8798', 'd50bff2c-1b81-4eeb-afc4-9cfac1e6ee1b', 'd957fe8b-d341-4c1e-ae11-bbaea4b30568', '9cbc4505-3ece-47c3-9d7b-956f64a520bc', 'abd0f991-6374-417d-9ca5-c32aaaf45ae7', '158aefd0-30d1-4c9a-a396-0cf783e75936', '08ee0285-be12-4000-81ad-d2592881abd2', '57cad7cb-da49-4c0b-bc9c-a1f8f4e01a17', '8747f0f7-1dea-4f80-b06d-3c60aeadbdcf', 'a47c5473-a696-46ed-bed6-faa75d93e44f', '03af94c5-f995-4030-9d6d-5edb92b4a5ad', 'dab76b43-6766-4ea5-8edd-2bbf918023dc', 'efab03f7-afca-4e1b-82f4-a2f4c0086699', '51344b65-6c62-4c9c-8b5e-99239365f143', '49b1abba-8b86-444c-ba43-72a19f9a0e44', 'e9094dec-470a-4c85-8638-1acaa7a0e402', '0456d207-d3c9-49c8-88ed-a9ba7075dbfc', '187b514c-bbc4-4d85-addc-f257fbba568c', '04957203-6b7e-4fe0-bfe7-32e1cdfe5fec', '122fb840-eac3-4748-9b19-cec0d21dcd77', '03d09c75-0b9b-4e90-bbff-8db66ce22566', 'e81e65dd-b9c4-4ebe-b842-abd56ede0ef3', 'd8352df1-d313-41ab-8fa6-cf989c152589', 'a4dc28e6-ee74-4f07-b77e-596452a7582b', 'f1b93191-672f-4ff7-a1ce-150bb40b6844', 'de3621c4-8820-4486-837a-1587236f15f9', '4aae54c2-3268-4de1-8a28-10a3bc0632b2', '24145815-8f76-41bd-b71e-acf179efed58', '9474abd6-94af-429c-bc6e-c98c6db07a94', 'ae76e9cf-af54-4196-88cd-79bfcd0ea9d2', 'd492c2f9-914b-4e27-ae99-18e9c0888b12', '9076c303-abfc-4840-b849-4326761abb09', '3acf3435-8fb4-4788-91b6-c3f10598ada1', '55576125-7721-4635-8691-0a99f0835e07', '2c58a75d-6424-4cd2-b1ee-50aa5aaaddfa', 'cafe7334-ebf8-434b-b430-6a5d648bd4a1', '0aa87f8a-2653-4fe5-be6f-06d8526965e5', 'b2c67452-c451-4ebd-9134-846d1658fe94', '238eb0e3-e29a-4ee4-b3d2-3e01a2cf36e0', '80f680bd-b529-4468-ab09-0947b09cce3c', 'b54725ef-7c3c-48ca-90f5-0b82012b0faf', '05bbc159-76ef-4671-9354-bf3e9fe65975', 'acd6dee9-e7d5-47b5-bcf6-38be16c8dd95', 'd018d47f-2ea2-41c9-9605-dabf1b1cdab1', 'f789bffa-8bf8-460d-b7af-d452845bef32', 'f6ef7f89-ac82-4fae-9c3b-920d402c1922', 'f1403293-9f4b-400a-b809-05a5b18d36dc', '9acb57e8-7b66-4f11-8c95-7201adbe7a1b', '40f4522f-b804-4c02-b0e8-00fc76067fd7', 'e5ccfca6-50f3-4600-9613-cdf77c3be2a6', '41ee44ae-f84c-48f5-a31d-7cccb0c32dec', 'e6062f6a-5e1c-4205-be80-09f1aa658777', '6ab8c2dc-17b6-48f6-bff1-e41936f7d448', 'e9355aea-3769-48c6-a315-f52280ce0cb2', '340af222-4a67-4762-8100-ea94ef974604', '3b1e000e-331b-442a-bf7f-7ab64862cfb1', '19add83e-066b-440a-8374-f6ffc5ce900e', 'ad149165-9723-4ff8-8b6e-db0636a523ee', 'a5889c7b-c16d-4563-8c7e-3675741882a9', '7864be6b-8062-4795-ae90-857ba06d01c3', 'dea867da-f66c-4102-8247-9319e4ba8609', '604dfe25-3e1d-407d-8024-586235e8c1fb', '0623a184-e8d6-4c4e-a458-b90c880053e3', 'b6b55464-91b9-441d-b39f-7732e16c3ef7', 'f097f383-c6bf-4fec-8194-ff8dd74fc37f', 'a03697ab-c78d-4f72-a249-3ffb4792a47f', '1feb0278-2ce5-4cbb-b11c-07526be86a32', '215143cc-174f-454d-ab81-af4dfac99306', 'fbed60a0-2a6f-4e07-b360-7e33c9780be7', '736b8b7d-e679-4752-b36e-5ed79c1ddd4f', 'be346715-d764-4f8e-a876-27a75e77bab4', '047a0d1e-5eee-440e-89b7-2105ae7b3f77', '8927d4b6-7248-4803-98f9-b349985c30bb', '1ced6904-6798-47c8-914c-7a4a8f461985', 'a5cf9347-021c-4c3d-b8be-4e2a506886cd', '4b6f4c00-cc1e-4974-8890-35c0e060526d', '53e58d89-fcaf-4c03-86d4-ee5df40ab00b', '3f37b470-2064-4c68-a8d3-7c60302fc56e', '892497a4-a32a-43f8-a076-37a57807b7bc', 'e4fa620b-ef3c-4b57-9452-52cf16b40e6b', 'abcdd5b3-1fc9-43d8-afec-8e77df3bf490', '6bbc2c27-58f7-487c-a3b9-bab3bc20be02', 'ba7fd536-0b34-47da-a779-b4a1da944cba', 'c0082a9e-03ec-49c0-bd17-72150a86d673', '0705d2a7-5073-49ca-a95e-c63d4c0285a5', 'b19eb556-b5c9-498f-8ad9-d3aae0db02c9', '152796f0-7e3e-4eb1-9853-b7f12d790c47', '59f5c369-c321-4210-92d5-2fc2fffd2387', '6c6c77f8-bdf6-4c32-999d-fba5335982ef', 'e1f3b5b0-ac97-4399-96f8-f4426900f65e', 'dd9fe08b-d50e-41a4-98e9-45b2b9981cdc', '6e6c25cb-9386-4005-b435-eb70df0946fb', 'be76f37b-f55f-47ae-b5f4-80726d9f035a', 'e6ed7d3f-f234-45fe-a105-5033a4ce20a0', '602e3e18-b753-4edc-b615-c440728d3c60', '5c8632bb-bb25-45ea-8ac9-28da413a03a0', '0cd7c202-a115-4df5-a465-f9df075bc619', '97288b9c-e385-4bd6-b755-256db4349191']
+2025-07-12 12:57:10 [INFO] Batch 1 completed: 0 rows
+2025-07-12 12:57:10 [INFO] Processing batch 2/15 with 1000 contacts
+2025-07-12 12:57:10 [DEBUG] Task status saved to file
+2025-07-12 12:57:10 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 33, 'message': 'Processing batch 2/15...'}
+2025-07-12 12:57:10 [INFO] Batch 2 completed: 0 rows
+2025-07-12 12:57:10 [INFO] Processing batch 3/15 with 1000 contacts
+2025-07-12 12:57:10 [DEBUG] Task status saved to file
+2025-07-12 12:57:10 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 36, 'message': 'Processing batch 3/15...'}
+2025-07-12 12:57:10 [INFO] Batch 3 completed: 0 rows
+2025-07-12 12:57:10 [INFO] Processing batch 4/15 with 1000 contacts
+2025-07-12 12:57:10 [DEBUG] Task status saved to file
+2025-07-12 12:57:10 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 40, 'message': 'Processing batch 4/15...'}
+2025-07-12 12:57:10 [INFO] Batch 4 completed: 0 rows
+2025-07-12 12:57:10 [INFO] Processing batch 5/15 with 1000 contacts
+2025-07-12 12:57:10 [DEBUG] Task status saved to file
+2025-07-12 12:57:10 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 43, 'message': 'Processing batch 5/15...'}
+2025-07-12 12:57:10 [INFO] Batch 5 completed: 0 rows
+2025-07-12 12:57:10 [INFO] Processing batch 6/15 with 1000 contacts
+2025-07-12 12:57:10 [DEBUG] Task status saved to file
+2025-07-12 12:57:10 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 46, 'message': 'Processing batch 6/15...'}
+2025-07-12 12:57:10 [INFO] Batch 6 completed: 0 rows
+2025-07-12 12:57:10 [INFO] Processing batch 7/15 with 1000 contacts
+2025-07-12 12:57:10 [DEBUG] Task status saved to file
+2025-07-12 12:57:10 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 50, 'message': 'Processing batch 7/15...'}
+2025-07-12 12:57:10 [INFO] Batch 7 completed: 0 rows
+2025-07-12 12:57:10 [INFO] Processing batch 8/15 with 1000 contacts
+2025-07-12 12:57:10 [DEBUG] Task status saved to file
+2025-07-12 12:57:10 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 53, 'message': 'Processing batch 8/15...'}
+2025-07-12 12:57:10 [INFO] Batch 8 completed: 0 rows
+2025-07-12 12:57:10 [INFO] Processing batch 9/15 with 1000 contacts
+2025-07-12 12:57:10 [DEBUG] Task status saved to file
+2025-07-12 12:57:10 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 56, 'message': 'Processing batch 9/15...'}
+2025-07-12 12:57:11 [INFO] Batch 9 completed: 0 rows
+2025-07-12 12:57:11 [INFO] Processing batch 10/15 with 1000 contacts
+2025-07-12 12:57:11 [DEBUG] Task status saved to file
+2025-07-12 12:57:11 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 60, 'message': 'Processing batch 10/15...'}
+2025-07-12 12:57:11 [INFO] Batch 10 completed: 0 rows
+2025-07-12 12:57:11 [INFO] Processing batch 11/15 with 1000 contacts
+2025-07-12 12:57:11 [DEBUG] Task status saved to file
+2025-07-12 12:57:11 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 63, 'message': 'Processing batch 11/15...'}
+2025-07-12 12:57:11 [INFO] Batch 11 completed: 0 rows
+2025-07-12 12:57:11 [INFO] Processing batch 12/15 with 1000 contacts
+2025-07-12 12:57:11 [DEBUG] Task status saved to file
+2025-07-12 12:57:11 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 66, 'message': 'Processing batch 12/15...'}
+2025-07-12 12:57:11 [INFO] Batch 12 completed: 0 rows
+2025-07-12 12:57:11 [INFO] Processing batch 13/15 with 1000 contacts
+2025-07-12 12:57:11 [DEBUG] Task status saved to file
+2025-07-12 12:57:11 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 70, 'message': 'Processing batch 13/15...'}
+2025-07-12 12:57:11 [INFO] Batch 13 completed: 0 rows
+2025-07-12 12:57:11 [INFO] Processing batch 14/15 with 1000 contacts
+2025-07-12 12:57:11 [DEBUG] Task status saved to file
+2025-07-12 12:57:11 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 73, 'message': 'Processing batch 14/15...'}
+2025-07-12 12:57:11 [INFO] Batch 14 completed: 0 rows
+2025-07-12 12:57:11 [INFO] Processing batch 15/15 with 504 contacts
+2025-07-12 12:57:11 [DEBUG] Task status saved to file
+2025-07-12 12:57:11 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 76, 'message': 'Processing batch 15/15...'}
+2025-07-12 12:57:11 [INFO] Batch 15 completed: 0 rows
+2025-07-12 12:57:11 [INFO] All batches completed. Total rows: 0
+2025-07-12 12:57:11 [DEBUG] Task status saved to file
+2025-07-12 12:57:11 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 80, 'message': 'Processing missing contacts...'}
+2025-07-12 12:57:11 [INFO] Missing contacts found: 14504 contacts
+2025-07-12 12:57:11 [DEBUG] Task status saved to file
+2025-07-12 12:57:11 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'progress': 90, 'message': 'Generating report file...'}
+2025-07-12 12:57:11 [DEBUG] Task status saved to file
+2025-07-12 12:57:11 [INFO] Task b5c5982e-5828-4105-b793-0a67271e2e09 status updated: {'status': 'completed', 'message': 'Report generated successfully', 'file_url': '/download-zip/report_GLOBE AGENCIES_GLOBE AGENCIES_2025-07-09_4909.zip', 'progress': 100}
+2025-07-12 12:57:11 [INFO] Successfully generated ZIP report for task b5c5982e-5828-4105-b793-0a67271e2e09
+2025-07-12 13:03:07 [DEBUG] Task status saved to file
+2025-07-12 13:03:07 [INFO] Task 1b868719-f560-4fd1-a252-0c00640067ba status updated: {'status': 'processing', 'message': 'Starting insights generation...', 'created_at': '2025-07-12T13:03:07.381820', 'progress': 10}
+2025-07-12 13:03:07 [DEBUG] Task status saved to file
+2025-07-12 13:03:07 [INFO] Task 1b868719-f560-4fd1-a252-0c00640067ba status updated: {'status': 'processing', 'message': 'Processing report...', 'created_at': '2025-07-12T13:03:07.385521', 'progress': 10}
+2025-07-12 13:03:07 [INFO] Starting optimized background report generation for task 1b868719-f560-4fd1-a252-0c00640067ba
+2025-07-12 13:03:07 [INFO] Contact list size: 4701
+2025-07-12 13:03:07 [DEBUG] Task status saved to file
+2025-07-12 13:03:07 [INFO] Task 1b868719-f560-4fd1-a252-0c00640067ba status updated: {'progress': 30, 'message': 'Database connected, starting batch processing...'}
+2025-07-12 13:03:07 [INFO] Processing 4701 contacts in 5 batches of 1000
+2025-07-12 13:03:07 [INFO] Processing batch 1/5 with 1000 contacts
+2025-07-12 13:03:07 [DEBUG] Task status saved to file
+2025-07-12 13:03:07 [INFO] Task 1b868719-f560-4fd1-a252-0c00640067ba status updated: {'progress': 30, 'message': 'Processing batch 1/5...'}
+2025-07-12 13:03:07 [INFO] Batch 1 completed: 801 rows
+2025-07-12 13:03:07 [INFO] Processing batch 2/5 with 1000 contacts
+2025-07-12 13:03:07 [DEBUG] Task status saved to file
+2025-07-12 13:03:07 [INFO] Task 1b868719-f560-4fd1-a252-0c00640067ba status updated: {'progress': 40, 'message': 'Processing batch 2/5...'}
+2025-07-12 13:03:07 [INFO] Batch 2 completed: 661 rows
+2025-07-12 13:03:07 [INFO] Processing batch 3/5 with 1000 contacts
+2025-07-12 13:03:07 [DEBUG] Task status saved to file
+2025-07-12 13:03:07 [INFO] Task 1b868719-f560-4fd1-a252-0c00640067ba status updated: {'progress': 50, 'message': 'Processing batch 3/5...'}
+2025-07-12 13:03:07 [INFO] Batch 3 completed: 442 rows
+2025-07-12 13:03:07 [INFO] Processing batch 4/5 with 1000 contacts
+2025-07-12 13:03:07 [DEBUG] Task status saved to file
+2025-07-12 13:03:07 [INFO] Task 1b868719-f560-4fd1-a252-0c00640067ba status updated: {'progress': 60, 'message': 'Processing batch 4/5...'}
+2025-07-12 13:03:07 [INFO] Batch 4 completed: 382 rows
+2025-07-12 13:03:07 [INFO] Processing batch 5/5 with 701 contacts
+2025-07-12 13:03:07 [DEBUG] Task status saved to file
+2025-07-12 13:03:07 [INFO] Task 1b868719-f560-4fd1-a252-0c00640067ba status updated: {'progress': 70, 'message': 'Processing batch 5/5...'}
+2025-07-12 13:03:07 [INFO] Batch 5 completed: 274 rows
+2025-07-12 13:03:07 [INFO] All batches completed. Total rows: 2560
+2025-07-12 13:03:07 [DEBUG] Task status saved to file
+2025-07-12 13:03:07 [INFO] Task 1b868719-f560-4fd1-a252-0c00640067ba status updated: {'progress': 80, 'message': 'Processing missing contacts...'}
+2025-07-12 13:03:07 [INFO] Missing contacts found: 2141 contacts
+2025-07-12 13:03:08 [DEBUG] Task status saved to file
+2025-07-12 13:03:08 [INFO] Task 1b868719-f560-4fd1-a252-0c00640067ba status updated: {'progress': 90, 'message': 'Generating report file...'}
+2025-07-12 13:03:08 [ERROR] Error in background task 1b868719-f560-4fd1-a252-0c00640067ba: cannot access local variable 'zip_filename' where it is not associated with a value
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/main.py", line 604, in generate_report_background
+    "file_url": f"/download-zip/{zip_filename}",
+                                 ^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'zip_filename' where it is not associated with a value
+2025-07-12 13:03:08 [DEBUG] Task status saved to file
+2025-07-12 13:03:08 [INFO] Task 1b868719-f560-4fd1-a252-0c00640067ba status updated: {'status': 'failed', 'message': "Error generating report: cannot access local variable 'zip_filename' where it is not associated with a value", 'progress': 0}
+2025-07-12 13:03:26 [DEBUG] connect_tcp.started host='wtsdealnow.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-07-12 13:03:27 [DEBUG] connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x702b17b8e4b0>
+2025-07-12 13:03:27 [DEBUG] start_tls.started ssl_context=<ssl.SSLContext object at 0x702b1980abd0> server_hostname='wtsdealnow.com' timeout=5.0
+2025-07-12 13:03:27 [DEBUG] start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x702b16be9f40>
+2025-07-12 13:03:27 [DEBUG] send_request_headers.started request=<Request [b'GET']>
+2025-07-12 13:03:27 [DEBUG] send_request_headers.complete
+2025-07-12 13:03:27 [DEBUG] send_request_body.started request=<Request [b'GET']>
+2025-07-12 13:03:27 [DEBUG] send_request_body.complete
+2025-07-12 13:03:27 [DEBUG] receive_response_headers.started request=<Request [b'GET']>
+2025-07-12 13:03:27 [DEBUG] receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Server', b'nginx/1.24.0 (Ubuntu)'), (b'Date', b'Sat, 12 Jul 2025 07:33:27 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Vary', b'Accept-Encoding'), (b'Vary', b'origin, Cookie'), (b'X-Frame-Options', b'DENY'), (b'Strict-Transport-Security', b'max-age=15780000'), (b'X-Content-Type-Options', b'nosniff'), (b'Referrer-Policy', b'same-origin'), (b'Cross-Origin-Opener-Policy', b'same-origin'), (b'Content-Encoding', b'gzip')])
+2025-07-12 13:03:27 [INFO] HTTP Request: GET https://wtsdealnow.com/api/users/ "HTTP/1.1 200 OK"
+2025-07-12 13:03:27 [DEBUG] receive_response_body.started request=<Request [b'GET']>
+2025-07-12 13:03:27 [DEBUG] receive_response_body.complete
+2025-07-12 13:03:27 [DEBUG] response_closed.started
+2025-07-12 13:03:27 [DEBUG] response_closed.complete
+2025-07-12 13:03:27 [DEBUG] close.started
+2025-07-12 13:03:27 [DEBUG] close.complete
+2025-07-12 13:03:27 [INFO] User validation successful for user_id: VertueFurnishing01
+2025-07-12 13:03:27 [INFO] Coin validation successful. Required: 1, Available: 0
+2025-07-12 13:03:27 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 13:03:27 [INFO] Sending batch of 1 contacts
+2025-07-12 13:03:27 [INFO] media_type OTP
+2025-07-12 13:03:28 [DEBUG] Task status saved to file
+2025-07-12 13:03:28 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'status': 'processing', 'message': 'Starting insights generation...', 'created_at': '2025-07-12T13:03:28.113552', 'progress': 10}
+2025-07-12 13:03:28 [DEBUG] Task status saved to file
+2025-07-12 13:03:28 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'status': 'processing', 'message': 'Processing report...', 'created_at': '2025-07-12T13:03:28.116986', 'progress': 10}
+2025-07-12 13:03:28 [INFO] Starting optimized background report generation for task f3e164e2-0bbe-48a4-8ac8-3948764f1f53
+2025-07-12 13:03:28 [INFO] Contact list size: 7591
+2025-07-12 13:03:28 [DEBUG] Task status saved to file
+2025-07-12 13:03:28 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'progress': 30, 'message': 'Database connected, starting batch processing...'}
+2025-07-12 13:03:28 [INFO] Processing 7591 contacts in 8 batches of 1000
+2025-07-12 13:03:28 [INFO] Processing batch 1/8 with 1000 contacts
+2025-07-12 13:03:28 [DEBUG] Task status saved to file
+2025-07-12 13:03:28 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'progress': 30, 'message': 'Processing batch 1/8...'}
+2025-07-12 13:03:28 [INFO] Batch 1 completed: 440 rows
+2025-07-12 13:03:28 [INFO] Processing batch 2/8 with 1000 contacts
+2025-07-12 13:03:28 [DEBUG] Task status saved to file
+2025-07-12 13:03:28 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'progress': 36, 'message': 'Processing batch 2/8...'}
+2025-07-12 13:03:28 [INFO] Batch 2 completed: 381 rows
+2025-07-12 13:03:28 [INFO] Processing batch 3/8 with 1000 contacts
+2025-07-12 13:03:28 [DEBUG] Task status saved to file
+2025-07-12 13:03:28 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'progress': 42, 'message': 'Processing batch 3/8...'}
+2025-07-12 13:03:28 [INFO] Batch 3 completed: 302 rows
+2025-07-12 13:03:28 [INFO] Processing batch 4/8 with 1000 contacts
+2025-07-12 13:03:28 [DEBUG] Task status saved to file
+2025-07-12 13:03:28 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'progress': 48, 'message': 'Processing batch 4/8...'}
+2025-07-12 13:03:28 [INFO] Batch 4 completed: 306 rows
+2025-07-12 13:03:28 [INFO] Processing batch 5/8 with 1000 contacts
+2025-07-12 13:03:28 [DEBUG] Task status saved to file
+2025-07-12 13:03:28 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'progress': 55, 'message': 'Processing batch 5/8...'}
+2025-07-12 13:03:28 [INFO] Batch 5 completed: 338 rows
+2025-07-12 13:03:28 [INFO] Processing batch 6/8 with 1000 contacts
+2025-07-12 13:03:28 [DEBUG] Task status saved to file
+2025-07-12 13:03:28 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'progress': 61, 'message': 'Processing batch 6/8...'}
+2025-07-12 13:03:28 [INFO] Batch 6 completed: 315 rows
+2025-07-12 13:03:28 [INFO] Processing batch 7/8 with 1000 contacts
+2025-07-12 13:03:28 [DEBUG] Task status saved to file
+2025-07-12 13:03:28 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'progress': 67, 'message': 'Processing batch 7/8...'}
+2025-07-12 13:03:28 [INFO] Batch 7 completed: 284 rows
+2025-07-12 13:03:28 [INFO] Processing batch 8/8 with 591 contacts
+2025-07-12 13:03:28 [DEBUG] Task status saved to file
+2025-07-12 13:03:28 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'progress': 73, 'message': 'Processing batch 8/8...'}
+2025-07-12 13:03:28 [INFO] Batch 8 completed: 250 rows
+2025-07-12 13:03:28 [INFO] All batches completed. Total rows: 2616
+2025-07-12 13:03:28 [INFO] All messages processed. Total results: 1
+2025-07-12 13:03:28 [INFO] notify_user function called
+2025-07-12 13:03:28 [DEBUG] Task status saved to file
+2025-07-12 13:03:28 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'progress': 80, 'message': 'Processing missing contacts...'}
+2025-07-12 13:03:28 [INFO] Missing contacts found: 4975 contacts
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'progress': 90, 'message': 'Generating report file...'}
+2025-07-12 13:03:29 [ERROR] Error in background task f3e164e2-0bbe-48a4-8ac8-3948764f1f53: cannot access local variable 'zip_filename' where it is not associated with a value
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/main.py", line 604, in generate_report_background
+    "file_url": f"/download-zip/{zip_filename}",
+                                 ^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'zip_filename' where it is not associated with a value
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task f3e164e2-0bbe-48a4-8ac8-3948764f1f53 status updated: {'status': 'failed', 'message': "Error generating report: cannot access local variable 'zip_filename' where it is not associated with a value", 'progress': 0}
+2025-07-12 13:03:29 [INFO] Successfully notified user via webhook.
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'status': 'processing', 'message': 'Starting insights generation...', 'created_at': '2025-07-12T13:03:29.123508', 'progress': 10}
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'status': 'processing', 'message': 'Processing report...', 'created_at': '2025-07-12T13:03:29.126664', 'progress': 10}
+2025-07-12 13:03:29 [INFO] Starting optimized background report generation for task 7cd47889-7dd8-4167-9d2a-733765fae25f
+2025-07-12 13:03:29 [INFO] Contact list size: 8505
+2025-07-12 13:03:29 [DEBUG] connect_tcp.started host='wtsdealnow.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'progress': 30, 'message': 'Database connected, starting batch processing...'}
+2025-07-12 13:03:29 [INFO] Processing 8505 contacts in 9 batches of 1000
+2025-07-12 13:03:29 [INFO] Processing batch 1/9 with 1000 contacts
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'progress': 30, 'message': 'Processing batch 1/9...'}
+2025-07-12 13:03:29 [DEBUG] connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x702b17b8c800>
+2025-07-12 13:03:29 [DEBUG] start_tls.started ssl_context=<ssl.SSLContext object at 0x702b19825d50> server_hostname='wtsdealnow.com' timeout=5.0
+2025-07-12 13:03:29 [DEBUG] start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x702b16fa2540>
+2025-07-12 13:03:29 [DEBUG] send_request_headers.started request=<Request [b'POST']>
+2025-07-12 13:03:29 [DEBUG] send_request_headers.complete
+2025-07-12 13:03:29 [DEBUG] send_request_body.started request=<Request [b'POST']>
+2025-07-12 13:03:29 [DEBUG] send_request_body.complete
+2025-07-12 13:03:29 [DEBUG] receive_response_headers.started request=<Request [b'POST']>
+2025-07-12 13:03:29 [DEBUG] receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Server', b'nginx/1.24.0 (Ubuntu)'), (b'Date', b'Sat, 12 Jul 2025 07:33:29 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Vary', b'Accept-Encoding'), (b'Vary', b'Accept, origin, Cookie'), (b'Allow', b'POST, OPTIONS'), (b'X-Frame-Options', b'DENY'), (b'Strict-Transport-Security', b'max-age=15780000'), (b'X-Content-Type-Options', b'nosniff'), (b'Referrer-Policy', b'same-origin'), (b'Cross-Origin-Opener-Policy', b'same-origin'), (b'Content-Encoding', b'gzip')])
+2025-07-12 13:03:29 [INFO] HTTP Request: POST https://wtsdealnow.com/update-balance-report/ "HTTP/1.1 200 OK"
+2025-07-12 13:03:29 [DEBUG] receive_response_body.started request=<Request [b'POST']>
+2025-07-12 13:03:29 [DEBUG] receive_response_body.complete
+2025-07-12 13:03:29 [DEBUG] response_closed.started
+2025-07-12 13:03:29 [DEBUG] response_closed.complete
+2025-07-12 13:03:29 [DEBUG] close.started
+2025-07-12 13:03:29 [DEBUG] close.complete
+2025-07-12 13:03:29 [INFO] Batch 1 completed: 454 rows
+2025-07-12 13:03:29 [INFO] Processing batch 2/9 with 1000 contacts
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'progress': 35, 'message': 'Processing batch 2/9...'}
+2025-07-12 13:03:29 [INFO] Batch 2 completed: 501 rows
+2025-07-12 13:03:29 [INFO] Processing batch 3/9 with 1000 contacts
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'progress': 41, 'message': 'Processing batch 3/9...'}
+2025-07-12 13:03:29 [INFO] Batch 3 completed: 300 rows
+2025-07-12 13:03:29 [INFO] Processing batch 4/9 with 1000 contacts
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'progress': 46, 'message': 'Processing batch 4/9...'}
+2025-07-12 13:03:29 [INFO] Batch 4 completed: 316 rows
+2025-07-12 13:03:29 [INFO] Processing batch 5/9 with 1000 contacts
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'progress': 52, 'message': 'Processing batch 5/9...'}
+2025-07-12 13:03:29 [INFO] Batch 5 completed: 375 rows
+2025-07-12 13:03:29 [INFO] Processing batch 6/9 with 1000 contacts
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'progress': 57, 'message': 'Processing batch 6/9...'}
+2025-07-12 13:03:29 [INFO] Batch 6 completed: 347 rows
+2025-07-12 13:03:29 [INFO] Processing batch 7/9 with 1000 contacts
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'progress': 63, 'message': 'Processing batch 7/9...'}
+2025-07-12 13:03:29 [INFO] Batch 7 completed: 288 rows
+2025-07-12 13:03:29 [INFO] Processing batch 8/9 with 1000 contacts
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'progress': 68, 'message': 'Processing batch 8/9...'}
+2025-07-12 13:03:29 [INFO] Batch 8 completed: 281 rows
+2025-07-12 13:03:29 [INFO] Processing batch 9/9 with 505 contacts
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'progress': 74, 'message': 'Processing batch 9/9...'}
+2025-07-12 13:03:29 [INFO] Batch 9 completed: 223 rows
+2025-07-12 13:03:29 [INFO] All batches completed. Total rows: 3085
+2025-07-12 13:03:29 [DEBUG] Task status saved to file
+2025-07-12 13:03:29 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'progress': 80, 'message': 'Processing missing contacts...'}
+2025-07-12 13:03:29 [INFO] Missing contacts found: 5421 contacts
+2025-07-12 13:03:30 [DEBUG] Task status saved to file
+2025-07-12 13:03:30 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'progress': 90, 'message': 'Generating report file...'}
+2025-07-12 13:03:30 [ERROR] Error in background task 7cd47889-7dd8-4167-9d2a-733765fae25f: cannot access local variable 'zip_filename' where it is not associated with a value
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/main.py", line 604, in generate_report_background
+    "file_url": f"/download-zip/{zip_filename}",
+                                 ^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'zip_filename' where it is not associated with a value
+2025-07-12 13:03:30 [DEBUG] Task status saved to file
+2025-07-12 13:03:30 [INFO] Task 7cd47889-7dd8-4167-9d2a-733765fae25f status updated: {'status': 'failed', 'message': "Error generating report: cannot access local variable 'zip_filename' where it is not associated with a value", 'progress': 0}
+2025-07-12 13:03:30 [DEBUG] Task status saved to file
+2025-07-12 13:03:30 [INFO] Task a4626da9-8d61-4e80-a264-3d584f8c603d status updated: {'status': 'processing', 'message': 'Starting insights generation...', 'created_at': '2025-07-12T13:03:30.559151', 'progress': 10}
+2025-07-12 13:03:30 [DEBUG] Task status saved to file
+2025-07-12 13:03:30 [INFO] Task a4626da9-8d61-4e80-a264-3d584f8c603d status updated: {'status': 'processing', 'message': 'Processing report...', 'created_at': '2025-07-12T13:03:30.563088', 'progress': 10}
+2025-07-12 13:03:30 [INFO] Starting optimized background report generation for task a4626da9-8d61-4e80-a264-3d584f8c603d
+2025-07-12 13:03:30 [INFO] Contact list size: 4701
+2025-07-12 13:03:30 [DEBUG] Task status saved to file
+2025-07-12 13:03:30 [INFO] Task a4626da9-8d61-4e80-a264-3d584f8c603d status updated: {'progress': 30, 'message': 'Database connected, starting batch processing...'}
+2025-07-12 13:03:30 [INFO] Processing 4701 contacts in 5 batches of 1000
+2025-07-12 13:03:30 [INFO] Processing batch 1/5 with 1000 contacts
+2025-07-12 13:03:30 [DEBUG] Task status saved to file
+2025-07-12 13:03:30 [INFO] Task a4626da9-8d61-4e80-a264-3d584f8c603d status updated: {'progress': 30, 'message': 'Processing batch 1/5...'}
+2025-07-12 13:03:30 [INFO] Batch 1 completed: 569 rows
+2025-07-12 13:03:30 [INFO] Processing batch 2/5 with 1000 contacts
+2025-07-12 13:03:30 [DEBUG] Task status saved to file
+2025-07-12 13:03:30 [INFO] Task a4626da9-8d61-4e80-a264-3d584f8c603d status updated: {'progress': 40, 'message': 'Processing batch 2/5...'}
+2025-07-12 13:03:30 [INFO] Batch 2 completed: 406 rows
+2025-07-12 13:03:30 [INFO] Processing batch 3/5 with 1000 contacts
+2025-07-12 13:03:30 [DEBUG] Task status saved to file
+2025-07-12 13:03:30 [INFO] Task a4626da9-8d61-4e80-a264-3d584f8c603d status updated: {'progress': 50, 'message': 'Processing batch 3/5...'}
+2025-07-12 13:03:30 [INFO] Batch 3 completed: 341 rows
+2025-07-12 13:03:30 [INFO] Processing batch 4/5 with 1000 contacts
+2025-07-12 13:03:30 [DEBUG] Task status saved to file
+2025-07-12 13:03:30 [INFO] Task a4626da9-8d61-4e80-a264-3d584f8c603d status updated: {'progress': 60, 'message': 'Processing batch 4/5...'}
+2025-07-12 13:03:30 [INFO] Batch 4 completed: 326 rows
+2025-07-12 13:03:30 [INFO] Processing batch 5/5 with 701 contacts
+2025-07-12 13:03:30 [DEBUG] Task status saved to file
+2025-07-12 13:03:30 [INFO] Task a4626da9-8d61-4e80-a264-3d584f8c603d status updated: {'progress': 70, 'message': 'Processing batch 5/5...'}
+2025-07-12 13:03:30 [INFO] Batch 5 completed: 227 rows
+2025-07-12 13:03:30 [INFO] All batches completed. Total rows: 1869
+2025-07-12 13:03:30 [DEBUG] Task status saved to file
+2025-07-12 13:03:30 [INFO] Task a4626da9-8d61-4e80-a264-3d584f8c603d status updated: {'progress': 80, 'message': 'Processing missing contacts...'}
+2025-07-12 13:03:30 [INFO] Missing contacts found: 2832 contacts
+2025-07-12 13:03:31 [DEBUG] Task status saved to file
+2025-07-12 13:03:31 [INFO] Task a4626da9-8d61-4e80-a264-3d584f8c603d status updated: {'progress': 90, 'message': 'Generating report file...'}
+2025-07-12 13:03:31 [ERROR] Error in background task a4626da9-8d61-4e80-a264-3d584f8c603d: cannot access local variable 'zip_filename' where it is not associated with a value
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/main.py", line 604, in generate_report_background
+    "file_url": f"/download-zip/{zip_filename}",
+                                 ^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'zip_filename' where it is not associated with a value
+2025-07-12 13:03:31 [DEBUG] Task status saved to file
+2025-07-12 13:03:31 [INFO] Task a4626da9-8d61-4e80-a264-3d584f8c603d status updated: {'status': 'failed', 'message': "Error generating report: cannot access local variable 'zip_filename' where it is not associated with a value", 'progress': 0}
+2025-07-12 13:03:33 [DEBUG] Task status saved to file
+2025-07-12 13:03:33 [INFO] Task 8dcdab0b-1179-4dc7-a3f5-dc5629191217 status updated: {'status': 'processing', 'message': 'Starting insights generation...', 'created_at': '2025-07-12T13:03:33.024429', 'progress': 10}
+2025-07-12 13:03:33 [DEBUG] Task status saved to file
+2025-07-12 13:03:33 [INFO] Task 8dcdab0b-1179-4dc7-a3f5-dc5629191217 status updated: {'status': 'processing', 'message': 'Processing report...', 'created_at': '2025-07-12T13:03:33.028039', 'progress': 10}
+2025-07-12 13:03:33 [INFO] Starting optimized background report generation for task 8dcdab0b-1179-4dc7-a3f5-dc5629191217
+2025-07-12 13:03:33 [INFO] Contact list size: 948
+2025-07-12 13:03:33 [DEBUG] Task status saved to file
+2025-07-12 13:03:33 [INFO] Task 8dcdab0b-1179-4dc7-a3f5-dc5629191217 status updated: {'progress': 30, 'message': 'Database connected, starting batch processing...'}
+2025-07-12 13:03:33 [INFO] Processing 948 contacts in 1 batches of 1000
+2025-07-12 13:03:33 [INFO] Processing batch 1/1 with 948 contacts
+2025-07-12 13:03:33 [DEBUG] Task status saved to file
+2025-07-12 13:03:33 [INFO] Task 8dcdab0b-1179-4dc7-a3f5-dc5629191217 status updated: {'progress': 30, 'message': 'Processing batch 1/1...'}
+2025-07-12 13:03:33 [INFO] Batch 1 completed: 614 rows
+2025-07-12 13:03:33 [INFO] All batches completed. Total rows: 614
+2025-07-12 13:03:33 [DEBUG] Task status saved to file
+2025-07-12 13:03:33 [INFO] Task 8dcdab0b-1179-4dc7-a3f5-dc5629191217 status updated: {'progress': 80, 'message': 'Processing missing contacts...'}
+2025-07-12 13:03:33 [INFO] Missing contacts found: 334 contacts
+2025-07-12 13:03:33 [DEBUG] Task status saved to file
+2025-07-12 13:03:33 [INFO] Task 8dcdab0b-1179-4dc7-a3f5-dc5629191217 status updated: {'progress': 90, 'message': 'Generating report file...'}
+2025-07-12 13:03:33 [ERROR] Error in background task 8dcdab0b-1179-4dc7-a3f5-dc5629191217: cannot access local variable 'zip_filename' where it is not associated with a value
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/main.py", line 604, in generate_report_background
+    "file_url": f"/download-zip/{zip_filename}",
+                                 ^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'zip_filename' where it is not associated with a value
+2025-07-12 13:03:33 [DEBUG] Task status saved to file
+2025-07-12 13:03:33 [INFO] Task 8dcdab0b-1179-4dc7-a3f5-dc5629191217 status updated: {'status': 'failed', 'message': "Error generating report: cannot access local variable 'zip_filename' where it is not associated with a value", 'progress': 0}
+2025-07-12 13:03:35 [DEBUG] Task status saved to file
+2025-07-12 13:03:35 [INFO] Task a762533f-1e55-48a5-8eb6-f367c9540b02 status updated: {'status': 'processing', 'message': 'Starting insights generation...', 'created_at': '2025-07-12T13:03:35.027758', 'progress': 10}
+2025-07-12 13:03:35 [DEBUG] Task status saved to file
+2025-07-12 13:03:35 [INFO] Task a762533f-1e55-48a5-8eb6-f367c9540b02 status updated: {'status': 'processing', 'message': 'Processing report...', 'created_at': '2025-07-12T13:03:35.031136', 'progress': 10}
+2025-07-12 13:03:35 [INFO] Starting optimized background report generation for task a762533f-1e55-48a5-8eb6-f367c9540b02
+2025-07-12 13:03:35 [INFO] Contact list size: 5850
+2025-07-12 13:03:35 [DEBUG] Task status saved to file
+2025-07-12 13:03:35 [INFO] Task a762533f-1e55-48a5-8eb6-f367c9540b02 status updated: {'progress': 30, 'message': 'Database connected, starting batch processing...'}
+2025-07-12 13:03:35 [INFO] Processing 5850 contacts in 6 batches of 1000
+2025-07-12 13:03:35 [INFO] Processing batch 1/6 with 1000 contacts
+2025-07-12 13:03:35 [DEBUG] Task status saved to file
+2025-07-12 13:03:35 [INFO] Task a762533f-1e55-48a5-8eb6-f367c9540b02 status updated: {'progress': 30, 'message': 'Processing batch 1/6...'}
+2025-07-12 13:03:35 [INFO] Batch 1 completed: 769 rows
+2025-07-12 13:03:35 [INFO] Processing batch 2/6 with 1000 contacts
+2025-07-12 13:03:35 [DEBUG] Task status saved to file
+2025-07-12 13:03:35 [INFO] Task a762533f-1e55-48a5-8eb6-f367c9540b02 status updated: {'progress': 38, 'message': 'Processing batch 2/6...'}
+2025-07-12 13:03:35 [INFO] Batch 2 completed: 744 rows
+2025-07-12 13:03:35 [INFO] Processing batch 3/6 with 1000 contacts
+2025-07-12 13:03:35 [DEBUG] Task status saved to file
+2025-07-12 13:03:35 [INFO] Task a762533f-1e55-48a5-8eb6-f367c9540b02 status updated: {'progress': 46, 'message': 'Processing batch 3/6...'}
+2025-07-12 13:03:35 [INFO] Batch 3 completed: 624 rows
+2025-07-12 13:03:35 [INFO] Processing batch 4/6 with 1000 contacts
+2025-07-12 13:03:35 [DEBUG] Task status saved to file
+2025-07-12 13:03:35 [INFO] Task a762533f-1e55-48a5-8eb6-f367c9540b02 status updated: {'progress': 55, 'message': 'Processing batch 4/6...'}
+2025-07-12 13:03:35 [INFO] Batch 4 completed: 782 rows
+2025-07-12 13:03:35 [INFO] Processing batch 5/6 with 1000 contacts
+2025-07-12 13:03:35 [DEBUG] Task status saved to file
+2025-07-12 13:03:35 [INFO] Task a762533f-1e55-48a5-8eb6-f367c9540b02 status updated: {'progress': 63, 'message': 'Processing batch 5/6...'}
+2025-07-12 13:03:35 [INFO] Batch 5 completed: 779 rows
+2025-07-12 13:03:35 [INFO] Processing batch 6/6 with 850 contacts
+2025-07-12 13:03:35 [DEBUG] Task status saved to file
+2025-07-12 13:03:35 [INFO] Task a762533f-1e55-48a5-8eb6-f367c9540b02 status updated: {'progress': 71, 'message': 'Processing batch 6/6...'}
+2025-07-12 13:03:35 [INFO] Batch 6 completed: 547 rows
+2025-07-12 13:03:35 [INFO] All batches completed. Total rows: 4245
+2025-07-12 13:03:35 [DEBUG] Task status saved to file
+2025-07-12 13:03:35 [INFO] Task a762533f-1e55-48a5-8eb6-f367c9540b02 status updated: {'progress': 80, 'message': 'Processing missing contacts...'}
+2025-07-12 13:03:35 [INFO] Missing contacts found: 1605 contacts
+2025-07-12 13:03:35 [DEBUG] Task status saved to file
+2025-07-12 13:03:35 [INFO] Task a762533f-1e55-48a5-8eb6-f367c9540b02 status updated: {'progress': 90, 'message': 'Generating report file...'}
+2025-07-12 13:03:35 [ERROR] Error in background task a762533f-1e55-48a5-8eb6-f367c9540b02: cannot access local variable 'zip_filename' where it is not associated with a value
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/main.py", line 604, in generate_report_background
+    "file_url": f"/download-zip/{zip_filename}",
+                                 ^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'zip_filename' where it is not associated with a value
+2025-07-12 13:03:35 [DEBUG] Task status saved to file
+2025-07-12 13:03:35 [INFO] Task a762533f-1e55-48a5-8eb6-f367c9540b02 status updated: {'status': 'failed', 'message': "Error generating report: cannot access local variable 'zip_filename' where it is not associated with a value", 'progress': 0}
+2025-07-12 13:09:32 [INFO] Root endpoint accessed.
+2025-07-12 13:33:37 [DEBUG] connect_tcp.started host='wtsdealnow.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-07-12 13:33:37 [DEBUG] connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x702b16973ce0>
+2025-07-12 13:33:37 [DEBUG] start_tls.started ssl_context=<ssl.SSLContext object at 0x702b19825bd0> server_hostname='wtsdealnow.com' timeout=5.0
+2025-07-12 13:33:37 [DEBUG] start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x702b17b119a0>
+2025-07-12 13:33:37 [DEBUG] send_request_headers.started request=<Request [b'GET']>
+2025-07-12 13:33:37 [DEBUG] send_request_headers.complete
+2025-07-12 13:33:37 [DEBUG] send_request_body.started request=<Request [b'GET']>
+2025-07-12 13:33:37 [DEBUG] send_request_body.complete
+2025-07-12 13:33:37 [DEBUG] receive_response_headers.started request=<Request [b'GET']>
+2025-07-12 13:33:37 [DEBUG] receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Server', b'nginx/1.24.0 (Ubuntu)'), (b'Date', b'Sat, 12 Jul 2025 08:03:37 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Vary', b'Accept-Encoding'), (b'Vary', b'origin, Cookie'), (b'X-Frame-Options', b'DENY'), (b'Strict-Transport-Security', b'max-age=15780000'), (b'X-Content-Type-Options', b'nosniff'), (b'Referrer-Policy', b'same-origin'), (b'Cross-Origin-Opener-Policy', b'same-origin'), (b'Content-Encoding', b'gzip')])
+2025-07-12 13:33:37 [INFO] HTTP Request: GET https://wtsdealnow.com/api/users/ "HTTP/1.1 200 OK"
+2025-07-12 13:33:37 [DEBUG] receive_response_body.started request=<Request [b'GET']>
+2025-07-12 13:33:37 [DEBUG] receive_response_body.complete
+2025-07-12 13:33:37 [DEBUG] response_closed.started
+2025-07-12 13:33:37 [DEBUG] response_closed.complete
+2025-07-12 13:33:37 [DEBUG] close.started
+2025-07-12 13:33:37 [DEBUG] close.complete
+2025-07-12 13:33:37 [INFO] User validation successful for user_id: VertueFurnishing01
+2025-07-12 13:33:38 [INFO] Coin validation successful. Required: 1, Available: 0
+2025-07-12 13:33:38 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 13:33:38 [INFO] Sending batch of 1 contacts
+2025-07-12 13:33:38 [INFO] media_type OTP
+2025-07-12 13:33:39 [INFO] All messages processed. Total results: 1
+2025-07-12 13:33:39 [INFO] notify_user function called
+2025-07-12 13:33:39 [INFO] Successfully notified user via webhook.
+2025-07-12 13:33:39 [DEBUG] connect_tcp.started host='wtsdealnow.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-07-12 13:33:39 [DEBUG] connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x702b17523e60>
+2025-07-12 13:33:39 [DEBUG] start_tls.started ssl_context=<ssl.SSLContext object at 0x702b198241d0> server_hostname='wtsdealnow.com' timeout=5.0
+2025-07-12 13:33:39 [DEBUG] start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x702b170945f0>
+2025-07-12 13:33:39 [DEBUG] send_request_headers.started request=<Request [b'POST']>
+2025-07-12 13:33:39 [DEBUG] send_request_headers.complete
+2025-07-12 13:33:39 [DEBUG] send_request_body.started request=<Request [b'POST']>
+2025-07-12 13:33:39 [DEBUG] send_request_body.complete
+2025-07-12 13:33:39 [DEBUG] receive_response_headers.started request=<Request [b'POST']>
+2025-07-12 13:33:39 [DEBUG] receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Server', b'nginx/1.24.0 (Ubuntu)'), (b'Date', b'Sat, 12 Jul 2025 08:03:39 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Vary', b'Accept-Encoding'), (b'Vary', b'Accept, origin, Cookie'), (b'Allow', b'POST, OPTIONS'), (b'X-Frame-Options', b'DENY'), (b'Strict-Transport-Security', b'max-age=15780000'), (b'X-Content-Type-Options', b'nosniff'), (b'Referrer-Policy', b'same-origin'), (b'Cross-Origin-Opener-Policy', b'same-origin'), (b'Content-Encoding', b'gzip')])
+2025-07-12 13:33:39 [INFO] HTTP Request: POST https://wtsdealnow.com/update-balance-report/ "HTTP/1.1 200 OK"
+2025-07-12 13:33:39 [DEBUG] receive_response_body.started request=<Request [b'POST']>
+2025-07-12 13:33:39 [DEBUG] receive_response_body.complete
+2025-07-12 13:33:39 [DEBUG] response_closed.started
+2025-07-12 13:33:39 [DEBUG] response_closed.complete
+2025-07-12 13:33:39 [DEBUG] close.started
+2025-07-12 13:33:39 [DEBUG] close.complete
+2025-07-12 13:35:06 [DEBUG] Task status saved to file
+2025-07-12 13:35:06 [INFO] Task 36c6b4e1-3611-4aa5-aab3-a3c38044e38e status updated: {'status': 'processing', 'message': 'Starting insights generation...', 'created_at': '2025-07-12T13:35:06.594384', 'progress': 10}
+2025-07-12 13:35:06 [DEBUG] Task status saved to file
+2025-07-12 13:35:06 [INFO] Task 36c6b4e1-3611-4aa5-aab3-a3c38044e38e status updated: {'status': 'processing', 'message': 'Processing report...', 'created_at': '2025-07-12T13:35:06.598705', 'progress': 10}
+2025-07-12 13:35:06 [INFO] Starting optimized background report generation for task 36c6b4e1-3611-4aa5-aab3-a3c38044e38e
+2025-07-12 13:35:06 [INFO] Contact list size: 3769
+2025-07-12 13:35:06 [DEBUG] Task status saved to file
+2025-07-12 13:35:06 [INFO] Task 36c6b4e1-3611-4aa5-aab3-a3c38044e38e status updated: {'progress': 30, 'message': 'Database connected, starting batch processing...'}
+2025-07-12 13:35:06 [INFO] Processing 3769 contacts in 4 batches of 1000
+2025-07-12 13:35:06 [INFO] Processing batch 1/4 with 1000 contacts
+2025-07-12 13:35:06 [DEBUG] Task status saved to file
+2025-07-12 13:35:06 [INFO] Task 36c6b4e1-3611-4aa5-aab3-a3c38044e38e status updated: {'progress': 30, 'message': 'Processing batch 1/4...'}
+2025-07-12 13:35:06 [INFO] Batch 1 completed: 322 rows
+2025-07-12 13:35:06 [INFO] Processing batch 2/4 with 1000 contacts
+2025-07-12 13:35:06 [DEBUG] Task status saved to file
+2025-07-12 13:35:06 [INFO] Task 36c6b4e1-3611-4aa5-aab3-a3c38044e38e status updated: {'progress': 42, 'message': 'Processing batch 2/4...'}
+2025-07-12 13:35:06 [INFO] Batch 2 completed: 341 rows
+2025-07-12 13:35:06 [INFO] Processing batch 3/4 with 1000 contacts
+2025-07-12 13:35:06 [DEBUG] Task status saved to file
+2025-07-12 13:35:06 [INFO] Task 36c6b4e1-3611-4aa5-aab3-a3c38044e38e status updated: {'progress': 55, 'message': 'Processing batch 3/4...'}
+2025-07-12 13:35:06 [INFO] Batch 3 completed: 313 rows
+2025-07-12 13:35:06 [INFO] Processing batch 4/4 with 769 contacts
+2025-07-12 13:35:06 [DEBUG] Task status saved to file
+2025-07-12 13:35:06 [INFO] Task 36c6b4e1-3611-4aa5-aab3-a3c38044e38e status updated: {'progress': 67, 'message': 'Processing batch 4/4...'}
+2025-07-12 13:35:06 [INFO] Batch 4 completed: 225 rows
+2025-07-12 13:35:06 [INFO] All batches completed. Total rows: 1201
+2025-07-12 13:35:06 [DEBUG] Task status saved to file
+2025-07-12 13:35:06 [INFO] Task 36c6b4e1-3611-4aa5-aab3-a3c38044e38e status updated: {'progress': 80, 'message': 'Processing missing contacts...'}
+2025-07-12 13:35:06 [INFO] Missing contacts found: 2568 contacts
+2025-07-12 13:35:06 [DEBUG] Task status saved to file
+2025-07-12 13:35:06 [INFO] Task 36c6b4e1-3611-4aa5-aab3-a3c38044e38e status updated: {'progress': 90, 'message': 'Generating report file...'}
+2025-07-12 13:35:06 [ERROR] Error in background task 36c6b4e1-3611-4aa5-aab3-a3c38044e38e: cannot access local variable 'zip_filename' where it is not associated with a value
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/main.py", line 604, in generate_report_background
+    "file_url": f"/download-zip/{zip_filename}",
+                                 ^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'zip_filename' where it is not associated with a value
+2025-07-12 13:35:06 [DEBUG] Task status saved to file
+2025-07-12 13:35:06 [INFO] Task 36c6b4e1-3611-4aa5-aab3-a3c38044e38e status updated: {'status': 'failed', 'message': "Error generating report: cannot access local variable 'zip_filename' where it is not associated with a value", 'progress': 0}
+2025-07-12 13:35:48 [DEBUG] Task status saved to file
+2025-07-12 13:35:48 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'status': 'processing', 'message': 'Starting insights generation...', 'created_at': '2025-07-12T13:35:48.027217', 'progress': 10}
+2025-07-12 13:35:48 [DEBUG] Task status saved to file
+2025-07-12 13:35:48 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'status': 'processing', 'message': 'Processing report...', 'created_at': '2025-07-12T13:35:48.030912', 'progress': 10}
+2025-07-12 13:35:48 [INFO] Starting optimized background report generation for task 66761414-024e-441f-a06b-01e83bba9a73
+2025-07-12 13:35:48 [INFO] Contact list size: 8508
+2025-07-12 13:35:48 [DEBUG] Task status saved to file
+2025-07-12 13:35:48 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'progress': 30, 'message': 'Database connected, starting batch processing...'}
+2025-07-12 13:35:48 [INFO] Processing 8508 contacts in 9 batches of 1000
+2025-07-12 13:35:48 [INFO] Processing batch 1/9 with 1000 contacts
+2025-07-12 13:35:48 [DEBUG] Task status saved to file
+2025-07-12 13:35:48 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'progress': 30, 'message': 'Processing batch 1/9...'}
+2025-07-12 13:35:48 [INFO] Batch 1 completed: 341 rows
+2025-07-12 13:35:48 [INFO] Processing batch 2/9 with 1000 contacts
+2025-07-12 13:35:48 [DEBUG] Task status saved to file
+2025-07-12 13:35:48 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'progress': 35, 'message': 'Processing batch 2/9...'}
+2025-07-12 13:35:48 [INFO] Batch 2 completed: 361 rows
+2025-07-12 13:35:48 [INFO] Processing batch 3/9 with 1000 contacts
+2025-07-12 13:35:48 [DEBUG] Task status saved to file
+2025-07-12 13:35:48 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'progress': 41, 'message': 'Processing batch 3/9...'}
+2025-07-12 13:35:48 [INFO] Batch 3 completed: 340 rows
+2025-07-12 13:35:48 [INFO] Processing batch 4/9 with 1000 contacts
+2025-07-12 13:35:48 [DEBUG] Task status saved to file
+2025-07-12 13:35:48 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'progress': 46, 'message': 'Processing batch 4/9...'}
+2025-07-12 13:35:48 [INFO] Batch 4 completed: 337 rows
+2025-07-12 13:35:48 [INFO] Processing batch 5/9 with 1000 contacts
+2025-07-12 13:35:48 [DEBUG] Task status saved to file
+2025-07-12 13:35:48 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'progress': 52, 'message': 'Processing batch 5/9...'}
+2025-07-12 13:35:48 [INFO] Batch 5 completed: 386 rows
+2025-07-12 13:35:48 [INFO] Processing batch 6/9 with 1000 contacts
+2025-07-12 13:35:48 [DEBUG] Task status saved to file
+2025-07-12 13:35:48 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'progress': 57, 'message': 'Processing batch 6/9...'}
+2025-07-12 13:35:48 [INFO] Batch 6 completed: 580 rows
+2025-07-12 13:35:48 [INFO] Processing batch 7/9 with 1000 contacts
+2025-07-12 13:35:48 [DEBUG] Task status saved to file
+2025-07-12 13:35:48 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'progress': 63, 'message': 'Processing batch 7/9...'}
+2025-07-12 13:35:48 [INFO] Batch 7 completed: 639 rows
+2025-07-12 13:35:48 [INFO] Processing batch 8/9 with 1000 contacts
+2025-07-12 13:35:48 [DEBUG] Task status saved to file
+2025-07-12 13:35:48 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'progress': 68, 'message': 'Processing batch 8/9...'}
+2025-07-12 13:35:48 [INFO] Batch 8 completed: 597 rows
+2025-07-12 13:35:48 [INFO] Processing batch 9/9 with 508 contacts
+2025-07-12 13:35:48 [DEBUG] Task status saved to file
+2025-07-12 13:35:48 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'progress': 74, 'message': 'Processing batch 9/9...'}
+2025-07-12 13:35:49 [INFO] Batch 9 completed: 277 rows
+2025-07-12 13:35:49 [INFO] All batches completed. Total rows: 3858
+2025-07-12 13:35:49 [DEBUG] Task status saved to file
+2025-07-12 13:35:49 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'progress': 80, 'message': 'Processing missing contacts...'}
+2025-07-12 13:35:49 [INFO] Missing contacts found: 4650 contacts
+2025-07-12 13:35:49 [DEBUG] Task status saved to file
+2025-07-12 13:35:49 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'progress': 90, 'message': 'Generating report file...'}
+2025-07-12 13:35:49 [ERROR] Error in background task 66761414-024e-441f-a06b-01e83bba9a73: cannot access local variable 'zip_filename' where it is not associated with a value
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/main.py", line 604, in generate_report_background
+    "file_url": f"/download-zip/{zip_filename}",
+                                 ^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'zip_filename' where it is not associated with a value
+2025-07-12 13:35:49 [DEBUG] Task status saved to file
+2025-07-12 13:35:49 [INFO] Task 66761414-024e-441f-a06b-01e83bba9a73 status updated: {'status': 'failed', 'message': "Error generating report: cannot access local variable 'zip_filename' where it is not associated with a value", 'progress': 0}
+2025-07-12 13:36:27 [INFO] Generated new task_id: 70f7e03d-840f-4905-bfec-09e7f9cc5cae
+2025-07-12 13:36:27 [DEBUG] Task status saved to file
+2025-07-12 13:36:27 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'status': 'pending', 'message': 'Task queued for processing', 'created_at': '2025-07-12T13:36:27.819703', 'progress': 0}
+2025-07-12 13:36:27 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae initialized
+2025-07-12 13:36:27 [INFO] Background task added for task_id: 70f7e03d-840f-4905-bfec-09e7f9cc5cae
+2025-07-12 13:36:27 [DEBUG] Task status saved to file
+2025-07-12 13:36:27 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'status': 'processing', 'message': 'Processing report...', 'created_at': '2025-07-12T13:36:27.823515', 'progress': 10}
+2025-07-12 13:36:27 [INFO] Starting optimized background report generation for task 70f7e03d-840f-4905-bfec-09e7f9cc5cae
+2025-07-12 13:36:27 [INFO] Contact list size: 8508
+2025-07-12 13:36:27 [DEBUG] Task status saved to file
+2025-07-12 13:36:27 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'progress': 30, 'message': 'Database connected, starting batch processing...'}
+2025-07-12 13:36:27 [INFO] Processing 8508 contacts in 9 batches of 1000
+2025-07-12 13:36:27 [INFO] Processing batch 1/9 with 1000 contacts
+2025-07-12 13:36:27 [DEBUG] Task status saved to file
+2025-07-12 13:36:27 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'progress': 30, 'message': 'Processing batch 1/9...'}
+2025-07-12 13:36:27 [INFO] Checking status for task_id: 70f7e03d-840f-4905-bfec-09e7f9cc5cae
+2025-07-12 13:36:27 [ERROR] Task not found: 70f7e03d-840f-4905-bfec-09e7f9cc5cae
+2025-07-12 13:36:27 [INFO] Available task_ids: ['a58ed193-b6d3-417c-b700-05f1b4366883', '643c34ab-a570-4efa-bd6e-f396c0dfde67', '1d0f13d5-7a80-4b19-aabb-a7025cb07e23', '6c7cc33f-bc70-4b97-bd1f-3a3612bcee18', 'd92fbe8f-12fa-42d4-a853-5853b63f2e55', '0f65d732-d587-4405-a5b7-c046baaf6f6a', '827f92af-b931-4379-848c-a291bff77edd', 'e1d0bfb2-deb0-4c6a-9363-ec54fe244747', '7005cb77-9b51-4842-b074-ea899049e79a', 'eb21f755-dd86-4c34-ab3e-ba70a30cc1f3', '50d460a0-c15b-4c59-aafd-60f3e2d363bb', 'd6a29cc4-8f31-4abc-989c-a36347bd2eb1', '7f18d29f-c204-4e7e-9401-b212de3726ab', '611aba7f-f17e-4100-bdb3-0378dfbb585a', '526c6d4a-ed88-42a0-a80b-fce7d1eee4b9', 'f4e77a2b-8643-44d9-8b7a-82593b34b46c', '25ccf826-bc71-4d55-ba4c-459e4ecf3151', 'face138b-0084-48ce-95a3-0c365e0932d1', '824493e3-49e8-4f85-b35e-9c35f69c76cd', '2cbc9898-88cb-44fe-9ad6-69b4bbf8797c', '0b70d805-ecbf-4e84-86b7-609d6e8a6496', '3d7c0c03-d6fd-4d3b-8662-198cdf13f45a', 'd56af78e-3bb9-49b0-b25b-569fb1aaab33', '46390e7a-c031-4511-8f5e-dc7772a6c61d', '70d17fae-75f1-4a49-9782-7196d106dc04', '455c6f0a-f308-46b7-b624-3b39eaccf20c', 'ac26329c-e37e-44f9-9715-d7eed5549fe2', 'c67a1185-be92-420f-a9a4-af7562129c17', '288b9dd8-edbc-49d6-a433-d6f71bafc92d', '1d65368a-473f-4e3e-966b-8c9cd4157960', '1a20fd01-b176-466a-8d77-153b89596921', '31900f87-e0d7-4284-b6e1-6a46f3e8bb6e', '841e9427-54f8-47a4-a09d-c9cfcb894afc', '7fc7a818-7498-4f78-87bc-ff723122cf1a', 'ffa2f0e7-1868-4354-b597-6985fb9dfbdb', 'c6a1320f-07bf-471b-a121-4ad702c2bf38', 'b5830476-8a8c-468d-958c-76c8ca3c7863', '14e3c464-f7c8-4dfd-a7fe-341c2231f500', '0e7953c1-f3cc-415b-90aa-90e187d3da72', 'e695a202-cb72-4f8c-8f73-e38dfd835c45', '3b6c211d-31e0-45d8-b37f-74fe5ca6f067', 'fad08163-98ce-4436-80b7-6172f0d6e438', 'bcab7fec-db5e-426a-81bc-425a023fbdba', '381ca08f-0dd1-4d9a-a740-43f0d29ea647', 'fe0de084-8e6f-49df-b0e1-90a195be6d92', '3c9d7060-0ea6-423e-9dbd-90800228ced6', 'e41be12d-32ba-4f04-b767-e8272233f6ed', '946d7ebe-b237-42b2-af7f-01f1e088a487', '77db5781-5d2a-4f50-9251-f937c41cd406', '8b8dda60-1584-406a-9f87-f261b640b0d7', '4792e7bd-a262-479a-9be1-c2e705d329e3', '4bba1042-797d-47f3-a907-1e6909e66302', 'c22f69ee-749d-4afd-b3b7-4cfe5fc6fd36', '72de2b4d-d625-45a3-9c91-f7a98cc4e93a', '34b124fd-b0ff-44d6-acd0-71d6e6f875fa', '0564205a-be6b-4739-9a8f-6cac386ec41d', '00b2d0ae-654a-4131-9c68-f80991944834', 'a3a21732-1235-4e93-a1f9-8a2fd20fda6f', '55fa41eb-fac8-4e4f-aaaf-4b36f4cf40d1', 'cf21eb4a-0f7b-44b6-853e-f73c4b84f764', '9dde9294-c0f8-4c6e-b907-8f6cb200cd96', '29996fee-c1f0-4d1d-8dd3-8819beb5af07', '91fc42d0-879b-4952-a139-0aad03cec12c', 'bc2f4493-27f3-43ca-abe2-81ef9a124e1d', '77080089-d742-4446-a47f-9e9aadcd376c', '9a72a803-0c0b-4321-b9ac-55b5a9002e4d', 'a1ff6d99-7dc7-4329-99d3-fa9ea345ad0c', 'dd52f2b7-cf5e-44eb-8e05-654654289a66', '2fd66ee0-7e18-4ef1-858f-72c772a5ef63', 'd1252d57-f88b-4a0e-89bf-b52430bf42f3', '90475a6b-8f9b-4282-97af-a4ba56a5c924', 'e0a1abb3-3d60-423e-b9b1-0113ac22c6dc', '294009ef-f41f-431d-b21f-2b79202d8bd5', '45ca28b7-23a0-44bd-80dd-3d92a39eb467', '1eb0997d-830c-478c-84ac-f32d5d945cab', '9733de20-19ae-404d-b4ff-0bf734178c07', '3dc57a74-7438-4cbf-8c59-cde8bac423fa', '9b8810e9-2bd8-4085-8de9-06f652e822d6', '7f9e7d34-b0a9-4018-90de-f3b0fc4de6cf', 'e7ca29e8-11c3-42da-a7f7-837528e7b99e', 'b8abdbc1-410d-46e8-b9c6-82f0997d1070', 'c5b70011-9c93-46ed-9f69-957edcb43048', '274118a3-44a0-46a7-8fe5-96c68d562cf0', 'd1b826cf-c75e-4db6-a7ed-73a2cc3f121c', '7ceaf35b-4569-43d9-8d26-804080a3c73a', '3f3ca49a-8643-4d16-9a8f-862b0a3cb53e', '0ae935b8-5b1c-41ae-aa76-d60a7010d596', 'cf2fc873-3dc5-440f-b3c7-6f50eb0cc918', '0e2e27f8-1b32-437c-b091-ea98129560d8', '141c1a19-8676-4c8e-9ce4-ce8420070499', '4870c167-333f-40d1-a4a9-c5959d4a69f6', 'c8bbd3db-9bea-4661-8486-09e59ce2910c', '6d5d46e3-bfa5-424d-8707-7f873bb89222', '6bb642f4-276a-47f8-9638-67f8ebb24601', 'ab3c9d32-df64-481a-a6f3-c952fb076812', '1bffded1-d51d-4478-a0f5-3eccef167c56', 'cc5e7f9e-42e4-43f7-80d6-9b0cbaa98bfc', 'c8690c33-dd16-4971-bffd-309b65af8f9c', '0aaedfb6-8bfc-43b4-ab2d-8e7768e3240c', '27d63234-0572-4d75-96b9-b4d3807787e8', 'f089a86d-11f0-4f60-9509-e581534e0aa9', '37272a33-5fc9-4867-ac27-fac58bf4def5', '89cf2921-3962-4c7e-b529-e190547afaed', '2bb3771a-f260-4849-9302-5859c31efa4c', 'ddf9cc89-e0a9-4306-8919-9500200016ea', 'c97d5d6a-50c1-4397-844d-d3641bffe0e1', 'a55022cb-47d6-44d3-98e4-1e67573519af', 'e178a5a2-a5d2-4b02-b8e1-7bbcc16aa5cd', '9fefcf8b-b61c-446a-a6ef-bab233971f84', '6df50c52-b511-40d3-a9af-793cf6a58e5f', 'ee577970-5318-47f8-a0d9-9079364ef27a', '6c41e32f-63e1-4fb8-9213-e7d70a83514a', '23d35047-823c-4f5a-96af-ea387fe4ec41', 'dcccb4f4-d8b2-47ee-8895-aedc7c646f80', '3f6e03a2-2bc8-4fd2-ac6b-794da7225d9c', '815b6c3e-3fbb-432b-a490-55600b8b8af7', 'd94fe9df-4277-42b3-985d-242a233cc67f', 'e897d9f3-204f-481d-a77c-b15ccf9918c5', 'b7511c02-a0cd-4d16-a0dd-e296dbb839a6', 'a23acd04-ce00-4466-8458-356e45557157', 'c7b19bc5-2002-4623-817f-e58779ef7441', '5c19bd71-298d-484b-a82b-b4d91d10becd', '1addc9fc-f264-42b6-b860-68745f1cff25', '366c3921-e64b-451a-a517-dd827cbc1a9d', '4dd9299b-a621-4367-a0e0-3ac5d2fe3201', 'd816dd26-065d-4800-ae76-19144a9aa627', '54ff09dc-9c0d-4f0e-aee6-213a1f6d8bf2', '20a9f47e-05b6-4daa-895c-1452fed7b9f8', '316e0e42-3786-4b16-9f6e-8fedad3e9c7f', '097ef007-989b-4b92-af45-2f58a5f32a58', 'a595a9ab-cdb5-4a2c-8673-d0d18a2b5fc3', '4d679804-0e5a-477c-99e3-0f9e2f0752ae', 'db6f2078-c18d-4b0a-b1cd-e1440599e4fe', 'fc454b77-b874-43a0-9fd5-54ff563e8798', 'd50bff2c-1b81-4eeb-afc4-9cfac1e6ee1b', 'd957fe8b-d341-4c1e-ae11-bbaea4b30568', '9cbc4505-3ece-47c3-9d7b-956f64a520bc', 'abd0f991-6374-417d-9ca5-c32aaaf45ae7', '158aefd0-30d1-4c9a-a396-0cf783e75936', '08ee0285-be12-4000-81ad-d2592881abd2', '57cad7cb-da49-4c0b-bc9c-a1f8f4e01a17', '8747f0f7-1dea-4f80-b06d-3c60aeadbdcf', 'a47c5473-a696-46ed-bed6-faa75d93e44f', '03af94c5-f995-4030-9d6d-5edb92b4a5ad', 'dab76b43-6766-4ea5-8edd-2bbf918023dc', 'efab03f7-afca-4e1b-82f4-a2f4c0086699', '51344b65-6c62-4c9c-8b5e-99239365f143', '49b1abba-8b86-444c-ba43-72a19f9a0e44', 'e9094dec-470a-4c85-8638-1acaa7a0e402', '0456d207-d3c9-49c8-88ed-a9ba7075dbfc', '187b514c-bbc4-4d85-addc-f257fbba568c', '04957203-6b7e-4fe0-bfe7-32e1cdfe5fec', '122fb840-eac3-4748-9b19-cec0d21dcd77', '03d09c75-0b9b-4e90-bbff-8db66ce22566', 'e81e65dd-b9c4-4ebe-b842-abd56ede0ef3', 'd8352df1-d313-41ab-8fa6-cf989c152589', 'a4dc28e6-ee74-4f07-b77e-596452a7582b', 'f1b93191-672f-4ff7-a1ce-150bb40b6844', 'de3621c4-8820-4486-837a-1587236f15f9', '4aae54c2-3268-4de1-8a28-10a3bc0632b2', '24145815-8f76-41bd-b71e-acf179efed58', '9474abd6-94af-429c-bc6e-c98c6db07a94', 'ae76e9cf-af54-4196-88cd-79bfcd0ea9d2', 'd492c2f9-914b-4e27-ae99-18e9c0888b12', '9076c303-abfc-4840-b849-4326761abb09', '3acf3435-8fb4-4788-91b6-c3f10598ada1', '55576125-7721-4635-8691-0a99f0835e07', '2c58a75d-6424-4cd2-b1ee-50aa5aaaddfa', 'cafe7334-ebf8-434b-b430-6a5d648bd4a1', '0aa87f8a-2653-4fe5-be6f-06d8526965e5', 'b2c67452-c451-4ebd-9134-846d1658fe94', '238eb0e3-e29a-4ee4-b3d2-3e01a2cf36e0', '80f680bd-b529-4468-ab09-0947b09cce3c', 'b54725ef-7c3c-48ca-90f5-0b82012b0faf', '05bbc159-76ef-4671-9354-bf3e9fe65975', 'acd6dee9-e7d5-47b5-bcf6-38be16c8dd95', 'd018d47f-2ea2-41c9-9605-dabf1b1cdab1', 'f789bffa-8bf8-460d-b7af-d452845bef32', 'f6ef7f89-ac82-4fae-9c3b-920d402c1922', 'f1403293-9f4b-400a-b809-05a5b18d36dc', '9acb57e8-7b66-4f11-8c95-7201adbe7a1b', '40f4522f-b804-4c02-b0e8-00fc76067fd7', 'e5ccfca6-50f3-4600-9613-cdf77c3be2a6', '41ee44ae-f84c-48f5-a31d-7cccb0c32dec', 'e6062f6a-5e1c-4205-be80-09f1aa658777', '6ab8c2dc-17b6-48f6-bff1-e41936f7d448', 'e9355aea-3769-48c6-a315-f52280ce0cb2', '340af222-4a67-4762-8100-ea94ef974604', '3b1e000e-331b-442a-bf7f-7ab64862cfb1', '19add83e-066b-440a-8374-f6ffc5ce900e', 'ad149165-9723-4ff8-8b6e-db0636a523ee', 'a5889c7b-c16d-4563-8c7e-3675741882a9', '7864be6b-8062-4795-ae90-857ba06d01c3', 'dea867da-f66c-4102-8247-9319e4ba8609', '604dfe25-3e1d-407d-8024-586235e8c1fb', '0623a184-e8d6-4c4e-a458-b90c880053e3', 'b6b55464-91b9-441d-b39f-7732e16c3ef7', 'f097f383-c6bf-4fec-8194-ff8dd74fc37f', 'a03697ab-c78d-4f72-a249-3ffb4792a47f', '1feb0278-2ce5-4cbb-b11c-07526be86a32', '215143cc-174f-454d-ab81-af4dfac99306', 'fbed60a0-2a6f-4e07-b360-7e33c9780be7', '736b8b7d-e679-4752-b36e-5ed79c1ddd4f', 'be346715-d764-4f8e-a876-27a75e77bab4', '047a0d1e-5eee-440e-89b7-2105ae7b3f77', '8927d4b6-7248-4803-98f9-b349985c30bb', '1ced6904-6798-47c8-914c-7a4a8f461985', 'a5cf9347-021c-4c3d-b8be-4e2a506886cd', '4b6f4c00-cc1e-4974-8890-35c0e060526d', '53e58d89-fcaf-4c03-86d4-ee5df40ab00b', '3f37b470-2064-4c68-a8d3-7c60302fc56e', '892497a4-a32a-43f8-a076-37a57807b7bc', 'e4fa620b-ef3c-4b57-9452-52cf16b40e6b', 'abcdd5b3-1fc9-43d8-afec-8e77df3bf490', '6bbc2c27-58f7-487c-a3b9-bab3bc20be02', 'ba7fd536-0b34-47da-a779-b4a1da944cba', 'c0082a9e-03ec-49c0-bd17-72150a86d673', '0705d2a7-5073-49ca-a95e-c63d4c0285a5', 'b19eb556-b5c9-498f-8ad9-d3aae0db02c9', '152796f0-7e3e-4eb1-9853-b7f12d790c47', '59f5c369-c321-4210-92d5-2fc2fffd2387', '6c6c77f8-bdf6-4c32-999d-fba5335982ef', 'e1f3b5b0-ac97-4399-96f8-f4426900f65e', 'dd9fe08b-d50e-41a4-98e9-45b2b9981cdc', '6e6c25cb-9386-4005-b435-eb70df0946fb', 'be76f37b-f55f-47ae-b5f4-80726d9f035a', 'e6ed7d3f-f234-45fe-a105-5033a4ce20a0', '602e3e18-b753-4edc-b615-c440728d3c60', '5c8632bb-bb25-45ea-8ac9-28da413a03a0', '0cd7c202-a115-4df5-a465-f9df075bc619', '97288b9c-e385-4bd6-b755-256db4349191', '1b868719-f560-4fd1-a252-0c00640067ba', 'f3e164e2-0bbe-48a4-8ac8-3948764f1f53', '7cd47889-7dd8-4167-9d2a-733765fae25f', 'a762533f-1e55-48a5-8eb6-f367c9540b02', '66761414-024e-441f-a06b-01e83bba9a73']
+2025-07-12 13:36:27 [INFO] Batch 1 completed: 341 rows
+2025-07-12 13:36:27 [INFO] Processing batch 2/9 with 1000 contacts
+2025-07-12 13:36:27 [DEBUG] Task status saved to file
+2025-07-12 13:36:27 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'progress': 35, 'message': 'Processing batch 2/9...'}
+2025-07-12 13:36:28 [INFO] Batch 2 completed: 361 rows
+2025-07-12 13:36:28 [INFO] Processing batch 3/9 with 1000 contacts
+2025-07-12 13:36:28 [DEBUG] Task status saved to file
+2025-07-12 13:36:28 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'progress': 41, 'message': 'Processing batch 3/9...'}
+2025-07-12 13:36:28 [INFO] Batch 3 completed: 340 rows
+2025-07-12 13:36:28 [INFO] Processing batch 4/9 with 1000 contacts
+2025-07-12 13:36:28 [DEBUG] Task status saved to file
+2025-07-12 13:36:28 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'progress': 46, 'message': 'Processing batch 4/9...'}
+2025-07-12 13:36:28 [INFO] Batch 4 completed: 337 rows
+2025-07-12 13:36:28 [INFO] Processing batch 5/9 with 1000 contacts
+2025-07-12 13:36:28 [DEBUG] Task status saved to file
+2025-07-12 13:36:28 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'progress': 52, 'message': 'Processing batch 5/9...'}
+2025-07-12 13:36:28 [INFO] Batch 5 completed: 386 rows
+2025-07-12 13:36:28 [INFO] Processing batch 6/9 with 1000 contacts
+2025-07-12 13:36:28 [DEBUG] Task status saved to file
+2025-07-12 13:36:28 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'progress': 57, 'message': 'Processing batch 6/9...'}
+2025-07-12 13:36:28 [INFO] Batch 6 completed: 580 rows
+2025-07-12 13:36:28 [INFO] Processing batch 7/9 with 1000 contacts
+2025-07-12 13:36:28 [DEBUG] Task status saved to file
+2025-07-12 13:36:28 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'progress': 63, 'message': 'Processing batch 7/9...'}
+2025-07-12 13:36:28 [INFO] Batch 7 completed: 639 rows
+2025-07-12 13:36:28 [INFO] Processing batch 8/9 with 1000 contacts
+2025-07-12 13:36:28 [DEBUG] Task status saved to file
+2025-07-12 13:36:28 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'progress': 68, 'message': 'Processing batch 8/9...'}
+2025-07-12 13:36:28 [INFO] Batch 8 completed: 597 rows
+2025-07-12 13:36:28 [INFO] Processing batch 9/9 with 508 contacts
+2025-07-12 13:36:28 [DEBUG] Task status saved to file
+2025-07-12 13:36:28 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'progress': 74, 'message': 'Processing batch 9/9...'}
+2025-07-12 13:36:28 [INFO] Batch 9 completed: 277 rows
+2025-07-12 13:36:28 [INFO] All batches completed. Total rows: 3858
+2025-07-12 13:36:28 [DEBUG] Task status saved to file
+2025-07-12 13:36:28 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'progress': 80, 'message': 'Processing missing contacts...'}
+2025-07-12 13:36:28 [INFO] Missing contacts found: 4650 contacts
+2025-07-12 13:36:28 [DEBUG] Task status saved to file
+2025-07-12 13:36:28 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'progress': 90, 'message': 'Generating report file...'}
+2025-07-12 13:36:28 [DEBUG] Task status saved to file
+2025-07-12 13:36:28 [INFO] Task 70f7e03d-840f-4905-bfec-09e7f9cc5cae status updated: {'status': 'completed', 'message': 'Report generated successfully', 'file_url': '/download-zip/report_PASHUPATI MOTORS_PASHUPATI MOTORS_2025-07-08_4882.zip', 'progress': 100}
+2025-07-12 13:36:28 [INFO] Successfully generated ZIP report for task 70f7e03d-840f-4905-bfec-09e7f9cc5cae
+2025-07-12 13:55:49 [INFO] Processing 36 contacts for sending messages.
+2025-07-12 13:55:49 [INFO] Sending batch of 36 contacts
+2025-07-12 13:55:49 [INFO] media_type IMAGE
+2025-07-12 13:55:51 [INFO] Processing 863 test numbers
+2025-07-12 13:55:51 [INFO] Sending batch of 70 test numbers
+2025-07-12 13:55:53 [INFO] Sending batch of 70 test numbers
+2025-07-12 13:55:54 [INFO] Sending batch of 70 test numbers
+2025-07-12 13:55:56 [INFO] Sending batch of 70 test numbers
+2025-07-12 13:55:57 [INFO] Sending batch of 70 test numbers
+2025-07-12 13:55:59 [INFO] Sending batch of 70 test numbers
+2025-07-12 13:56:01 [INFO] Sending batch of 70 test numbers
+2025-07-12 13:56:02 [INFO] Sending batch of 70 test numbers
+2025-07-12 13:56:04 [INFO] Sending batch of 70 test numbers
+2025-07-12 13:56:06 [INFO] Sending batch of 70 test numbers
+2025-07-12 13:56:07 [INFO] Sending batch of 70 test numbers
+2025-07-12 13:56:09 [INFO] Sending batch of 70 test numbers
+2025-07-12 13:56:10 [INFO] Sending batch of 23 test numbers
+2025-07-12 13:56:11 [INFO] All messages processed. Total results: 899
+2025-07-12 13:56:11 [INFO] Successfully saved 899 WAMIDs for request MESSAGE8F7HUZ4A194S
+2025-07-12 13:56:11 [INFO] notify_user function called
+2025-07-12 13:56:11 [INFO] Successfully notified user via webhook.
+2025-07-12 14:13:46 [INFO] Processing 292 contacts for sending messages.
+2025-07-12 14:13:46 [INFO] Sending batch of 70 contacts
+2025-07-12 14:13:46 [INFO] media_type IMAGE
+2025-07-12 14:13:48 [INFO] Sending batch of 70 contacts
+2025-07-12 14:13:48 [INFO] media_type IMAGE
+2025-07-12 14:13:50 [INFO] Sending batch of 70 contacts
+2025-07-12 14:13:50 [INFO] media_type IMAGE
+2025-07-12 14:13:52 [INFO] Sending batch of 70 contacts
+2025-07-12 14:13:52 [INFO] media_type IMAGE
+2025-07-12 14:13:53 [INFO] Sending batch of 12 contacts
+2025-07-12 14:13:53 [INFO] media_type IMAGE
+2025-07-12 14:13:55 [INFO] Processing 2759 test numbers
+2025-07-12 14:13:55 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:13:56 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:13:57 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:13:59 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:00 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:01 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:03 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:04 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:05 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:06 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:08 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:09 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:10 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:12 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:13 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:14 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:15 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:16 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:18 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:19 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:20 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:21 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:22 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:23 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:25 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:26 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:27 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:29 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:30 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:31 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:32 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:34 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:35 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:36 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:37 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:39 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:40 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:41 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:43 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:14:44 [INFO] Sending batch of 29 test numbers
+2025-07-12 14:14:45 [INFO] All messages processed. Total results: 3051
+2025-07-12 14:14:45 [ERROR] Error saving WAMIDs to database: (psycopg2.errors.NotNullViolation) null value in column "pending_count" of relation "smsapp_reportinfo" violates not-null constraint
+DETAIL:  Failing row contains (4974, nan, 2025-07-12, 3046, nan, ioclumb, , MESSAGER90903GLFKJ7, MESSAGER90903GLFKJ7, 2025-07-12 14:14:45.655315+00, wamid.HBgMOTE5NDIzMTYxNzIxFQIAERgSN0E2QURFMzk1NTIwODcyQkM2AA==,w..., 0, 0, 0, 0, 0, 0, 2025-07-12 08:44:45.649588+00, null).
+
+[SQL: INSERT INTO smsapp_reportinfo (created_at, updated_at, email, campaign_title, contact_list, waba_id_list, message_date, template_name, message_delivery, start_request_id, end_request_id, deliver_count, sent_count, read_count, failed_count, reply_count, total_count) VALUES (%(created_at)s, now(), %(email)s, %(campaign_title)s, %(contact_list)s, %(waba_id_list)s, %(message_date)s, %(template_name)s, %(message_delivery)s, %(start_request_id)s, %(end_request_id)s, %(deliver_count)s, %(sent_count)s, %(read_count)s, %(failed_count)s, %(reply_count)s, %(total_count)s) RETURNING smsapp_reportinfo.id, smsapp_reportinfo.updated_at]
+[parameters: {'created_at': datetime.datetime(2025, 7, 12, 14, 14, 45, 655315), 'email': 'nan', 'campaign_title': 'nan', 'contact_list': '', 'waba_id_list': 'wamid.HBgMOTE5NDIzMTYxNzIxFQIAERgSN0E2QURFMzk1NTIwODcyQkM2AA==,wamid.HBgMOTE3MzUwNTY0ODQ4FQIAERgSQTQxQkUwMEE0NDA2NzAxNUNGAA==,wamid.HBgMOTE5NDIzMzg3N ... (191599 characters truncated) ... DQwMzkyNjExNUFBNDQ0AA==,wamid.HBgMOTE5ODI5ODAzMzE4FQIAERgSQUZGMkE3NDIxNTdBN0M4MjBBAA==,wamid.HBgMOTE5NDEwNDk3ODI0FQIAERgSNUNERjU1NzhENTk5MjgxNDA2AA==', 'message_date': datetime.date(2025, 7, 12), 'template_name': 'ioclumb', 'message_delivery': 3046, 'start_request_id': 'MESSAGER90903GLFKJ7', 'end_request_id': 'MESSAGER90903GLFKJ7', 'deliver_count': 0, 'sent_count': 0, 'read_count': 0, 'failed_count': 0, 'reply_count': 0, 'total_count': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 942, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.NotNullViolation: null value in column "pending_count" of relation "smsapp_reportinfo" violates not-null constraint
+DETAIL:  Failing row contains (4974, nan, 2025-07-12, 3046, nan, ioclumb, , MESSAGER90903GLFKJ7, MESSAGER90903GLFKJ7, 2025-07-12 14:14:45.655315+00, wamid.HBgMOTE5NDIzMTYxNzIxFQIAERgSN0E2QURFMzk1NTIwODcyQkM2AA==,w..., 0, 0, 0, 0, 0, 0, 2025-07-12 08:44:45.649588+00, null).
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/db_utils.py", line 57, in db_operation
+    db.commit()
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2032, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1313, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1288, in _prepare_impl
+    self.session.flush()
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4353, in flush
+    self._flush(objects)
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4488, in _flush
+    with util.safe_reraise():
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4449, in _flush
+    flush_context.execute()
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+    return meth(
+           ^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 516, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1843, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2352, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 942, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.IntegrityError: (psycopg2.errors.NotNullViolation) null value in column "pending_count" of relation "smsapp_reportinfo" violates not-null constraint
+DETAIL:  Failing row contains (4974, nan, 2025-07-12, 3046, nan, ioclumb, , MESSAGER90903GLFKJ7, MESSAGER90903GLFKJ7, 2025-07-12 14:14:45.655315+00, wamid.HBgMOTE5NDIzMTYxNzIxFQIAERgSN0E2QURFMzk1NTIwODcyQkM2AA==,w..., 0, 0, 0, 0, 0, 0, 2025-07-12 08:44:45.649588+00, null).
+
+[SQL: INSERT INTO smsapp_reportinfo (created_at, updated_at, email, campaign_title, contact_list, waba_id_list, message_date, template_name, message_delivery, start_request_id, end_request_id, deliver_count, sent_count, read_count, failed_count, reply_count, total_count) VALUES (%(created_at)s, now(), %(email)s, %(campaign_title)s, %(contact_list)s, %(waba_id_list)s, %(message_date)s, %(template_name)s, %(message_delivery)s, %(start_request_id)s, %(end_request_id)s, %(deliver_count)s, %(sent_count)s, %(read_count)s, %(failed_count)s, %(reply_count)s, %(total_count)s) RETURNING smsapp_reportinfo.id, smsapp_reportinfo.updated_at]
+[parameters: {'created_at': datetime.datetime(2025, 7, 12, 14, 14, 45, 655315), 'email': 'nan', 'campaign_title': 'nan', 'contact_list': '', 'waba_id_list': 'wamid.HBgMOTE5NDIzMTYxNzIxFQIAERgSN0E2QURFMzk1NTIwODcyQkM2AA==,wamid.HBgMOTE3MzUwNTY0ODQ4FQIAERgSQTQxQkUwMEE0NDA2NzAxNUNGAA==,wamid.HBgMOTE5NDIzMzg3N ... (191599 characters truncated) ... DQwMzkyNjExNUFBNDQ0AA==,wamid.HBgMOTE5ODI5ODAzMzE4FQIAERgSQUZGMkE3NDIxNTdBN0M4MjBBAA==,wamid.HBgMOTE5NDEwNDk3ODI0FQIAERgSNUNERjU1NzhENTk5MjgxNDA2AA==', 'message_date': datetime.date(2025, 7, 12), 'template_name': 'ioclumb', 'message_delivery': 3046, 'start_request_id': 'MESSAGER90903GLFKJ7', 'end_request_id': 'MESSAGER90903GLFKJ7', 'deliver_count': 0, 'sent_count': 0, 'read_count': 0, 'failed_count': 0, 'reply_count': 0, 'total_count': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-07-12 14:14:45 [INFO] notify_user function called
+2025-07-12 14:14:45 [INFO] Successfully notified user via webhook.
+2025-07-12 14:20:32 [INFO] Processing 155 contacts for sending messages.
+2025-07-12 14:20:32 [INFO] Sending batch of 70 contacts
+2025-07-12 14:20:32 [INFO] media_type IMAGE
+2025-07-12 14:20:34 [INFO] Sending batch of 70 contacts
+2025-07-12 14:20:34 [INFO] media_type IMAGE
+2025-07-12 14:20:36 [INFO] Sending batch of 15 contacts
+2025-07-12 14:20:36 [INFO] media_type IMAGE
+2025-07-12 14:20:38 [INFO] Processing 3720 test numbers
+2025-07-12 14:20:38 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:39 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:41 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:42 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:43 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:45 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:46 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:48 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:49 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:50 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:52 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:54 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:55 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:56 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:58 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:20:59 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:03 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:04 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:06 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:07 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:08 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:09 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:11 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:12 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:13 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:15 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:16 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:17 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:19 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:20 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:21 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:22 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:24 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:27 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:28 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:30 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:31 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:32 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:34 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:37 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:38 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:40 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:41 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:42 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:44 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:45 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:47 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:48 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:50 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:51 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:52 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:54 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:55 [INFO] Sending batch of 70 test numbers
+2025-07-12 14:21:56 [INFO] Sending batch of 10 test numbers
+2025-07-12 14:21:57 [INFO] All messages processed. Total results: 3875
+2025-07-12 14:21:57 [ERROR] Error saving WAMIDs to database: (psycopg2.errors.NotNullViolation) null value in column "pending_count" of relation "smsapp_reportinfo" violates not-null constraint
+DETAIL:  Failing row contains (4976, nan, 2025-07-12, 3861, nan, ioclumb, , MESSAGE2R5LH9B62LE0, MESSAGE2R5LH9B62LE0, 2025-07-12 14:21:57.817599+00, wamid.HBgMOTE5NDM1MDUxNTIzFQIAERgSQjJFMjI2OTU5MDVEMTk0NkE1AA==,w..., 0, 0, 0, 0, 0, 0, 2025-07-12 08:51:57.814524+00, null).
+
+[SQL: INSERT INTO smsapp_reportinfo (created_at, updated_at, email, campaign_title, contact_list, waba_id_list, message_date, template_name, message_delivery, start_request_id, end_request_id, deliver_count, sent_count, read_count, failed_count, reply_count, total_count) VALUES (%(created_at)s, now(), %(email)s, %(campaign_title)s, %(contact_list)s, %(waba_id_list)s, %(message_date)s, %(template_name)s, %(message_delivery)s, %(start_request_id)s, %(end_request_id)s, %(deliver_count)s, %(sent_count)s, %(read_count)s, %(failed_count)s, %(reply_count)s, %(total_count)s) RETURNING smsapp_reportinfo.id, smsapp_reportinfo.updated_at]
+[parameters: {'created_at': datetime.datetime(2025, 7, 12, 14, 21, 57, 817599), 'email': 'nan', 'campaign_title': 'nan', 'contact_list': '', 'waba_id_list': 'wamid.HBgMOTE5NDM1MDUxNTIzFQIAERgSQjJFMjI2OTU5MDVEMTk0NkE1AA==,wamid.HBgMOTE5OTM1NTIxMjk4FQIAERgSRURCN0EyNDJCMzQ3RUU1NDc2AA==,wamid.HBgMOTE4OTY4MjQ0M ... (242944 characters truncated) ... kU0NDFBNEY5QjhDQTRGAA==,wamid.HBgMOTE5MjA0Mzc2MTYyFQIAERgSNTY3MTg5RTREQzEzNDFFNjFGAA==,wamid.HBgMOTE5OTk4MTc1NTY2FQIAERgSRjA3OUQxNTAyODQ1RTlCRkI1AA==', 'message_date': datetime.date(2025, 7, 12), 'template_name': 'ioclumb', 'message_delivery': 3861, 'start_request_id': 'MESSAGE2R5LH9B62LE0', 'end_request_id': 'MESSAGE2R5LH9B62LE0', 'deliver_count': 0, 'sent_count': 0, 'read_count': 0, 'failed_count': 0, 'reply_count': 0, 'total_count': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 942, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.NotNullViolation: null value in column "pending_count" of relation "smsapp_reportinfo" violates not-null constraint
+DETAIL:  Failing row contains (4976, nan, 2025-07-12, 3861, nan, ioclumb, , MESSAGE2R5LH9B62LE0, MESSAGE2R5LH9B62LE0, 2025-07-12 14:21:57.817599+00, wamid.HBgMOTE5NDM1MDUxNTIzFQIAERgSQjJFMjI2OTU5MDVEMTk0NkE1AA==,w..., 0, 0, 0, 0, 0, 0, 2025-07-12 08:51:57.814524+00, null).
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/www/fastapi_new/db_utils.py", line 57, in db_operation
+    db.commit()
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2032, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1313, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1288, in _prepare_impl
+    self.session.flush()
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4353, in flush
+    self._flush(objects)
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4488, in _flush
+    with util.safe_reraise():
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4449, in _flush
+    flush_context.execute()
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+    return meth(
+           ^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 516, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1843, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2352, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/var/www/fastapi_new/fastapi_env/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 942, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.IntegrityError: (psycopg2.errors.NotNullViolation) null value in column "pending_count" of relation "smsapp_reportinfo" violates not-null constraint
+DETAIL:  Failing row contains (4976, nan, 2025-07-12, 3861, nan, ioclumb, , MESSAGE2R5LH9B62LE0, MESSAGE2R5LH9B62LE0, 2025-07-12 14:21:57.817599+00, wamid.HBgMOTE5NDM1MDUxNTIzFQIAERgSQjJFMjI2OTU5MDVEMTk0NkE1AA==,w..., 0, 0, 0, 0, 0, 0, 2025-07-12 08:51:57.814524+00, null).
+
+[SQL: INSERT INTO smsapp_reportinfo (created_at, updated_at, email, campaign_title, contact_list, waba_id_list, message_date, template_name, message_delivery, start_request_id, end_request_id, deliver_count, sent_count, read_count, failed_count, reply_count, total_count) VALUES (%(created_at)s, now(), %(email)s, %(campaign_title)s, %(contact_list)s, %(waba_id_list)s, %(message_date)s, %(template_name)s, %(message_delivery)s, %(start_request_id)s, %(end_request_id)s, %(deliver_count)s, %(sent_count)s, %(read_count)s, %(failed_count)s, %(reply_count)s, %(total_count)s) RETURNING smsapp_reportinfo.id, smsapp_reportinfo.updated_at]
+[parameters: {'created_at': datetime.datetime(2025, 7, 12, 14, 21, 57, 817599), 'email': 'nan', 'campaign_title': 'nan', 'contact_list': '', 'waba_id_list': 'wamid.HBgMOTE5NDM1MDUxNTIzFQIAERgSQjJFMjI2OTU5MDVEMTk0NkE1AA==,wamid.HBgMOTE5OTM1NTIxMjk4FQIAERgSRURCN0EyNDJCMzQ3RUU1NDc2AA==,wamid.HBgMOTE4OTY4MjQ0M ... (242944 characters truncated) ... kU0NDFBNEY5QjhDQTRGAA==,wamid.HBgMOTE5MjA0Mzc2MTYyFQIAERgSNTY3MTg5RTREQzEzNDFFNjFGAA==,wamid.HBgMOTE5OTk4MTc1NTY2FQIAERgSRjA3OUQxNTAyODQ1RTlCRkI1AA==', 'message_date': datetime.date(2025, 7, 12), 'template_name': 'ioclumb', 'message_delivery': 3861, 'start_request_id': 'MESSAGE2R5LH9B62LE0', 'end_request_id': 'MESSAGE2R5LH9B62LE0', 'deliver_count': 0, 'sent_count': 0, 'read_count': 0, 'failed_count': 0, 'reply_count': 0, 'total_count': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-07-12 14:21:57 [INFO] notify_user function called
+2025-07-12 14:21:57 [INFO] Successfully notified user via webhook.
+2025-07-12 14:24:31 [INFO] request token='EAAJYZBxemmqsBOxzSA0a9xdhQ0wXXvyO56qTP6b9AOS4GzeeFPadf9FBmeOYZBOUbEqOrgQ28lGfLZBm3RmK9vtZCq4grrkIWsJT1FxR9nL6lKWtm78GO7NEGFZAcZAZAcY23kCLZCjtfyI2flA9rJpHLsnEssZCTZAxiDy7ordhQaAqpEANT9CF3dzROL8qZBDIqzmOAZDZD' phone_number_id='668976972961613' contact_list=['918948957617'] message_type='reply_button_message' header=None body='Welcome to Anandi Magic World, Kanpur Road !! 🙏🏻  \n\nKindly select your preferred Language ' footer=None button_data=[{'type': 'reply', 'reply': {'id': 'btn_1', 'title': 'हिंदी'}}, {'type': 'reply', 'reply': {'id': 'btn_2', 'title': 'English'}}] product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2025-07-12 14:24:31 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 14:24:31 [INFO] Sending batch of 1 contacts
+2025-07-12 14:24:32 [INFO] All messages processed.
+2025-07-12 14:25:42 [INFO] request token='EAAJYZBxemmqsBOxzSA0a9xdhQ0wXXvyO56qTP6b9AOS4GzeeFPadf9FBmeOYZBOUbEqOrgQ28lGfLZBm3RmK9vtZCq4grrkIWsJT1FxR9nL6lKWtm78GO7NEGFZAcZAZAcY23kCLZCjtfyI2flA9rJpHLsnEssZCTZAxiDy7ordhQaAqpEANT9CF3dzROL8qZBDIqzmOAZDZD' phone_number_id='668976972961613' contact_list=['918948957617'] message_type='reply_button_message' header=None body='कृपया अपनी क्वेरी का चयन करें !! 🙏' footer=None button_data=[{'type': 'reply', 'reply': {'id': 'btn_1', 'title': 'कीमत / समय / पता'}}, {'type': 'reply', 'reply': {'id': 'btn_2', 'title': 'ग्रुप बुकिंग'}}, {'type': 'reply', 'reply': {'id': 'btn_3', 'title': ' कॉल करें'}}] product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2025-07-12 14:25:42 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 14:25:42 [INFO] Sending batch of 1 contacts
+2025-07-12 14:25:43 [INFO] All messages processed.
+2025-07-12 14:25:51 [INFO] request token='EAAJYZBxemmqsBOxzSA0a9xdhQ0wXXvyO56qTP6b9AOS4GzeeFPadf9FBmeOYZBOUbEqOrgQ28lGfLZBm3RmK9vtZCq4grrkIWsJT1FxR9nL6lKWtm78GO7NEGFZAcZAZAcY23kCLZCjtfyI2flA9rJpHLsnEssZCTZAxiDy7ordhQaAqpEANT9CF3dzROL8qZBDIqzmOAZDZD' phone_number_id='668976972961613' contact_list=['918948957617'] message_type='reply_button_message' header=None body='अपनी पसंद का चयन करें' footer=None button_data=[{'type': 'reply', 'reply': {'id': 'btn_1', 'title': 'टिकट कीमतें '}}, {'type': 'reply', 'reply': {'id': 'btn_2', 'title': 'पार्क का समय '}}, {'type': 'reply', 'reply': {'id': 'btn_3', 'title': 'पता'}}] product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2025-07-12 14:25:51 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 14:25:51 [INFO] Sending batch of 1 contacts
+2025-07-12 14:25:52 [INFO] All messages processed.
+2025-07-12 14:25:53 [INFO] request token='EAAJYZBxemmqsBOxzSA0a9xdhQ0wXXvyO56qTP6b9AOS4GzeeFPadf9FBmeOYZBOUbEqOrgQ28lGfLZBm3RmK9vtZCq4grrkIWsJT1FxR9nL6lKWtm78GO7NEGFZAcZAZAcY23kCLZCjtfyI2flA9rJpHLsnEssZCTZAxiDy7ordhQaAqpEANT9CF3dzROL8qZBDIqzmOAZDZD' phone_number_id='668976972961613' contact_list=['918948957617'] message_type='reply_button_message' header=None body='अपनी पसंद का चयन करें' footer=None button_data=[{'type': 'reply', 'reply': {'id': 'btn_1', 'title': 'स्कूल और कॉर्पोरेट '}}, {'type': 'reply', 'reply': {'id': 'btn_2', 'title': 'शादी की बुकिंग '}}, {'type': 'reply', 'reply': {'id': 'btn_3', 'title': 'फैमिली स्टे पैकेज'}}] product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2025-07-12 14:25:53 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 14:25:53 [INFO] Sending batch of 1 contacts
+2025-07-12 14:25:54 [INFO] All messages processed.
+2025-07-12 14:26:01 [INFO] request token='EAAJYZBxemmqsBOxzSA0a9xdhQ0wXXvyO56qTP6b9AOS4GzeeFPadf9FBmeOYZBOUbEqOrgQ28lGfLZBm3RmK9vtZCq4grrkIWsJT1FxR9nL6lKWtm78GO7NEGFZAcZAZAcY23kCLZCjtfyI2flA9rJpHLsnEssZCTZAxiDy7ordhQaAqpEANT9CF3dzROL8qZBDIqzmOAZDZD' phone_number_id='668976972961613' contact_list=['918948957617'] message_type='text' header=None body='https://forms.gle/XpiJwvJ4tRUiTVwZ7 कृपया अपने प्रश्न के संबंध में इस फॉर्म को भरें और हमारी टीम शीघ्र ही आपसे संपर्क करेगी।' footer=None button_data=None product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2025-07-12 14:26:01 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 14:26:01 [INFO] Sending batch of 1 contacts
+2025-07-12 14:26:02 [INFO] All messages processed.
+2025-07-12 14:31:50 [INFO] request token='EAAJYZBxemmqsBOxzSA0a9xdhQ0wXXvyO56qTP6b9AOS4GzeeFPadf9FBmeOYZBOUbEqOrgQ28lGfLZBm3RmK9vtZCq4grrkIWsJT1FxR9nL6lKWtm78GO7NEGFZAcZAZAcY23kCLZCjtfyI2flA9rJpHLsnEssZCTZAxiDy7ordhQaAqpEANT9CF3dzROL8qZBDIqzmOAZDZD' phone_number_id='668976972961613' contact_list=['917800011116'] message_type='reply_button_message' header=None body='Welcome to Anandi Magic World, Kanpur Road !! 🙏🏻  \n\nKindly select your preferred Language ' footer=None button_data=[{'type': 'reply', 'reply': {'id': 'btn_1', 'title': 'हिंदी'}}, {'type': 'reply', 'reply': {'id': 'btn_2', 'title': 'English'}}] product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2025-07-12 14:31:50 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 14:31:50 [INFO] Sending batch of 1 contacts
+2025-07-12 14:31:51 [INFO] All messages processed.
+2025-07-12 14:31:57 [INFO] request token='EAAJYZBxemmqsBOxzSA0a9xdhQ0wXXvyO56qTP6b9AOS4GzeeFPadf9FBmeOYZBOUbEqOrgQ28lGfLZBm3RmK9vtZCq4grrkIWsJT1FxR9nL6lKWtm78GO7NEGFZAcZAZAcY23kCLZCjtfyI2flA9rJpHLsnEssZCTZAxiDy7ordhQaAqpEANT9CF3dzROL8qZBDIqzmOAZDZD' phone_number_id='668976972961613' contact_list=['917800011116'] message_type='reply_button_message' header=None body='Kindly select your Query:' footer=None button_data=[{'type': 'reply', 'reply': {'id': 'btn_1', 'title': 'Pricing & Timing'}}, {'type': 'reply', 'reply': {'id': 'btn_2', 'title': 'Booking Enquiry'}}, {'type': 'reply', 'reply': {'id': 'btn_3', 'title': 'Call Us'}}] product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2025-07-12 14:31:57 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 14:31:57 [INFO] Sending batch of 1 contacts
+2025-07-12 14:31:58 [INFO] All messages processed.
+2025-07-12 14:32:02 [INFO] request token='EAAJYZBxemmqsBOxzSA0a9xdhQ0wXXvyO56qTP6b9AOS4GzeeFPadf9FBmeOYZBOUbEqOrgQ28lGfLZBm3RmK9vtZCq4grrkIWsJT1FxR9nL6lKWtm78GO7NEGFZAcZAZAcY23kCLZCjtfyI2flA9rJpHLsnEssZCTZAxiDy7ordhQaAqpEANT9CF3dzROL8qZBDIqzmOAZDZD' phone_number_id='668976972961613' contact_list=['917800011116'] message_type='reply_button_message' header=None body='Select Your Choice' footer=None button_data=[{'type': 'reply', 'reply': {'id': 'btn_1', 'title': 'Schools & Corporates'}}, {'type': 'reply', 'reply': {'id': 'btn_2', 'title': 'Wedding Booking'}}, {'type': 'reply', 'reply': {'id': 'btn_3', 'title': 'Family Stay Package'}}] product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2025-07-12 14:32:02 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 14:32:02 [INFO] Sending batch of 1 contacts
+2025-07-12 14:32:03 [INFO] All messages processed.
+2025-07-12 14:32:08 [INFO] request token='EAAJYZBxemmqsBOxzSA0a9xdhQ0wXXvyO56qTP6b9AOS4GzeeFPadf9FBmeOYZBOUbEqOrgQ28lGfLZBm3RmK9vtZCq4grrkIWsJT1FxR9nL6lKWtm78GO7NEGFZAcZAZAcY23kCLZCjtfyI2flA9rJpHLsnEssZCTZAxiDy7ordhQaAqpEANT9CF3dzROL8qZBDIqzmOAZDZD' phone_number_id='668976972961613' contact_list=['917800011116'] message_type='text' header=None body='https://forms.gle/XpiJwvJ4tRUiTVwZ7 Please fill this form regarding your query and our team will get back to you shortly.' footer=None button_data=None product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2025-07-12 14:32:08 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 14:32:08 [INFO] Sending batch of 1 contacts
+2025-07-12 14:32:09 [INFO] All messages processed.
+2025-07-12 14:32:32 [INFO] request token='EAAJYZBxemmqsBOxzSA0a9xdhQ0wXXvyO56qTP6b9AOS4GzeeFPadf9FBmeOYZBOUbEqOrgQ28lGfLZBm3RmK9vtZCq4grrkIWsJT1FxR9nL6lKWtm78GO7NEGFZAcZAZAcY23kCLZCjtfyI2flA9rJpHLsnEssZCTZAxiDy7ordhQaAqpEANT9CF3dzROL8qZBDIqzmOAZDZD' phone_number_id='668976972961613' contact_list=['917800011116'] message_type='text' header=None body='Please call us on: +91-7065-05-7065 You can also visit our website www.anandimagicworld.com for more information' footer=None button_data=None product_data=None catalog_id=None sections=None latitude=None longitude=None media_id=None
+2025-07-12 14:32:32 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 14:32:32 [INFO] Sending batch of 1 contacts
+2025-07-12 14:32:33 [INFO] All messages processed.
+2025-07-12 14:48:53 [DEBUG] connect_tcp.started host='wtsdealnow.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-07-12 14:48:53 [DEBUG] connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x702b15db42c0>
+2025-07-12 14:48:53 [DEBUG] start_tls.started ssl_context=<ssl.SSLContext object at 0x702b198de2d0> server_hostname='wtsdealnow.com' timeout=5.0
+2025-07-12 14:48:53 [DEBUG] start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x702b16fa2150>
+2025-07-12 14:48:53 [DEBUG] send_request_headers.started request=<Request [b'GET']>
+2025-07-12 14:48:53 [DEBUG] send_request_headers.complete
+2025-07-12 14:48:53 [DEBUG] send_request_body.started request=<Request [b'GET']>
+2025-07-12 14:48:53 [DEBUG] send_request_body.complete
+2025-07-12 14:48:53 [DEBUG] receive_response_headers.started request=<Request [b'GET']>
+2025-07-12 14:48:53 [DEBUG] receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Server', b'nginx/1.24.0 (Ubuntu)'), (b'Date', b'Sat, 12 Jul 2025 09:18:53 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Vary', b'Accept-Encoding'), (b'Vary', b'origin, Cookie'), (b'X-Frame-Options', b'DENY'), (b'Strict-Transport-Security', b'max-age=15780000'), (b'X-Content-Type-Options', b'nosniff'), (b'Referrer-Policy', b'same-origin'), (b'Cross-Origin-Opener-Policy', b'same-origin'), (b'Content-Encoding', b'gzip')])
+2025-07-12 14:48:53 [INFO] HTTP Request: GET https://wtsdealnow.com/api/users/ "HTTP/1.1 200 OK"
+2025-07-12 14:48:53 [DEBUG] receive_response_body.started request=<Request [b'GET']>
+2025-07-12 14:48:53 [DEBUG] receive_response_body.complete
+2025-07-12 14:48:53 [DEBUG] response_closed.started
+2025-07-12 14:48:53 [DEBUG] response_closed.complete
+2025-07-12 14:48:53 [DEBUG] close.started
+2025-07-12 14:48:53 [DEBUG] close.complete
+2025-07-12 14:48:53 [INFO] User validation successful for user_id: VertueFurnishing01
+2025-07-12 14:48:53 [INFO] Coin validation successful. Required: 1, Available: 0
+2025-07-12 14:48:53 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 14:48:53 [INFO] Sending batch of 1 contacts
+2025-07-12 14:48:53 [INFO] media_type OTP
+2025-07-12 14:48:55 [INFO] All messages processed. Total results: 1
+2025-07-12 14:48:55 [INFO] notify_user function called
+2025-07-12 14:48:55 [INFO] Successfully notified user via webhook.
+2025-07-12 14:48:55 [DEBUG] connect_tcp.started host='wtsdealnow.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-07-12 14:48:55 [DEBUG] connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x702b16f19190>
+2025-07-12 14:48:55 [DEBUG] start_tls.started ssl_context=<ssl.SSLContext object at 0x702b197f56d0> server_hostname='wtsdealnow.com' timeout=5.0
+2025-07-12 14:48:55 [DEBUG] start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x702b16f18ec0>
+2025-07-12 14:48:55 [DEBUG] send_request_headers.started request=<Request [b'POST']>
+2025-07-12 14:48:55 [DEBUG] send_request_headers.complete
+2025-07-12 14:48:55 [DEBUG] send_request_body.started request=<Request [b'POST']>
+2025-07-12 14:48:55 [DEBUG] send_request_body.complete
+2025-07-12 14:48:55 [DEBUG] receive_response_headers.started request=<Request [b'POST']>
+2025-07-12 14:48:55 [DEBUG] receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Server', b'nginx/1.24.0 (Ubuntu)'), (b'Date', b'Sat, 12 Jul 2025 09:18:55 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Vary', b'Accept-Encoding'), (b'Vary', b'Accept, origin, Cookie'), (b'Allow', b'POST, OPTIONS'), (b'X-Frame-Options', b'DENY'), (b'Strict-Transport-Security', b'max-age=15780000'), (b'X-Content-Type-Options', b'nosniff'), (b'Referrer-Policy', b'same-origin'), (b'Cross-Origin-Opener-Policy', b'same-origin'), (b'Content-Encoding', b'gzip')])
+2025-07-12 14:48:55 [INFO] HTTP Request: POST https://wtsdealnow.com/update-balance-report/ "HTTP/1.1 200 OK"
+2025-07-12 14:48:55 [DEBUG] receive_response_body.started request=<Request [b'POST']>
+2025-07-12 14:48:55 [DEBUG] receive_response_body.complete
+2025-07-12 14:48:55 [DEBUG] response_closed.started
+2025-07-12 14:48:55 [DEBUG] response_closed.complete
+2025-07-12 14:48:55 [DEBUG] close.started
+2025-07-12 14:48:55 [DEBUG] close.complete
+2025-07-12 15:02:11 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 15:02:11 [INFO] Sending batch of 1 contacts
+2025-07-12 15:02:11 [INFO] media_type IMAGE
+2025-07-12 15:02:12 [INFO] All messages processed. Total results: 1
+2025-07-12 15:02:12 [INFO] Successfully saved 1 WAMIDs for request MESSAGEZ32KA3XS6Q12
+2025-07-12 15:02:12 [INFO] notify_user function called
+2025-07-12 15:02:13 [INFO] Successfully notified user via webhook.
+2025-07-12 15:02:58 [INFO] Processing 1 contacts for sending messages.
+2025-07-12 15:02:58 [INFO] Sending batch of 1 contacts
+2025-07-12 15:02:58 [INFO] media_type IMAGE
+2025-07-12 15:02:59 [INFO] All messages processed. Total results: 1
+2025-07-12 15:02:59 [INFO] Successfully saved 1 WAMIDs for request MESSAGEUE4NI3217JK6
+2025-07-12 15:02:59 [INFO] notify_user function called
+2025-07-12 15:02:59 [INFO] Successfully notified user via webhook.
