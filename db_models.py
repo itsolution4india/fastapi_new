@@ -38,6 +38,7 @@ class ReportInfo(Base):
     deliver_count = Column(Integer, default=0, nullable=False)
     sent_count = Column(Integer, default=0, nullable=False)
     read_count = Column(Integer, default=0, nullable=False)
+    pending_count = Column(Integer, default=0, nullable=False)
     failed_count = Column(Integer, default=0, nullable=False)
     reply_count = Column(Integer, default=0, nullable=False)
     total_count = Column(Integer, default=0, nullable=False)
