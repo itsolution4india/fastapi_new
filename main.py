@@ -574,7 +574,15 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
         })
         
         if insight:
-            status_counts = Counter(row[5].lower() if row[5] else '' for row in all_rows)
+            seen_contacts = set()
+            unique_rows = []
+            for row in all_rows:
+                contact_wa_id = row[4]
+                if contact_wa_id not in seen_contacts:
+                    seen_contacts.add(contact_wa_id)
+                    unique_rows.append(row)
+            
+            status_counts = Counter(row[5].lower() if row[5] else '' for row in unique_rows)
             
             report.deliver_count = status_counts.get('delivered', 0)
             report.sent_count = status_counts.get('sent', 0)
