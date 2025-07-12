@@ -4,7 +4,6 @@ import uvicorn
 from fastapi import HTTPException, Query
 from fastapi import BackgroundTasks
 from fastapi import File, UploadFile, Form
-from typing import List, Optional
 from models import APIMessageRequest, APIBalanceRequest, ValidateNumbers, MessageRequest, BotMessageRequest, CarouselRequest, FlowMessageRequest, ReportRequest, TaskStatusResponse
 from utils import logger, generate_unique_id
 from async_api_functions import fetch_user_data, validate_coins, update_balance_and_report, get_template_details_by_name, generate_media_id
@@ -12,9 +11,14 @@ from async_chunk_functions import send_messages, send_carousels, send_bot_messag
 from app import app, load_tracker
 import httpx
 import threading
-from typing import Dict, Optional, Any, Tuple
+from typing import Dict, Optional, Any, Tuple, List
 from collections import Counter
 import mysql.connector
+from db_models import SessionLocal, ReportInfo
+import pymysql
+from fastapi.responses import FileResponse
+import zipfile, uuid, math, json, csv, io, random
+from datetime import datetime, timedelta
 
 TEMP_FOLDER = "temp_uploads"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
@@ -31,6 +35,14 @@ task_status_lock = threading.Lock()
 SECONDARY_SERVER = "http://fastapi2.wtsmessage.xyz"
 IS_PRIMARY = False
         
+dbconfig = {
+    "host": "localhost",
+    "port": 3306,
+    "user": "prashanth@itsolution4india.com",
+    "password": "Solution@97",
+    "db": "webhook_responses",
+    "charset": "utf8mb4",
+}
 
 @app.post("/send_sms/")
 async def send_messages_api(request: MessageRequest, background_tasks: BackgroundTasks):
@@ -113,275 +125,6 @@ async def get_insights(request: ReportRequest, background_tasks: BackgroundTasks
     except Exception as e:
         logger.error(f"Error in get_insights: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing insights request: {e}")
-
-# async def generate_insights_background(task_id: str, request: ReportRequest):
-#     """Background task to generate insights and update ReportInfo"""
-    
-#     update_task_status(task_id, {
-#         "status": "processing",
-#         "message": "Processing insights...",
-#         "progress": 20
-#     })
-    
-#     logger.info(f"Starting insights generation for task {task_id}")
-    
-#     db = None
-#     connection = None
-#     cursor = None
-    
-#     try:
-#         # Database connections
-#         db = SessionLocal()
-#         report = db.query(ReportInfo).filter(ReportInfo.id == int(request.report_id)).first()
-        
-#         if not report:
-#             logger.error(f"Report not found for report_id={request.report_id}")
-#             update_task_status(task_id, {
-#                 "status": "failed",
-#                 "message": "Report not found"
-#             })
-#             return
-        
-#         contact_list = [x.strip() for x in report.contact_list.split(",") if x.strip()]
-#         waba_id_list = [x.strip() for x in report.waba_id_list.split(",") if x.strip()]
-#         phone_id = request.phone_id
-        
-#         logger.info(f"Processing insights for {len(contact_list)} contacts")
-        
-#         # Timezone adjustment
-#         created_at = report.created_at + timedelta(hours=5, minutes=30)
-#         created_at_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
-        
-#         # MySQL Connection
-#         connection = pymysql.connect(**dbconfig)
-#         cursor = connection.cursor()
-        
-#         update_task_status(task_id, {
-#             "progress": 40,
-#             "message": "Analyzing message statuses..."
-#         })
-        
-#         if not contact_list:
-#             logger.error("Contact list is empty")
-#             update_task_status(task_id, {
-#                 "status": "failed",
-#                 "message": "Contact list is empty"
-#             })
-#             return
-        
-#         # Get all message data (similar to report generation but focus on status)
-#         all_rows = []
-        
-#         # BATCH PROCESSING for insights
-#         batch_size = 1000
-#         total_batches = math.ceil(len(contact_list) / batch_size)
-        
-#         logger.info(f"Processing {len(contact_list)} contacts in {total_batches} batches")
-        
-#         for batch_num in range(total_batches):
-#             start_idx = batch_num * batch_size
-#             end_idx = min((batch_num + 1) * batch_size, len(contact_list))
-#             batch_contacts = contact_list[start_idx:end_idx]
-            
-#             logger.info(f"Processing batch {batch_num + 1}/{total_batches}")
-            
-#             # Update progress
-#             base_progress = 40
-#             batch_progress = int((batch_num / total_batches) * 40)  # 40% for batch processing
-#             current_progress = base_progress + batch_progress
-            
-#             update_task_status(task_id, {
-#                 "progress": current_progress,
-#                 "message": f"Processing batch {batch_num + 1}/{total_batches}..."
-#             })
-            
-#             # Execute batch query for insights
-#             batch_rows = await execute_insights_batch_query(
-#                 cursor, batch_contacts, phone_id, created_at_str, waba_id_list
-#             )
-            
-#             if batch_rows:
-#                 all_rows.extend(batch_rows)
-#                 logger.info(f"Batch {batch_num + 1} completed: {len(batch_rows)} rows")
-        
-#         update_task_status(task_id, {
-#             "progress": 80,
-#             "message": "Calculating statistics..."
-#         })
-        
-#         # Calculate statistics from the data
-#         stats = calculate_message_statistics(all_rows, contact_list)
-        
-#         # Update ReportInfo with calculated statistics
-#         report.deliver_count = stats['delivered']
-#         report.sent_count = stats['sent']
-#         report.read_count = stats['read']
-#         report.failed_count = stats['failed']
-#         report.reply_count = stats['reply']
-#         report.total_count = len(contact_list)
-        
-#         # Commit the changes
-#         db.commit()
-        
-#         update_task_status(task_id, {
-#             "status": "completed",
-#             "message": "Insights generated successfully",
-#             "progress": 100,
-#             "stats": stats
-#         })
-        
-#         logger.info(f"Successfully generated insights for task {task_id}: {stats}")
-        
-#     except Exception as e:
-#         logger.error(f"Error in insights background task {task_id}: {str(e)}", exc_info=True)
-#         update_task_status(task_id, {
-#             "status": "failed",
-#             "message": f"Error generating insights: {str(e)}",
-#             "progress": 0
-#         })
-        
-#         # Rollback any partial changes
-#         if db:
-#             db.rollback()
-    
-#     finally:
-#         # Clean up database connections
-#         if cursor:
-#             cursor.close()
-#         if connection:
-#             connection.close()
-#         if db:
-#             db.close()
-
-
-# async def execute_insights_batch_query(cursor, batch_contacts: List[str], phone_id: str, 
-#                                        created_at_str: str, waba_id_list: List[str]) -> List[Tuple]:
-#     """Execute optimized query for insights - focus on unique waba_id per contact"""
-
-#     placeholders_contacts = ','.join(['%s'] * len(batch_contacts))
-#     waba_filter = ""
-#     waba_placeholders = ""
-#     if waba_id_list and waba_id_list != ['0']:
-#         waba_placeholders = ','.join(['%s'] * len(waba_id_list))
-#         waba_filter = f"AND wr1.waba_id IN ({waba_placeholders})"
-
-#     base_query = f"""
-#         SELECT wr1.contact_wa_id,
-#                wr1.new_status,
-#                wr1.message_type,
-#                wr1.error_code,
-#                wr1.message_from
-#         FROM webhook_responses_490892730652855_dup wr1
-#         INNER JOIN (
-#             SELECT contact_wa_id, MAX(message_timestamp) AS latest_timestamp
-#             FROM webhook_responses_490892730652855_dup
-#             WHERE contact_wa_id IN ({placeholders_contacts})
-#               AND phone_number_id = %s
-#               AND Date >= %s
-#               {f"AND waba_id IN ({waba_placeholders})" if waba_filter else ""}
-#             GROUP BY contact_wa_id
-#         ) latest ON latest.contact_wa_id = wr1.contact_wa_id 
-#                 AND latest.latest_timestamp = wr1.message_timestamp
-#         WHERE wr1.contact_wa_id IN ({placeholders_contacts})
-#           AND wr1.phone_number_id = %s
-#           AND wr1.Date >= %s
-#           {waba_filter}
-#         ORDER BY wr1.contact_wa_id
-#     """
-
-#     # Build parameter list
-#     params = batch_contacts + [phone_id, created_at_str]
-#     if waba_filter:
-#         params += waba_id_list
-#     params += batch_contacts + [phone_id, created_at_str]
-#     if waba_filter:
-#         params += waba_id_list
-
-#     try:
-#         cursor.execute(base_query, params)
-#         return cursor.fetchall()
-#     except Exception as e:
-#         logger.error(f"Error executing insights batch query: {str(e)}")
-#         return []
-
-# def calculate_message_statistics(rows: List[Tuple], contact_list: List[str]) -> dict:
-#     """Calculate message delivery statistics"""
-    
-#     stats = {
-#         'delivered': 0,
-#         'sent': 0,
-#         'read': 0,
-#         'failed': 0,
-#         'reply': 0,
-#         'no_data': 0
-#     }
-    
-#     # Track processed contacts
-#     processed_contacts = set()
-    
-#     for row in rows:
-#         contact_wa_id = row[0]  # contact_wa_id
-#         status = row[1]         # status
-#         message_type = row[2]   # message_type
-#         error_code = row[3]     # error_code
-#         message_from = row[4]   # message_from
-        
-#         processed_contacts.add(contact_wa_id)
-        
-#         # Categorize based on status
-#         if status:
-#             status_lower = status.lower()
-            
-#             if status_lower == 'delivered':
-#                 stats['delivered'] += 1
-#             elif status_lower == 'sent':
-#                 stats['sent'] += 1
-#             elif status_lower == 'read':
-#                 stats['read'] += 1
-#             elif status_lower in ['failed', 'error', 'rejected']:
-#                 stats['failed'] += 1
-#             elif message_type == 'text' and message_from and message_from != 'system':
-#                 # This indicates a reply from the contact
-#                 stats['reply'] += 1
-#             else:
-#                 # Default to sent if status exists but doesn't match known categories
-#                 stats['sent'] += 1
-#         else:
-#             # No status means failed
-#             stats['failed'] += 1
-    
-#     # Count contacts with no data
-#     missing_contacts = set(contact_list) - processed_contacts
-#     stats['no_data'] = len(missing_contacts)
-    
-#     # Add missing contacts to failed count (assuming they failed to deliver)
-#     stats['failed'] += stats['no_data']
-    
-#     logger.info(f"Statistics calculated: {stats}")
-#     return stats
-
-from fastapi.responses import StreamingResponse
-from db_models import SessionLocal, ReportInfo
-import pymysql
-import csv
-import io
-from fastapi.responses import FileResponse
-import zipfile
-import uuid
-import math
-import json
-from datetime import datetime, timedelta
- 
-dbconfig = {
-    "host": "localhost",
-    "port": 3306,
-    "user": "prashanth@itsolution4india.com",
-    "password": "Solution@97",
-    "db": "webhook_responses",
-    "charset": "utf8mb4",
-}
- 
-import random
 
 def load_task_status():
     """Load task status from file"""
@@ -553,7 +296,6 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             "message": "Processing missing contacts..."
         })
         
-        # Handle missing contacts (same as before but more efficient)
         found_contacts = set()
         if all_rows:
             for row in all_rows:
@@ -587,6 +329,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             report.deliver_count = status_counts.get('delivered', 0)
             report.sent_count = status_counts.get('sent', 0)
             report.read_count = status_counts.get('read', 0)
+            report.pending_count = status_counts.get('pending', 0)
             report.failed_count = status_counts.get('failed', 0)
             report.reply_count = status_counts.get('reply', 0)
             report.total_count = len(contact_list)
@@ -677,7 +420,7 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
 
 async def generate_fallback_data(cursor, missing_contacts: set, created_at: datetime) -> List[Tuple]:
     """Generate fallback data for missing contacts"""
-    
+
     if not missing_contacts:
         return []
     
@@ -695,7 +438,7 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
     
     cursor.execute(fallback_query, (len(missing_contacts),))
     fallback_rows = cursor.fetchall()
-    
+
     # Modify fallback records for missing contacts
     modified_fallback_rows = []
     for i, missing_contact in enumerate(missing_contacts):
@@ -705,6 +448,10 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
             # Generate random date within 5 minutes of created_at
             random_seconds = random.randint(0, 300)
             new_date = created_at + timedelta(seconds=random_seconds)
+        
+            # Check if new_date is within the last 24 hours
+            if (datetime.now() - new_date) < timedelta(hours=24):
+                fallback_row[5] = 'pending'  # status
             
             # Update the record
             fallback_row[0] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # Date
@@ -724,7 +471,7 @@ async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, camp
     
     # Process rows and generate CSV
     header = [
-        "Date", "display_phone_number", "phone_number_id", "waba_id",
+        "Date", "display_phone_number", "phone_number_id", "waba_id", "contact_wa_id",
         "new_status", "message_timestamp", "error_code", "error_message", "contact_name",
         "message_from", "message_type", "message_body"
     ]
@@ -740,11 +487,9 @@ async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, camp
             
         seen_contacts.add(contact_wa_id)
         
-        row_list.pop(4)
-        
-        if row_list[4] != 'failed':
-            row_list[6] = None
+        if row_list[5] != 'failed':
             row_list[7] = None
+            row_list[8] = None
         
         processed_rows.append(row_list)
 
