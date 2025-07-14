@@ -316,29 +316,27 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             "message": "Generating report file..."
         })
         
-        if insight:
-            seen_contacts = set()
-            unique_rows = []
-            for row in all_rows:
-                contact_wa_id = row[4]
-                if contact_wa_id not in seen_contacts:
-                    seen_contacts.add(contact_wa_id)
-                    unique_rows.append(row)
-            
-            status_counts = Counter(row[5].lower() if row[5] else '' for row in unique_rows)
-            
-            report.deliver_count = status_counts.get('delivered', 0)
-            report.sent_count = status_counts.get('sent', 0)
-            report.read_count = status_counts.get('read', 0)
-            report.pending_count = status_counts.get('pending', 0)
-            report.failed_count = status_counts.get('failed', 0)
-            report.reply_count = status_counts.get('reply', 0)
-            report.total_count = len(contact_list)
-            
-            # Commit the changes
-            db.commit()
-        else:
-            # Generate CSV and ZIP file (same as original code)
+        seen_contacts = set()
+        unique_rows = []
+        for row in all_rows:
+            contact_wa_id = row[4]
+            if contact_wa_id not in seen_contacts:
+                seen_contacts.add(contact_wa_id)
+                unique_rows.append(row)
+        
+        status_counts = Counter(row[5].lower() if row[5] else '' for row in unique_rows)
+        
+        report.deliver_count = status_counts.get('delivered', 0)
+        report.sent_count = status_counts.get('sent', 0)
+        report.read_count = status_counts.get('read', 0)
+        report.pending_count = status_counts.get('pending', 0)
+        report.failed_count = status_counts.get('failed', 0)
+        report.reply_count = status_counts.get('reply', 0)
+        report.total_count = len(contact_list)
+        
+        # Commit the changes
+        db.commit()
+        if not insight:
             zip_filename = await generate_csv_zip(all_rows, request.report_id, task_id, campaign_title, str(template_name), str(created_at))
         
             # Update task status to completed
