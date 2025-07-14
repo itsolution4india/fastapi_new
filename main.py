@@ -300,7 +300,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
         found_contacts = set()
         if all_rows:
             for row in all_rows:
-                found_contacts.add(row[4])  # contact_wa_id is at index 4
+                found_contacts.add(row[4])
         
         missing_contacts = set(contact_list) - found_contacts
         
@@ -309,6 +309,14 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             fallback_rows = await generate_fallback_data(cursor, missing_contacts, created_at)
             if fallback_rows:
                 all_rows.extend(fallback_rows)
+        
+        new_found_contacts = set()
+        if all_rows:
+            for row in all_rows:
+                new_found_contacts.add(row[4])
+        
+        new_missing_contacts = set(contact_list) - new_found_contacts
+        logger.info(f"Missing contacts found level two: {len(new_missing_contacts)} contacts")
         
         # Continue with file generation (same as before)
         update_task_status(task_id, {
@@ -439,7 +447,7 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
             Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
             status, message_timestamp, error_code, error_message, contact_name,
             message_from, message_type, message_body
-        FROM webhook_responses
+        FROM webhook_responses_490892730652855
         WHERE status = 'delivered'
         ORDER BY RAND()
         LIMIT %s
@@ -488,7 +496,9 @@ async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, camp
         "status", "message_timestamp", "error_code", "error_message", "contact_name", 
         "message_from", "message_type", "message_body" 
     ] 
- 
+    
+    logger.info(f"[{task_id}] Total rows received before filtering: {len(rows)}")
+    
     seen_contacts = set() 
     processed_rows = [] 
      
@@ -501,7 +511,8 @@ async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, camp
         seen_contacts.add(contact_wa_id) 
          
         processed_rows.append(row_list) 
- 
+    
+    logger.info(f"[{task_id}] Total rows after deduplication by contact_wa_id: {len(processed_rows)}")
     # Generate CSV content 
     csv_content = io.StringIO() 
     writer = csv.writer(csv_content) 
