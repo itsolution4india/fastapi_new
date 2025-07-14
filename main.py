@@ -341,13 +341,13 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             # Generate CSV and ZIP file (same as original code)
             zip_filename = await generate_csv_zip(all_rows, request.report_id, task_id, campaign_title, str(template_name), str(created_at))
         
-        # Update task status to completed
-        update_task_status(task_id, {
-            "status": "completed",
-            "message": "Report generated successfully",
-            "file_url": f"/download-zip/{zip_filename}",
-            "progress": 100
-        })
+            # Update task status to completed
+            update_task_status(task_id, {
+                "status": "completed",
+                "message": "Report generated successfully",
+                "file_url": f"/download-zip/{zip_filename}",
+                "progress": 100
+            })
         
         logger.info(f"Successfully generated ZIP report for task {task_id}")
         
