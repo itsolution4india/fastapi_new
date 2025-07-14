@@ -374,35 +374,38 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
 
     placeholders_contacts = ','.join(['%s'] * len(batch_contacts))
     base_query = f"""
-        SELECT 
-            wr1.Date,
-            wr1.display_phone_number,
-            wr1.phone_number_id,
-            wr1.waba_id,
-            wr1.contact_wa_id,
-            wr1.status,
-            wr1.message_timestamp,
-            wr1.error_code,
-            wr1.error_message,
-            wr1.contact_name,
-            wr1.message_from,
-            wr1.message_type,
-            wr1.message_body
-        FROM webhook_responses_{app_id} wr1
-        WHERE wr1.contact_wa_id IN ({placeholders_contacts})
-        AND wr1.phone_number_id = %s
-        AND wr1.Date >= %s
-        {"AND wr1.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
-        AND wr1.message_timestamp = (
-            SELECT MAX(wr2.message_timestamp)
-            FROM webhook_responses_{app_id} wr2
-            WHERE wr2.contact_wa_id = wr1.contact_wa_id
-            AND wr2.phone_number_id = wr1.phone_number_id
-            AND wr2.Date >= %s
-            {"AND wr2.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
-        )
-        ORDER BY wr1.contact_wa_id
-    """
+            SELECT 
+                wr1.Date,
+                wr1.display_phone_number,
+                wr1.phone_number_id,
+                wr1.waba_id,
+                wr1.contact_wa_id,
+                CASE 
+                    WHEN wr1.status IN ('read', 'sent', 'reply') THEN 'delivered'
+                    ELSE wr1.status
+                END AS status,
+                wr1.message_timestamp,
+                wr1.error_code,
+                wr1.error_message,
+                wr1.contact_name,
+                wr1.message_from,
+                wr1.message_type,
+                wr1.message_body
+            FROM webhook_responses_{app_id} wr1
+            WHERE wr1.contact_wa_id IN ({placeholders_contacts})
+            AND wr1.phone_number_id = %s
+            AND wr1.Date >= %s
+            {"AND wr1.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
+            AND wr1.message_timestamp = (
+                SELECT MAX(wr2.message_timestamp)
+                FROM webhook_responses_{app_id} wr2
+                WHERE wr2.contact_wa_id = wr1.contact_wa_id
+                AND wr2.phone_number_id = wr1.phone_number_id
+                AND wr2.Date >= %s
+                {"AND wr2.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
+            )
+            ORDER BY wr1.contact_wa_id
+        """
 
     # Prepare parameters
     params = batch_contacts + [phone_id, created_at_str]
