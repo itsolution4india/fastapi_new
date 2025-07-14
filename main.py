@@ -381,12 +381,19 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
                 wr1.waba_id,
                 wr1.contact_wa_id,
                 CASE 
+                    WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 THEN 'delivered'
                     WHEN wr1.status IN ('read', 'sent', 'reply') THEN 'delivered'
                     ELSE wr1.status
                 END AS status,
                 wr1.message_timestamp,
-                wr1.error_code,
-                wr1.error_message,
+                CASE 
+                    WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 THEN NULL
+                    ELSE wr1.error_code
+                END AS error_code,
+                CASE 
+                    WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 THEN NULL
+                    ELSE wr1.error_message
+                END AS error_message,
                 wr1.contact_name,
                 wr1.message_from,
                 wr1.message_type,
@@ -489,16 +496,6 @@ async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, camp
             continue 
              
         seen_contacts.add(contact_wa_id) 
-        
-        # Handle error code 131047 - treat as delivered
-        error_code = row_list[7]
-        if error_code == 131047 or error_code == '131047':
-            row_list[5] = 'delivered'  # status
-            row_list[7] = None         # error_code
-            row_list[8] = None         # error_message
-        elif row_list[5] != 'failed': 
-            row_list[7] = None 
-            row_list[8] = None 
          
         processed_rows.append(row_list) 
  
