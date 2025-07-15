@@ -442,7 +442,7 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
             Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
             status, message_timestamp, error_code, error_message, contact_name,
             message_from, message_type, message_body
-        FROM webhook_responses_490892730652855
+        FROM webhook_responses
         WHERE status = 'delivered'
         ORDER BY RAND()
         LIMIT %s
