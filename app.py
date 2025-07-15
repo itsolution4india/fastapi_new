@@ -9,10 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     await init_db_pool()
-    try:
-        yield
-    finally:
-        await close_db_pool()
+    yield
+    await close_db_pool()
 
 
 app = FastAPI(lifespan=lifespan)

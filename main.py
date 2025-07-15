@@ -257,7 +257,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
         
         async with mysql_pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                
+  
                 # BATCH PROCESSING APPROACH
                 batch_size = 1000  # Process 1000 contacts at a time
                 total_batches = math.ceil(len(contact_list) / batch_size)
