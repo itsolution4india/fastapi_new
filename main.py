@@ -313,14 +313,6 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
                     all_rows.extend(fallback_rows)
                     logger.info(f"Missing contacts Batch {i + 1} completed: {len(fallback_rows)} rows")
         
-        new_found_contacts = set()
-        if all_rows:
-            for row in all_rows:
-                new_found_contacts.add(row[4])
-        
-        new_missing_contacts = set(contact_list) - new_found_contacts
-        logger.info(f"Missing contacts found level two: {len(new_missing_contacts)} contacts")
-        
         # Continue with file generation (same as before)
         update_task_status(task_id, {
             "progress": 90,
