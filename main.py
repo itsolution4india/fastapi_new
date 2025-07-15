@@ -9,6 +9,7 @@ from utils import logger, generate_unique_id
 from async_api_functions import fetch_user_data, validate_coins, update_balance_and_report, get_template_details_by_name, generate_media_id
 from async_chunk_functions import send_messages, send_carousels, send_bot_messages, send_template_with_flows, validate_numbers_async
 from app import app, load_tracker
+from db_pool import mysql_pool
 import httpx
 import threading
 from typing import Dict, Optional, Any, Tuple, List
@@ -16,6 +17,7 @@ from collections import Counter
 import mysql.connector
 from db_models import SessionLocal, ReportInfo
 import pymysql
+import aiomysql
 from fastapi.responses import FileResponse
 import zipfile, uuid, math, json, csv, io, random
 from datetime import datetime, timedelta
@@ -206,8 +208,6 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
     logger.info(f"Starting optimized background report generation for task {task_id}")
     
     db = None
-    connection = None
-    cursor = None
     all_rows = []
     app_id = request.app_id
     
@@ -238,8 +238,8 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
         created_at_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
         
         # MySQL Connection
-        connection = pymysql.connect(**dbconfig)
-        cursor = connection.cursor()
+        # connection = pymysql.connect(**dbconfig)
+        # cursor = connection.cursor()
         
         update_task_status(task_id, {
             "progress": 30,
@@ -254,64 +254,54 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             })
             return
         
-        # BATCH PROCESSING APPROACH
-        batch_size = 1000  # Process 1000 contacts at a time
-        total_batches = math.ceil(len(contact_list) / batch_size)
-        
-        logger.info(f"Processing {len(contact_list)} contacts in {total_batches} batches of {batch_size}")
-        
-        # Process contacts in batches
-        for batch_num in range(total_batches):
-            start_idx = batch_num * batch_size
-            end_idx = min((batch_num + 1) * batch_size, len(contact_list))
-            batch_contacts = contact_list[start_idx:end_idx]
-            
-            logger.info(f"Processing batch {batch_num + 1}/{total_batches} with {len(batch_contacts)} contacts")
-            
-            # Update progress
-            # base_progress = 30
-            # batch_progress = int((batch_num / total_batches) * 50)  # 50% for batch processing
-            # current_progress = base_progress + batch_progress
-            
-            # update_task_status(task_id, {
-            #     "progress": current_progress,
-            #     "message": f"Processing batch {batch_num + 1}/{total_batches}..."
-            # })
-            
-            # Execute batch query
-            batch_rows = await execute_batch_query(
-                cursor, batch_contacts, phone_id, created_at_str, waba_id_list, app_id
-            )
-            
-            if batch_rows:
-                all_rows.extend(batch_rows)
-                logger.info(f"Batch {batch_num + 1} completed: {len(batch_rows)} rows")
-            else:
-                logger.info(f"Batch {batch_num + 1} completed: 0 rows")
-        
-        logger.info(f"All batches completed. Total rows: {len(all_rows)}")
-        
-        # Update progress
-        update_task_status(task_id, {
-            "progress": 80,
-            "message": "Processing missing contacts..."
-        })
-        
-        found_contacts = set()
-        if all_rows:
-            for row in all_rows:
-                found_contacts.add(row[4])
-        
-        missing_contacts = set(contact_list) - found_contacts
-        logger.info(f"Missing contacts found: {len(missing_contacts)} contacts")
-        if missing_contacts:
-            missing_contacts_list = list(missing_contacts)
-            for i in range(0, len(missing_contacts_list), batch_size):
-                batch = set(missing_contacts_list[i:i + batch_size])
-                fallback_rows = await generate_fallback_data(cursor, batch, created_at)
-                if fallback_rows:
-                    all_rows.extend(fallback_rows)
-                    logger.info(f"Missing contacts Batch {i + 1} completed: {len(fallback_rows)} rows")
+        async with mysql_pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                batch_size = 1000
+                total_batches = math.ceil(len(contact_list) / batch_size)
+                
+                logger.info(f"Processing {len(contact_list)} contacts in {total_batches} batches of {batch_size}")
+                
+                for batch_num in range(total_batches):
+                    start_idx = batch_num * batch_size
+                    end_idx = min((batch_num + 1) * batch_size, len(contact_list))
+                    batch_contacts = contact_list[start_idx:end_idx]
+                    
+                    logger.info(f"Processing batch {batch_num + 1}/{total_batches} with {len(batch_contacts)} contacts")
+                    
+                    # Execute batch query
+                    batch_rows = await execute_batch_query(
+                        cursor, batch_contacts, phone_id, created_at_str, waba_id_list, app_id
+                    )
+                    
+                    if batch_rows:
+                        all_rows.extend(batch_rows)
+                        logger.info(f"Batch {batch_num + 1} completed: {len(batch_rows)} rows")
+                    else:
+                        logger.info(f"Batch {batch_num + 1} completed: 0 rows")
+                
+                logger.info(f"All batches completed. Total rows: {len(all_rows)}")
+                
+                # Update progress
+                update_task_status(task_id, {
+                    "progress": 80,
+                    "message": "Processing missing contacts..."
+                })
+                
+                found_contacts = set()
+                if all_rows:
+                    for row in all_rows:
+                        found_contacts.add(row[4])
+                
+                missing_contacts = set(contact_list) - found_contacts
+                logger.info(f"Missing contacts found: {len(missing_contacts)} contacts")
+                if missing_contacts:
+                    missing_contacts_list = list(missing_contacts)
+                    for i in range(0, len(missing_contacts_list), batch_size):
+                        batch = set(missing_contacts_list[i:i + batch_size])
+                        fallback_rows = await generate_fallback_data(cursor, batch, created_at)
+                        if fallback_rows:
+                            all_rows.extend(fallback_rows)
+                            logger.info(f"Missing contacts Batch {i + 1} completed: {len(fallback_rows)} rows")
         
         # Continue with file generation (same as before)
         update_task_status(task_id, {
@@ -424,8 +414,8 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
         params += waba_id_list  # for wr2.waba_id
 
     try:
-        cursor.execute(base_query, params)
-        return cursor.fetchall()
+        await cursor.execute(base_query, params)
+        return await cursor.fetchall()
     except Exception as e:
         logger.error(f"Error executing batch query: {str(e)}")
         return []
@@ -448,8 +438,8 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
         LIMIT %s
     """
     
-    cursor.execute(fallback_query, (len(missing_contacts),))
-    fallback_rows = cursor.fetchall()
+    await cursor.execute(fallback_query, (len(missing_contacts),))
+    fallback_rows = await cursor.fetchall()
 
     # Modify fallback records for missing contacts
     modified_fallback_rows = []
