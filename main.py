@@ -255,7 +255,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             return
         
         # BATCH PROCESSING APPROACH
-        batch_size = 2000  # Process 1000 contacts at a time
+        batch_size = 1000  # Process 1000 contacts at a time
         total_batches = math.ceil(len(contact_list) / batch_size)
         
         logger.info(f"Processing {len(contact_list)} contacts in {total_batches} batches of {batch_size}")
@@ -269,14 +269,14 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             logger.info(f"Processing batch {batch_num + 1}/{total_batches} with {len(batch_contacts)} contacts")
             
             # Update progress
-            base_progress = 30
-            batch_progress = int((batch_num / total_batches) * 50)  # 50% for batch processing
-            current_progress = base_progress + batch_progress
+            # base_progress = 30
+            # batch_progress = int((batch_num / total_batches) * 50)  # 50% for batch processing
+            # current_progress = base_progress + batch_progress
             
-            update_task_status(task_id, {
-                "progress": current_progress,
-                "message": f"Processing batch {batch_num + 1}/{total_batches}..."
-            })
+            # update_task_status(task_id, {
+            #     "progress": current_progress,
+            #     "message": f"Processing batch {batch_num + 1}/{total_batches}..."
+            # })
             
             # Execute batch query
             batch_rows = await execute_batch_query(
