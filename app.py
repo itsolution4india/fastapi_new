@@ -1,16 +1,19 @@
 from contextlib import asynccontextmanager
 from load_tracker import setup_load_tracking
 from fastapi import FastAPI
-from db_pool import init_db_pool, close_db_pool
 from db_models import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
-    await init_db_pool()
+
+    from db_pool import init_mysql_pool, close_mysql_pool
+    await init_mysql_pool()
+
     yield
-    await close_db_pool()
+
+    await close_mysql_pool()
 
 
 app = FastAPI(lifespan=lifespan)

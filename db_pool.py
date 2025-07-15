@@ -2,6 +2,7 @@ import aiomysql
 from contextlib import asynccontextmanager
 from fastapi import HTTPException
 from typing import Optional
+import asyncio
 
 mysql_pool: Optional[aiomysql.Pool] = None
 
@@ -31,11 +32,17 @@ async def close_db_pool():
         await connection_pool.wait_closed()
         
 @asynccontextmanager
-async def get_db_connection():
+async def get_db_connection(retries: int = 2):
+    from .db_pool import connection_pool
     if not connection_pool:
         raise HTTPException(status_code=500, detail="Database pool not initialized")
-    try:
-        async with connection_pool.acquire() as conn:
-            yield conn
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Database connection error")
+
+    for attempt in range(retries):
+        try:
+            async with connection_pool.acquire() as conn:
+                yield conn
+                return
+        except Exception as e:
+            if attempt + 1 >= retries:
+                raise HTTPException(status_code=500, detail="Database connection error")
+            await asyncio.sleep(1)

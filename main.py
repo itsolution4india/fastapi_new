@@ -255,8 +255,9 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             })
             return
         
-        async with get_db_connection() as connection:
-            async with connection.cursor() as cursor:
+        async with get_db_connection() as conn:
+            await conn.ping(reconnect=True)
+            async with conn.cursor() as cursor:
   
                 # BATCH PROCESSING APPROACH
                 batch_size = 1000  # Process 1000 contacts at a time
