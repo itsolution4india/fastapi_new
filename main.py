@@ -9,7 +9,6 @@ from utils import logger, generate_unique_id
 from async_api_functions import fetch_user_data, validate_coins, update_balance_and_report, get_template_details_by_name, generate_media_id
 from async_chunk_functions import send_messages, send_carousels, send_bot_messages, send_template_with_flows, validate_numbers_async
 from app import app, load_tracker
-from db_pool import mysql_pool
 import httpx
 import threading
 from typing import Dict, Optional, Any, Tuple, List
@@ -17,7 +16,6 @@ from collections import Counter
 import mysql.connector
 from db_models import SessionLocal, ReportInfo
 import pymysql
-import aiomysql
 from fastapi.responses import FileResponse
 import zipfile, uuid, math, json, csv, io, random
 from datetime import datetime, timedelta
