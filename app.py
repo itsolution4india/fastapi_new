@@ -7,13 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
-
-    from db_pool import init_mysql_pool, close_mysql_pool
-    await init_mysql_pool()
-
     yield
-
-    await close_mysql_pool()
 
 
 app = FastAPI(lifespan=lifespan)
