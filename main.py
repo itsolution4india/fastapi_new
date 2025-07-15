@@ -19,7 +19,7 @@ import pymysql
 from fastapi.responses import FileResponse
 import zipfile, uuid, math, json, csv, io, random
 from datetime import datetime, timedelta
-from db_pool import mysql_pool
+from db_pool import get_db_connection
 
 TEMP_FOLDER = "temp_uploads"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
@@ -255,7 +255,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             })
             return
         
-        async with mysql_pool.acquire() as connection:
+        async with get_db_connection() as connection:
             async with connection.cursor() as cursor:
   
                 # BATCH PROCESSING APPROACH
