@@ -311,7 +311,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
                 fallback_rows = await generate_fallback_data(cursor, batch, created_at)
                 if fallback_rows:
                     all_rows.extend(fallback_rows)
-                    logger.info(f"Batch {i + 1} completed: {len(fallback_rows)} rows")
+                    logger.info(f"Missing contacts Batch {i + 1} completed: {len(fallback_rows)} rows")
         
         new_found_contacts = set()
         if all_rows:
