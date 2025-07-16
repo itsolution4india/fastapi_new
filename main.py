@@ -337,6 +337,18 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
         report.reply_count = status_counts.get('reply', 0)
         report.total_count = len(contact_list)
         
+        deliver_count = report.deliver_count
+        failed_count = report.failed_count
+        known_total = deliver_count + failed_count
+        missing_count = report.total_count - known_total
+
+        if missing_count > 0:
+            time_diff = datetime.now() - created_at
+            if time_diff <= timedelta(hours=24):
+                report.pending_count += missing_count
+            else:
+                report.failed_count += missing_count
+        
         # Commit the changes
         db.commit()
         if not insight:
