@@ -339,8 +339,10 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
         
         deliver_count = report.deliver_count
         failed_count = report.failed_count
-        known_total = deliver_count + failed_count
+        known_total = deliver_count + failed_count + report.pending_count
+        logger.info(f"known_total {known_total}, {report.pending_count}")
         missing_count = report.total_count - known_total
+        logger.info(f"known_total {missing_count}, {report.total_count}")
 
         if missing_count > 0:
             try:
