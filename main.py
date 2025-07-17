@@ -343,7 +343,11 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
         missing_count = report.total_count - known_total
 
         if missing_count > 0:
-            time_diff = datetime.now() - created_at
+            try:
+                time_diff = datetime.now() - created_at
+            except:
+                from datetime import timezone
+                time_diff = datetime.now(timezone.utc) - created_at
             if time_diff <= timedelta(hours=24):
                 report.pending_count += missing_count
             else:
