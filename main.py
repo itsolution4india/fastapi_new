@@ -319,7 +319,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             "message": "Generating report file..."
         })
         
-        await batch_save_to_database(cursor, connection, all_rows, app_id, batch_size=500)
+        # await batch_save_to_database(cursor, connection, all_rows, app_id, batch_size=500)
         
         seen_contacts = set()
         unique_rows = []
@@ -535,14 +535,14 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
                 wr1.message_from, 
                 wr1.message_type, 
                 wr1.message_body 
-            FROM webhook_responses_{app_id}_dup wr1 
+            FROM webhook_responses_{app_id} wr1 
             WHERE wr1.contact_wa_id IN ({placeholders_contacts}) 
             AND wr1.phone_number_id = %s 
             AND wr1.Date >= %s 
             {waba_condition_main}
             AND wr1.message_timestamp = ( 
                 SELECT MAX(wr2.message_timestamp) 
-                FROM webhook_responses_{app_id}_dup wr2 
+                FROM webhook_responses_{app_id} wr2 
                 WHERE wr2.contact_wa_id = wr1.contact_wa_id 
                 AND wr2.phone_number_id = wr1.phone_number_id 
                 AND wr2.Date >= %s 
@@ -853,13 +853,13 @@ async def batch_save_to_database(cursor, connection, rows_data: List[Tuple], app
     
     # Prepare queries
     check_duplicate_query = f"""
-        SELECT id FROM webhook_responses_{app_id}_dup 
+        SELECT id FROM webhook_responses_{app_id}
         WHERE waba_id = %s AND Date = %s AND contact_wa_id = %s
         LIMIT 1
     """
     
     insert_query = f"""
-        INSERT INTO webhook_responses_{app_id}_dup (
+        INSERT INTO webhook_responses_{app_id} (
             Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
             status, message_timestamp, error_code, error_message, contact_name,
             message_from, message_type, message_body
@@ -867,7 +867,7 @@ async def batch_save_to_database(cursor, connection, rows_data: List[Tuple], app
     """
     
     update_query = f"""
-        UPDATE webhook_responses_{app_id}_dup SET
+        UPDATE webhook_responses_{app_id} SET
             status = %s
         WHERE waba_id = %s AND Date = %s AND contact_wa_id = %s
     """
