@@ -453,16 +453,8 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
 
 async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,  
                              created_at_str: str, waba_id_list: List[str], app_id: str) -> List[Tuple]: 
-    """
-    Execute optimized query for a batch of contacts with time-based status distribution
-    
-    Status transition rules:
-    - failed -> can be changed to sent, delivered, read
-    - sent -> can be changed to delivered, read  
-    - delivered -> can be changed to read
-    - read -> cannot be changed (final state)
-    """
-    
+    """Execute optimized query for a batch of contacts with time-based status distribution""" 
+ 
     placeholders_contacts = ','.join(['%s'] * len(batch_contacts)) 
     total_records = len(batch_contacts)
     
@@ -482,52 +474,44 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
                 wr1.waba_id, 
                 wr1.contact_wa_id, 
                 CASE  
-                    -- Handle error code 131047 (failed status) with time-based progression
                     WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 THEN 
                         CASE
-                            -- 0-10 minutes: 10% read, 30% delivered, 60% sent
                             WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 10 THEN
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.10) THEN 'read'
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.40) THEN 'delivered'
                                     ELSE 'sent'
                                 END
-                            -- 10-30 minutes: 25% read, 50% delivered, 25% sent
                             WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 30 THEN
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.25) THEN 'read'
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.75) THEN 'delivered'
                                     ELSE 'sent'
                                 END
-                            -- 30-60 minutes: 30% read, 65% delivered, 5% sent
                             WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 60 THEN
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.30) THEN 'read'
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
                                     ELSE 'sent'
                                 END
-                            -- 1-3 hours: 45% read, 50% delivered, 5% sent
                             WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 180 THEN
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.45) THEN 'read'
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
                                     ELSE 'sent'
                                 END
-                            -- 3-6 hours: 55% read, 43% delivered, 2% sent
                             WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 360 THEN
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.55) THEN 'read'
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.98) THEN 'delivered'
                                     ELSE 'sent'
                                 END
-                            -- 6-24 hours: 65% read, 34% delivered, 1% sent
                             WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) < 1440 THEN
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.65) THEN 'read'
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.99) THEN 'delivered'
                                     ELSE 'sent'
                                 END
-                            -- 24+ hours: 70% read, 29% delivered, 1% sent
                             ELSE
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.70) THEN 'read'
@@ -535,13 +519,8 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
                                     ELSE 'sent'
                                 END
                         END
-                    -- Handle existing statuses based on transition rules
-                    WHEN wr1.status = 'read' THEN 'read'  -- read cannot be changed
-                    WHEN wr1.status = 'delivered' THEN 'delivered'  -- keep as delivered (can potentially be upgraded to read later)
-                    WHEN wr1.status = 'sent' THEN 'sent'  -- keep as sent (can potentially be upgraded later)
-                    WHEN wr1.status = 'reply' THEN 'delivered'  -- reply implies delivered
-                    WHEN wr1.status = 'failed' THEN 'sent'  -- failed can be upgraded to sent as minimum
-                    ELSE wr1.status  -- keep original status for any other cases
+                    WHEN wr1.status IN ('read', 'sent', 'reply') THEN 'delivered' 
+                    ELSE wr1.status 
                 END AS status, 
                 wr1.message_timestamp, 
                 CASE  
@@ -646,11 +625,8 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
 #     return modified_fallback_rows
 
 async def generate_fallback_data(cursor, missing_contacts: set, created_at: datetime) -> List[Tuple]: 
-    """
-    Generate fallback data for missing contacts with time-based percentage distribution
-    Following status hierarchy: failed -> sent -> delivered -> read
-    """
-    
+    """Generate fallback data for missing contacts with time-based percentage distribution""" 
+ 
     if not missing_contacts: 
         return [] 
     
@@ -664,59 +640,97 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
         time_diff_minutes = (datetime.now(timezone.utc) - created_at).total_seconds() / 60
 
     
-    # Determine percentages based on time elapsed (following your hierarchy)
+    # Determine percentages based on time elapsed
     if time_diff_minutes <= 10:
-        read_pct, delivered_pct, sent_pct, failed_pct = 0.10, 0.30, 0.50, 0.10
+        read_pct, delivered_pct, sent_pct = 0.10, 0.30, 0.60
     elif time_diff_minutes <= 30:
-        read_pct, delivered_pct, sent_pct, failed_pct = 0.25, 0.50, 0.20, 0.05
+        read_pct, delivered_pct, sent_pct = 0.25, 0.50, 0.25
     elif time_diff_minutes <= 60:
-        read_pct, delivered_pct, sent_pct, failed_pct = 0.30, 0.65, 0.04, 0.01
+        read_pct, delivered_pct, sent_pct = 0.30, 0.65, 0.05
     elif time_diff_minutes <= 180:  # 3 hours
-        read_pct, delivered_pct, sent_pct, failed_pct = 0.45, 0.50, 0.04, 0.01
+        read_pct, delivered_pct, sent_pct = 0.45, 0.50, 0.05
     elif time_diff_minutes <= 360:  # 6 hours
-        read_pct, delivered_pct, sent_pct, failed_pct = 0.55, 0.43, 0.015, 0.005
+        read_pct, delivered_pct, sent_pct = 0.55, 0.43, 0.02
     elif time_diff_minutes < 1440:  # Before 24 hours
-        read_pct, delivered_pct, sent_pct, failed_pct = 0.65, 0.34, 0.009, 0.001
+        read_pct, delivered_pct, sent_pct = 0.65, 0.34, 0.01
     else:  # After 24 hours
-        read_pct, delivered_pct, sent_pct, failed_pct = 0.70, 0.29, 0.009, 0.001
+        read_pct, delivered_pct, sent_pct = 0.70, 0.29, 0.01
     
     # Calculate counts for each status
     read_count = int(total_missing * read_pct)
     delivered_count = int(total_missing * delivered_pct)
-    sent_count = int(total_missing * sent_pct)
-    failed_count = total_missing - read_count - delivered_count - sent_count  # Remaining records
+    sent_count = total_missing - read_count - delivered_count  # Remaining records
     
-    # Fetch fallback records for each status following hierarchy
+    # Fetch fallback records for each status
     fallback_records = []
     
-    # Get 'read' status records (highest priority - cannot be changed)
+    # Get 'read' status records
     if read_count > 0:
-        read_records = await fetch_status_records(cursor, 'read', read_count)
-        fallback_records.extend([('read', row) for row in read_records])
+        read_query = """ 
+            SELECT  
+                Date, display_phone_number, phone_number_id, waba_id, contact_wa_id, 
+                status, message_timestamp, error_code, error_message, contact_name, 
+                message_from, message_type, message_body 
+            FROM webhook_responses 
+            WHERE status = 'read' 
+            ORDER BY RAND() 
+            LIMIT %s 
+        """ 
+        cursor.execute(read_query, (read_count,))
+        read_rows = cursor.fetchall()
+        fallback_records.extend([('read', row) for row in read_rows])
     
-    # Get 'delivered' status records (can only be upgraded to read)
+    # Get 'delivered' status records
     if delivered_count > 0:
-        delivered_records = await fetch_status_records(cursor, 'delivered', delivered_count)
-        fallback_records.extend([('delivered', row) for row in delivered_records])
+        delivered_query = """ 
+            SELECT  
+                Date, display_phone_number, phone_number_id, waba_id, contact_wa_id, 
+                status, message_timestamp, error_code, error_message, contact_name, 
+                message_from, message_type, message_body 
+            FROM webhook_responses 
+            WHERE status = 'delivered' 
+            ORDER BY RAND() 
+            LIMIT %s 
+        """ 
+        cursor.execute(delivered_query, (delivered_count,))
+        delivered_rows = cursor.fetchall()
+        fallback_records.extend([('delivered', row) for row in delivered_rows])
     
-    # Get 'sent' status records (can be upgraded to delivered or read)
+    # Get 'sent' status records
     if sent_count > 0:
-        sent_records = await fetch_status_records(cursor, 'sent', sent_count)
-        fallback_records.extend([('sent', row) for row in sent_records])
-    
-    # Get 'failed' status records (can be upgraded to any status)
-    if failed_count > 0:
-        failed_records = await fetch_status_records(cursor, 'failed', failed_count)
-        fallback_records.extend([('failed', row) for row in failed_records])
+        sent_query = """ 
+            SELECT  
+                Date, display_phone_number, phone_number_id, waba_id, contact_wa_id, 
+                status, message_timestamp, error_code, error_message, contact_name, 
+                message_from, message_type, message_body 
+            FROM webhook_responses 
+            WHERE status = 'sent' 
+            ORDER BY RAND() 
+            LIMIT %s 
+        """ 
+        cursor.execute(sent_query, (sent_count,))
+        sent_rows = cursor.fetchall()
+        fallback_records.extend([('sent', row) for row in sent_rows])
     
     # If we don't have enough records of specific statuses, fill with any available records
     if len(fallback_records) < total_missing:
-        logger.info(f"Fallback records: {len(fallback_records)}, total missing: {total_missing}")
+        logger.info(f"YES fallback_records: {len(fallback_records)},total_missing: {total_missing}")
         remaining_needed = total_missing - len(fallback_records)
-        additional_records = await fetch_status_records(cursor, 'any', remaining_needed)
-        fallback_records.extend([('fallback', row) for row in additional_records])
+        fallback_query = """ 
+            SELECT  
+                Date, display_phone_number, phone_number_id, waba_id, contact_wa_id, 
+                status, message_timestamp, error_code, error_message, contact_name, 
+                message_from, message_type, message_body 
+            FROM webhook_responses 
+            WHERE status IN ('read', 'delivered', 'sent') 
+            ORDER BY RAND() 
+            LIMIT %s 
+        """ 
+        cursor.execute(fallback_query, (remaining_needed,))
+        additional_rows = cursor.fetchall()
+        fallback_records.extend([('fallback', row) for row in additional_rows])
     
-    # Modify fallback records for missing contacts following status hierarchy
+    # Modify fallback records for missing contacts 
     modified_fallback_rows = [] 
     missing_contacts_list = list(missing_contacts)
     
@@ -729,9 +743,34 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
             random_seconds = random.randint(0, 300) 
             new_date = created_at + timedelta(seconds=random_seconds) 
          
-            # Apply status transition rules
-            final_status = apply_status_hierarchy(target_status, new_date, time_diff_minutes)
-            fallback_row[5] = final_status
+            # Determine status based on time and target distribution
+            if target_status == 'fallback':
+                # For fallback records, determine status based on time
+                try:
+                    if (datetime.now() - new_date) < timedelta(hours=24): 
+                        fallback_row[5] = 'pending' 
+                    else:
+                        pass
+                except:
+                    if (datetime.now(timezone.utc) - new_date) < timedelta(hours=24):
+                        fallback_row[5] = 'pending'
+                    else:
+                        pass
+            else:
+                # For specifically selected records, use the target status
+                fallback_row[5] = target_status
+                
+                # But if it's very recent (within 24 hours), some might still be pending
+                try: 
+                    if (datetime.now() - new_date) < timedelta(hours=24): 
+                        # Apply some randomness - not all recent records should be pending
+                        if random.random() < 0.01:  # 30% chance of being pending if recent
+                            fallback_row[5] = 'pending' 
+                except Exception as e: 
+                    from datetime import timezone 
+                    if (datetime.now(timezone.utc) - new_date) < timedelta(hours=24): 
+                        if random.random() < 0.01:  # 30% chance of being pending if recent
+                            fallback_row[5] = 'pending' 
              
             # Update the record 
             fallback_row[0] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # Date 
@@ -741,112 +780,6 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
             modified_fallback_rows.append(tuple(fallback_row)) 
      
     return modified_fallback_rows
-
-
-async def fetch_status_records(cursor, status: str, count: int) -> List[Tuple]:
-    """Fetch records with specific status or any status if 'any' is specified"""
-    
-    if status == 'any':
-        query = """ 
-            SELECT  
-                Date, display_phone_number, phone_number_id, waba_id, contact_wa_id, 
-                status, message_timestamp, error_code, error_message, contact_name, 
-                message_from, message_type, message_body 
-            FROM webhook_responses 
-            WHERE status IN ('read', 'delivered', 'sent', 'failed') 
-            ORDER BY RAND() 
-            LIMIT %s 
-        """
-    else:
-        query = """ 
-            SELECT  
-                Date, display_phone_number, phone_number_id, waba_id, contact_wa_id, 
-                status, message_timestamp, error_code, error_message, contact_name, 
-                message_from, message_type, message_body 
-            FROM webhook_responses 
-            WHERE status = %s 
-            ORDER BY RAND() 
-            LIMIT %s 
-        """
-    
-    try:
-        if status == 'any':
-            cursor.execute(query, (count,))
-        else:
-            cursor.execute(query, (status, count))
-        return cursor.fetchall()
-    except Exception as e:
-        logger.error(f"Error fetching {status} records: {str(e)}")
-        return []
-
-
-def apply_status_hierarchy(original_status: str, record_date: datetime, time_diff_minutes: float) -> str:
-    """
-    Apply status transition rules based on hierarchy:
-    - failed -> can become sent, delivered, read
-    - sent -> can become delivered, read  
-    - delivered -> can become read
-    - read -> cannot be changed (final state)
-    """
-    
-    # Status hierarchy levels
-    status_levels = {
-        'failed': 0,
-        'sent': 1, 
-        'delivered': 2,
-        'read': 3
-    }
-    
-    current_level = status_levels.get(original_status, 0)
-    
-    # Calculate how much time has passed since the record date
-    try:
-        record_age_minutes = (datetime.now() - record_date).total_seconds() / 60
-    except:
-        from datetime import timezone
-        record_age_minutes = (datetime.now(timezone.utc) - record_date).total_seconds() / 60
-    
-    # Determine target status based on hierarchy and time progression
-    if original_status == 'read':
-        # Read cannot be changed - final state
-        return 'read'
-    
-    elif original_status == 'delivered':
-        # Delivered can only be upgraded to read
-        if record_age_minutes > 60 and random.random() < 0.3:  # 30% chance to upgrade to read after 1 hour
-            return 'read'
-        return 'delivered'
-    
-    elif original_status == 'sent':
-        # Sent can be upgraded to delivered or read
-        if record_age_minutes > 180:  # After 3 hours
-            if random.random() < 0.4:  # 40% chance to upgrade to read
-                return 'read'
-            elif random.random() < 0.7:  # 70% chance to upgrade to delivered
-                return 'delivered'
-        elif record_age_minutes > 30:  # After 30 minutes
-            if random.random() < 0.6:  # 60% chance to upgrade to delivered
-                return 'delivered'
-        return 'sent'
-    
-    elif original_status == 'failed':
-        # Failed can be upgraded to any status
-        if record_age_minutes > 360:  # After 6 hours
-            if random.random() < 0.5:  # 50% chance to upgrade to read
-                return 'read'
-            elif random.random() < 0.8:  # 80% chance to upgrade to delivered
-                return 'delivered'
-            else:
-                return 'sent'
-        elif record_age_minutes > 60:  # After 1 hour
-            if random.random() < 0.3:  # 30% chance to upgrade to delivered
-                return 'delivered'
-            else:
-                return 'sent'
-        else:
-            return 'sent'  # At minimum, upgrade failed to sent
-    
-    return original_status
 
 async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, campaign_title: str, template_name: str, created_at: str) -> str:
     """Generate CSV and ZIP file from rows""" 
