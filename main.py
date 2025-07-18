@@ -622,7 +622,10 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
     total_missing = len(missing_contacts)
     
     # Calculate time difference in minutes from created_at to now
-    time_diff_minutes = (datetime.now() - created_at).total_seconds() / 60
+    try:
+        time_diff_minutes = (datetime.now() - created_at).total_seconds() / 60
+    except:
+        time_diff_minutes = (datetime.now(timezone.utc) - created_at).total_seconds() / 60
     
     # Determine percentages based on time elapsed
     if time_diff_minutes <= 10:
@@ -729,11 +732,16 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
             # Determine status based on time and target distribution
             if target_status == 'fallback':
                 # For fallback records, determine status based on time
-                if (datetime.now() - new_date) < timedelta(hours=24): 
-                    fallback_row[5] = 'pending' 
-                else:
-                    # Keep original status for older records
-                    pass
+                try:
+                    if (datetime.now() - new_date) < timedelta(hours=24): 
+                        fallback_row[5] = 'pending' 
+                    else:
+                        pass
+                except:
+                    if (datetime.now(timezone.utc) - new_date) < timedelta(hours=24):
+                        fallback_row[5] = 'pending'
+                    else:
+                        pass
             else:
                 # For specifically selected records, use the target status
                 fallback_row[5] = target_status
