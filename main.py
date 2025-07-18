@@ -839,8 +839,8 @@ async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, camp
 
 async def batch_save_to_database(cursor, connection, rows_data: List[Tuple], app_id: str, batch_size: int = 500):
     """
-    Batch save/update records to database with upsert logic
-    Uses ON DUPLICATE KEY UPDATE for efficient upsert operations
+    Batch save/update records to database with explicit duplicate checking
+    Checks for duplicates based only on waba_id, Date, and contact_wa_id
     """
     if not rows_data:
         logger.info("No data to save to database")
@@ -851,15 +851,25 @@ async def batch_save_to_database(cursor, connection, rows_data: List[Tuple], app
     
     logger.info(f"Starting batch database save: {total_rows} rows in {total_batches} batches")
     
-    # Prepare the upsert query - UPDATE only status column
-    upsert_query = f"""
+    # Prepare queries
+    check_duplicate_query = f"""
+        SELECT id FROM webhook_responses_{app_id}_dup 
+        WHERE waba_id = %s AND Date = %s AND contact_wa_id = %s
+        LIMIT 1
+    """
+    
+    insert_query = f"""
         INSERT INTO webhook_responses_{app_id}_dup (
             Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
             status, message_timestamp, error_code, error_message, contact_name,
             message_from, message_type, message_body
         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ON DUPLICATE KEY UPDATE
-            status = VALUES(status)
+    """
+    
+    update_query = f"""
+        UPDATE webhook_responses_{app_id}_dup SET
+            status = %s
+        WHERE waba_id = %s AND Date = %s AND contact_wa_id = %s
     """
     
     try:
@@ -870,30 +880,51 @@ async def batch_save_to_database(cursor, connection, rows_data: List[Tuple], app
             
             logger.info(f"Processing database batch {batch_num + 1}/{total_batches} with {len(batch_data)} records")
             
-            # Prepare batch data for insertion
-            batch_values = []
+            inserts = []
+            updates = []
+            
+            # Check for duplicates based only on waba_id, Date, contact_wa_id
             for row in batch_data:
-                # Extract values from row tuple (adjust indices based on your row structure)
-                batch_values.append((
-                    row[0],   # Date
-                    row[1],   # display_phone_number
-                    row[2],   # phone_number_id
-                    row[3],   # waba_id
-                    row[4],   # contact_wa_id
-                    row[5],   # status
-                    row[6],   # message_timestamp
-                    row[7],   # error_code
-                    row[8],   # error_message
-                    row[9],   # contact_name
-                    row[10],  # message_from
-                    row[11],  # message_type
-                    row[12]   # message_body
-                ))
+                cursor.execute(check_duplicate_query, (row[3], row[0], row[4]))  # waba_id, Date, contact_wa_id
+                exists = cursor.fetchone()
+                
+                if exists:
+                    # Record exists - prepare for update (only status)
+                    updates.append((
+                        row[5],  # status
+                        row[3],  # waba_id
+                        row[0],  # Date
+                        row[4]   # contact_wa_id
+                    ))
+                else:
+                    # Record doesn't exist - prepare for insert (all columns)
+                    inserts.append((
+                        row[0],   # Date
+                        row[1],   # display_phone_number
+                        row[2],   # phone_number_id
+                        row[3],   # waba_id
+                        row[4],   # contact_wa_id
+                        row[5],   # status
+                        row[6],   # message_timestamp
+                        row[7],   # error_code
+                        row[8],   # error_message
+                        row[9],   # contact_name
+                        row[10],  # message_from
+                        row[11],  # message_type
+                        row[12]   # message_body
+                    ))
             
-            # Execute batch upsert
-            cursor.executemany(upsert_query, batch_values)
+            # Execute batch inserts
+            if inserts:
+                cursor.executemany(insert_query, inserts)
+                logger.info(f"Batch {batch_num + 1}: {len(inserts)} records inserted")
+            
+            # Execute batch updates
+            if updates:
+                cursor.executemany(update_query, updates)
+                logger.info(f"Batch {batch_num + 1}: {len(updates)} records updated")
+            
             connection.commit()
-            
             logger.info(f"Database batch {batch_num + 1} completed: {len(batch_data)} records processed")
     
     except Exception as e:
