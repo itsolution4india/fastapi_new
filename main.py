@@ -455,6 +455,14 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
     placeholders_contacts = ','.join(['%s'] * len(batch_contacts)) 
     total_records = len(batch_contacts)
     
+    # Build the waba_id condition parts
+    waba_condition_main = ""
+    waba_condition_sub = ""
+    if waba_id_list and waba_id_list != ['0']:
+        waba_placeholders = ','.join(['%s'] * len(waba_id_list))
+        waba_condition_main = f"AND wr1.waba_id IN ({waba_placeholders})"
+        waba_condition_sub = f"AND wr2.waba_id IN ({waba_placeholders})"
+    
     base_query = f""" 
             SELECT  
                 wr1.Date, 
@@ -468,43 +476,43 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
                             WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 10 THEN
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.10) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.40) THEN 'delivered'  -- 10% + 30%
+                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.40) THEN 'delivered'
                                     ELSE 'sent'
                                 END
                             WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 30 THEN
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.25) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.75) THEN 'delivered'  -- 25% + 50%
+                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.75) THEN 'delivered'
                                     ELSE 'sent'
                                 END
                             WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 60 THEN
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.30) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'  -- 30% + 65%
+                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
                                     ELSE 'sent'
                                 END
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 180 THEN  -- 3 hours
+                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 180 THEN
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.45) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'  -- 45% + 50%
+                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
                                     ELSE 'sent'
                                 END
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 360 THEN  -- 6 hours
+                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 360 THEN
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.55) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.98) THEN 'delivered'  -- 55% + 43%
+                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.98) THEN 'delivered'
                                     ELSE 'sent'
                                 END
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) < 1440 THEN  -- Before 24 hours
+                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) < 1440 THEN
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.65) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.99) THEN 'delivered'  -- 65% + 34%
+                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.99) THEN 'delivered'
                                     ELSE 'sent'
                                 END
-                            ELSE  -- After 24 hours
+                            ELSE
                                 CASE
                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.70) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.99) THEN 'delivered'  -- 70% + 29%
+                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.99) THEN 'delivered'
                                     ELSE 'sent'
                                 END
                         END
@@ -528,14 +536,14 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
             WHERE wr1.contact_wa_id IN ({placeholders_contacts}) 
             AND wr1.phone_number_id = %s 
             AND wr1.Date >= %s 
-            {"AND wr1.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""} 
+            {waba_condition_main}
             AND wr1.message_timestamp = ( 
                 SELECT MAX(wr2.message_timestamp) 
                 FROM webhook_responses_{app_id} wr2 
                 WHERE wr2.contact_wa_id = wr1.contact_wa_id 
                 AND wr2.phone_number_id = wr1.phone_number_id 
                 AND wr2.Date >= %s 
-                {"AND wr2.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""} 
+                {waba_condition_sub}
             ) 
             ORDER BY wr1.contact_wa_id 
         """ 
@@ -701,9 +709,9 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
         sent_rows = cursor.fetchall()
         fallback_records.extend([('sent', row) for row in sent_rows])
     
-    logger.info(f"fallback_records: {len(fallback_records)},total_missing: {total_missing}")
     # If we don't have enough records of specific statuses, fill with any available records
     if len(fallback_records) < total_missing:
+        logger.info(f"YES fallback_records: {len(fallback_records)},total_missing: {total_missing}")
         remaining_needed = total_missing - len(fallback_records)
         fallback_query = """ 
             SELECT  
@@ -753,12 +761,12 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
                 try: 
                     if (datetime.now() - new_date) < timedelta(hours=24): 
                         # Apply some randomness - not all recent records should be pending
-                        if random.random() < 0.3:  # 30% chance of being pending if recent
+                        if random.random() < 0.01:  # 30% chance of being pending if recent
                             fallback_row[5] = 'pending' 
                 except Exception as e: 
                     from datetime import timezone 
                     if (datetime.now(timezone.utc) - new_date) < timedelta(hours=24): 
-                        if random.random() < 0.3:  # 30% chance of being pending if recent
+                        if random.random() < 0.01:  # 30% chance of being pending if recent
                             fallback_row[5] = 'pending' 
              
             # Update the record 
