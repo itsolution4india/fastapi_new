@@ -625,7 +625,9 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
     try:
         time_diff_minutes = (datetime.now() - created_at).total_seconds() / 60
     except:
+        from datetime import timezone
         time_diff_minutes = (datetime.now(timezone.utc) - created_at).total_seconds() / 60
+
     
     # Determine percentages based on time elapsed
     if time_diff_minutes <= 10:
