@@ -701,6 +701,7 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
         sent_rows = cursor.fetchall()
         fallback_records.extend([('sent', row) for row in sent_rows])
     
+    logger.info(f"fallback_records: {len(fallback_records)}")
     # If we don't have enough records of specific statuses, fill with any available records
     if len(fallback_records) < total_missing:
         remaining_needed = total_missing - len(fallback_records)
