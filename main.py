@@ -319,6 +319,8 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             "message": "Generating report file..."
         })
         
+        await batch_save_to_database(cursor, connection, all_rows, app_id, batch_size=500)
+        
         seen_contacts = set()
         unique_rows = []
         for row in all_rows:
@@ -357,6 +359,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
         
         # Commit the changes
         db.commit()
+        
         if not insight:
             zip_filename = await generate_csv_zip(all_rows, request.report_id, task_id, campaign_title, str(template_name), str(created_at))
         
@@ -532,14 +535,14 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
                 wr1.message_from, 
                 wr1.message_type, 
                 wr1.message_body 
-            FROM webhook_responses_{app_id} wr1 
+            FROM webhook_responses_{app_id}_dup wr1 
             WHERE wr1.contact_wa_id IN ({placeholders_contacts}) 
             AND wr1.phone_number_id = %s 
             AND wr1.Date >= %s 
             {waba_condition_main}
             AND wr1.message_timestamp = ( 
                 SELECT MAX(wr2.message_timestamp) 
-                FROM webhook_responses_{app_id} wr2 
+                FROM webhook_responses_{app_id}_dup wr2 
                 WHERE wr2.contact_wa_id = wr1.contact_wa_id 
                 AND wr2.phone_number_id = wr1.phone_number_id 
                 AND wr2.Date >= %s 
@@ -833,6 +836,70 @@ async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, camp
         raise Exception("Failed to create ZIP file") 
      
     return zip_filename
+
+async def batch_save_to_database(cursor, connection, rows_data: List[Tuple], app_id: str, batch_size: int = 500):
+    """
+    Batch save/update records to database with upsert logic
+    Uses ON DUPLICATE KEY UPDATE for efficient upsert operations
+    """
+    if not rows_data:
+        logger.info("No data to save to database")
+        return
+    
+    total_rows = len(rows_data)
+    total_batches = math.ceil(total_rows / batch_size)
+    
+    logger.info(f"Starting batch database save: {total_rows} rows in {total_batches} batches")
+    
+    # Prepare the upsert query - UPDATE only status column
+    upsert_query = f"""
+        INSERT INTO webhook_responses_{app_id}_dup (
+            Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
+            status, message_timestamp, error_code, error_message, contact_name,
+            message_from, message_type, message_body
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            status = VALUES(status)
+    """
+    
+    try:
+        for batch_num in range(total_batches):
+            start_idx = batch_num * batch_size
+            end_idx = min((batch_num + 1) * batch_size, total_rows)
+            batch_data = rows_data[start_idx:end_idx]
+            
+            logger.info(f"Processing database batch {batch_num + 1}/{total_batches} with {len(batch_data)} records")
+            
+            # Prepare batch data for insertion
+            batch_values = []
+            for row in batch_data:
+                # Extract values from row tuple (adjust indices based on your row structure)
+                batch_values.append((
+                    row[0],   # Date
+                    row[1],   # display_phone_number
+                    row[2],   # phone_number_id
+                    row[3],   # waba_id
+                    row[4],   # contact_wa_id
+                    row[5],   # status
+                    row[6],   # message_timestamp
+                    row[7],   # error_code
+                    row[8],   # error_message
+                    row[9],   # contact_name
+                    row[10],  # message_from
+                    row[11],  # message_type
+                    row[12]   # message_body
+                ))
+            
+            # Execute batch upsert
+            cursor.executemany(upsert_query, batch_values)
+            connection.commit()
+            
+            logger.info(f"Database batch {batch_num + 1} completed: {len(batch_data)} records processed")
+    
+    except Exception as e:
+        logger.error(f"Error in batch database save: {str(e)}", exc_info=True)
+        connection.rollback()
+        raise e
 
 # Alternative: Even more aggressive optimization with connection pooling
 class DatabasePool:
