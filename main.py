@@ -237,6 +237,9 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
         created_at = report.created_at + timedelta(hours=5, minutes=30)
         created_at_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
         
+        updated_at = report.updated_at + timedelta(hours=5, minutes=30)
+        updated_at_str = updated_at.strftime('%Y-%m-%d %H:%M:%S')
+        
         # MySQL Connection
         connection = pymysql.connect(**dbconfig)
         cursor = connection.cursor()
@@ -1375,9 +1378,9 @@ async def get_task_status_endpoint(task_id: str):
     status = get_task_status(task_id)
     if status is None:
         logger.error(f"Task not found: {task_id}")
-        with task_status_lock:
-            available_tasks = list(task_status.keys())
-        logger.info(f"Available task_ids: {available_tasks}")
+        # with task_status_lock:
+        #     available_tasks = list(task_status.keys())
+        # logger.info(f"Available task_ids: {available_tasks}")
         raise HTTPException(status_code=404, detail="Task not found")
     
     logger.info(f"Task {task_id} status: {status}")
