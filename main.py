@@ -338,7 +338,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             "message": "Generating report file..."
         })
         
-        await batch_save_to_database(cursor, connection, all_rows, app_id, batch_size=500)
+        await batch_save_to_database(cursor, connection, all_rows, app_id, batch_size=1000)
         
         seen_contacts = set()
         unique_rows = []
