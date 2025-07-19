@@ -308,10 +308,29 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             missing_contacts_list = list(missing_contacts)
             for i in range(0, len(missing_contacts_list), batch_size):
                 batch = set(missing_contacts_list[i:i + batch_size])
-                fallback_rows = await generate_fallback_data(cursor, batch, created_at)
+                fallback_rows = await generate_fallback_data_one(
+                    cursor, batch, phone_id, created_at_str, app_id
+                )
                 if fallback_rows:
                     all_rows.extend(fallback_rows)
                     logger.info(f"Missing contacts Batch {i + 1} completed: {len(fallback_rows)} rows")
+        
+        
+        found_contacts_two = set()
+        if all_rows:
+            for row in all_rows:
+                found_contacts_two.add(row[4])
+        
+        missing_contacts_two = set(contact_list) - found_contacts_two
+        logger.info(f"Missing contacts found two: {len(missing_contacts_two)} contacts")
+        if missing_contacts_two:
+            missing_contacts_list_two = list(missing_contacts_two)
+            for i in range(0, len(missing_contacts_list_two), batch_size):
+                batch_two = set(missing_contacts_list_two[i:i + batch_size])
+                fallback_rows_two = await generate_fallback_data(cursor, batch_two, created_at)
+                if fallback_rows_two:
+                    all_rows.extend(fallback_rows_two)
+                    logger.info(f"Missing contacts Batch two {i + 1} completed: {len(fallback_rows_two)} rows")
         
         # Continue with file generation (same as before)
         update_task_status(task_id, {
@@ -461,6 +480,215 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
     # Build the waba_id condition parts
     waba_condition_main = ""
     waba_condition_sub = ""
+    if waba_id_list and waba_id_list != ['0']:
+        waba_placeholders = ','.join(['%s'] * len(waba_id_list))
+        waba_condition_main = f"AND wr1.waba_id IN ({waba_placeholders})"
+        waba_condition_sub = f"AND wr2.waba_id IN ({waba_placeholders})"
+    
+    base_query = f""" 
+            SELECT  
+                wr1.Date, 
+                wr1.display_phone_number, 
+                wr1.phone_number_id, 
+                wr1.waba_id, 
+                wr1.contact_wa_id, 
+                CASE  
+                    WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 THEN 
+                        CASE
+                            -- Path A: For failed status - apply time-based distribution
+                            WHEN wr1.status = 'failed' THEN
+                                CASE
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 10 THEN
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.10) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.40) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 30 THEN
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.25) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.75) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 60 THEN
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.30) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 180 THEN
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.45) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 360 THEN
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.55) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.98) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) < 1440 THEN
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.65) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.99) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                    ELSE
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.70) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.99) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                END
+                            -- Path B: For non-failed status - apply progressive status updates
+                            ELSE
+                                CASE
+                                    -- Within 10 minutes: Any status can be changed
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 10 THEN
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.10) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.40) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                    -- Within 30 minutes: Change 'sent' to 'delivered' or 'read'
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 30 THEN
+                                        CASE
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.25) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            ELSE wr1.status
+                                        END
+                                    -- Within 60 minutes: Change 'sent' to 'delivered' or 'read'
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 60 THEN
+                                        CASE
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.30) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            ELSE wr1.status
+                                        END
+                                    -- Within 3 hours: Change 'delivered' to 'read', 'sent' to 'delivered'/'read'
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 180 THEN
+                                        CASE
+                                            WHEN wr1.status = 'delivered' THEN 'read'
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.45) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            ELSE wr1.status
+                                        END
+                                    -- Within 6 hours: Change 'delivered' to 'read', 'sent' to 'delivered'/'read'
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 360 THEN
+                                        CASE
+                                            WHEN wr1.status = 'delivered' THEN 'read'
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.55) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            ELSE wr1.status
+                                        END
+                                    -- Within 24 hours: Change 'delivered' to 'read', 'sent' to 'delivered'/'read'
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) < 1440 THEN
+                                        CASE
+                                            WHEN wr1.status = 'delivered' THEN 'read'
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.65) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            ELSE wr1.status
+                                        END
+                                    -- After 24 hours: Change 'delivered' to 'read', 'sent' to 'delivered'/'read'
+                                    ELSE
+                                        CASE
+                                            WHEN wr1.status = 'delivered' THEN 'read'
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.70) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            ELSE wr1.status
+                                        END
+                                END
+                        END
+                    -- For all other error codes, keep original status
+                    ELSE wr1.status 
+                END AS status, 
+                wr1.message_timestamp, 
+                CASE  
+                    WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 THEN NULL 
+                    ELSE wr1.error_code 
+                END AS error_code, 
+                CASE  
+                    WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 THEN NULL 
+                    ELSE wr1.error_message 
+                END AS error_message, 
+                wr1.contact_name, 
+                wr1.message_from, 
+                wr1.message_type, 
+                wr1.message_body 
+            FROM webhook_responses_{app_id} wr1 
+            WHERE wr1.contact_wa_id IN ({placeholders_contacts}) 
+            AND wr1.phone_number_id = %s 
+            AND wr1.Date >= %s 
+            {waba_condition_main}
+            AND wr1.message_timestamp = ( 
+                SELECT MAX(wr2.message_timestamp) 
+                FROM webhook_responses_{app_id} wr2 
+                WHERE wr2.contact_wa_id = wr1.contact_wa_id 
+                AND wr2.phone_number_id = wr1.phone_number_id 
+                AND wr2.Date >= %s 
+                {waba_condition_sub}
+            ) 
+            ORDER BY wr1.contact_wa_id 
+        """ 
+ 
+    params = []
+    
+    # Add created_at_str for all TIMESTAMPDIFF calls (12 times total)
+    for _ in range(12):
+        params.append(created_at_str)
+    
+    # Add batch contacts
+    params.extend(batch_contacts)
+    params.append(phone_id)
+    params.append(created_at_str)
+    
+    # Add waba_id_list for main query if needed
+    if waba_id_list and waba_id_list != ['0']: 
+        params.extend(waba_id_list)
+    
+    params.append(created_at_str)
+    
+    # Add waba_id_list for subquery if needed
+    if waba_id_list and waba_id_list != ['0']: 
+        params.extend(waba_id_list)
+ 
+    try: 
+        cursor.execute(base_query, params) 
+        return cursor.fetchall() 
+    except Exception as e: 
+        logger.error(f"Error executing batch query: {str(e)}") 
+        return []
+    
+    
+async def generate_fallback_data_one(cursor, batch_contacts: List[str], phone_id: str,  
+                             created_at_str: str, app_id: str) -> List[Tuple]: 
+    """Execute optimized query for a batch of contacts with comprehensive time-based status distribution""" 
+ 
+    placeholders_contacts = ','.join(['%s'] * len(batch_contacts)) 
+    total_records = len(batch_contacts)
+    
+    # Build the waba_id condition parts
+    waba_condition_main = ""
+    waba_condition_sub = ""
+    waba_id_list = ['0']
     if waba_id_list and waba_id_list != ['0']:
         waba_placeholders = ','.join(['%s'] * len(waba_id_list))
         waba_condition_main = f"AND wr1.waba_id IN ({waba_placeholders})"
