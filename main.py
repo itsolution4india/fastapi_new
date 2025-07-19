@@ -473,134 +473,139 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
                 wr1.phone_number_id, 
                 wr1.waba_id, 
                 wr1.contact_wa_id, 
-                CASE  
-                    -- Handle failed status (error_code 131047 AND status failed)
-                    WHEN (wr1.error_code = '131047' OR wr1.error_code = 131047) AND wr1.status = 'failed' THEN 
-                        CASE
-                            -- Before or equal to 10 min: 10% read, 30% delivered, 60% sent
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 10 THEN
-                                CASE
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.10) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.40) THEN 'delivered'
-                                    ELSE 'sent'
-                                END
-                            -- Before or equal to 30 min: 25% read, 50% delivered, 25% sent
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 30 THEN
-                                CASE
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.25) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.75) THEN 'delivered'
-                                    ELSE 'sent'
-                                END
-                            -- Before or equal to 60 min: 30% read, 65% delivered, 5% sent
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 60 THEN
-                                CASE
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.30) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
-                                    ELSE 'sent'
-                                END
-                            -- Before or equal to 3 hours: 45% read, 50% delivered, 5% sent
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 180 THEN
-                                CASE
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.45) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
-                                    ELSE 'sent'
-                                END
-                            -- Before or equal to 6 hours: 55% read, 40% delivered, 5% sent
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 360 THEN
-                                CASE
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.55) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
-                                    ELSE 'sent'
-                                END
-                            -- Before 24 hours: 65% read, 30% delivered, 5% sent
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) < 1440 THEN
-                                CASE
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.65) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
-                                    ELSE 'sent'
-                                END
-                            -- After 24 hours: 70% read, 25% delivered, 5% sent
-                            ELSE
-                                CASE
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.70) THEN 'read'
-                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
-                                    ELSE 'sent'
-                                END
-                        END
-                    -- Handle error code 131047 (but not failed status)
+                CASE
                     WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 THEN
                         CASE
-                            -- Before or equal to 10 min: No changes for non-failed
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 10 THEN wr1.status
-                            -- Before or equal to 30 min: Change 'sent' to 'delivered' or 'read'
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 30 THEN
+                            WHEN wr1.status = 'failed' THEN
+                                -- Manipulation logic A (status distribution fallback for failed messages)
                                 CASE
-                                    WHEN wr1.status = 'sent' THEN
+                                    -- Before or equal to 10 min: 10% read, 30% delivered, 60% sent
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 10 THEN
                                         CASE
-                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.50) THEN 'read'
-                                            ELSE 'delivered'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.10) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.40) THEN 'delivered'
+                                            ELSE 'sent'
                                         END
-                                    ELSE wr1.status
+                                    -- Before or equal to 30 min: 25% read, 50% delivered, 25% sent
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 30 THEN
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.25) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.75) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                    -- Before or equal to 60 min: 30% read, 65% delivered, 5% sent
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 60 THEN
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.30) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                    -- Before or equal to 3 hours: 45% read, 50% delivered, 5% sent
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 180 THEN
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.45) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                    -- Before or equal to 6 hours: 55% read, 40% delivered, 5% sent
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 360 THEN
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.55) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                    -- Before 24 hours: 65% read, 30% delivered, 5% sent
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) < 1440 THEN
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.65) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
+                                    -- After 24 hours: 70% read, 25% delivered, 5% sent
+                                    ELSE
+                                        CASE
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.70) THEN 'read'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
+                                            ELSE 'sent'
+                                        END
                                 END
-                            -- Before or equal to 60 min: Change 'sent' to 'delivered' or 'read'
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 60 THEN
-                                CASE
-                                    WHEN wr1.status = 'sent' THEN
-                                        CASE
-                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.46) THEN 'read'
-                                            ELSE 'delivered'
-                                        END
-                                    ELSE wr1.status
-                                END
-                            -- Before or equal to 3 hours: Change 'delivered' to 'read', 'sent' to 'delivered' or 'read'
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 180 THEN
-                                CASE
-                                    WHEN wr1.status = 'sent' THEN
-                                        CASE
-                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.90) THEN 'read'
-                                            ELSE 'delivered'
-                                        END
-                                    WHEN wr1.status = 'delivered' THEN
-                                        CASE
-                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.90) THEN 'read'
-                                            ELSE 'delivered'
-                                        END
-                                    ELSE wr1.status
-                                END
-                            -- Before or equal to 6 hours: Change 'delivered' to 'read', 'sent' to 'delivered' or 'read'
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 360 THEN
-                                CASE
-                                    WHEN wr1.status = 'sent' THEN
-                                        CASE
-                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'read'
-                                            ELSE 'delivered'
-                                        END
-                                    WHEN wr1.status = 'delivered' THEN 'read'
-                                    ELSE wr1.status
-                                END
-                            -- Before 24 hours: Change 'delivered' to 'read', 'sent' to 'delivered' or 'read'
-                            WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) < 1440 THEN
-                                CASE
-                                    WHEN wr1.status = 'sent' THEN
-                                        CASE
-                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'read'
-                                            ELSE 'delivered'
-                                        END
-                                    WHEN wr1.status = 'delivered' THEN 'read'
-                                    ELSE wr1.status
-                                END
-                            -- After 24 hours: Change 'delivered' to 'read', 'sent' to 'delivered' or 'read'
                             ELSE
+                                -- Manipulation logic B (fallback for 'sent' / 'delivered' but not failed)
                                 CASE
-                                    WHEN wr1.status = 'sent' THEN
+                                    -- Before or equal to 10 min: No changes for non-failed
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 10 THEN wr1.status
+                                    -- Before or equal to 30 min: Change 'sent' to 'delivered' or 'read'
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 30 THEN
                                         CASE
-                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'read'
-                                            ELSE 'delivered'
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.50) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            ELSE wr1.status
                                         END
-                                    WHEN wr1.status = 'delivered' THEN 'read'
-                                    ELSE wr1.status
+                                    -- Before or equal to 60 min: Change 'sent' to 'delivered' or 'read'
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 60 THEN
+                                        CASE
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.46) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            ELSE wr1.status
+                                        END
+                                    -- Before or equal to 3 hours: Change 'delivered' to 'read', 'sent' to 'delivered' or 'read'
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 180 THEN
+                                        CASE
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.90) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            WHEN wr1.status = 'delivered' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.90) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            ELSE wr1.status
+                                        END
+                                    -- Before or equal to 6 hours: Change 'delivered' to 'read', 'sent' to 'delivered' or 'read'
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 360 THEN
+                                        CASE
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            WHEN wr1.status = 'delivered' THEN 'read'
+                                            ELSE wr1.status
+                                        END
+                                    -- Before 24 hours: Change 'delivered' to 'read', 'sent' to 'delivered' or 'read'
+                                    WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) < 1440 THEN
+                                        CASE
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            WHEN wr1.status = 'delivered' THEN 'read'
+                                            ELSE wr1.status
+                                        END
+                                    -- After 24 hours: Change 'delivered' to 'read', 'sent' to 'delivered' or 'read'
+                                    ELSE
+                                        CASE
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'read'
+                                                    ELSE 'delivered'
+                                                END
+                                            WHEN wr1.status = 'delivered' THEN 'read'
+                                            ELSE wr1.status
+                                        END
                                 END
                         END
+                    ELSE
+                        wr1.status
                 END AS status, 
                 wr1.message_timestamp, 
                 CASE  
@@ -633,15 +638,11 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
  
     params = []
     
-    # Add created_at_str parameters for failed status time checks (6 times)
-    for _ in range(6):
+    # Add created_at_str parameters for failed status time checks (7 times)
+    for _ in range(7):
         params.append(created_at_str)
     
-    # Add created_at_str parameters for 131047 error code (but not failed) time checks (6 times)
-    for _ in range(6):
-        params.append(created_at_str)
-    
-    # Add created_at_str parameters for other cases time checks (6 times)
+    # Add created_at_str parameters for non-failed 131047 error code time checks (6 times)
     for _ in range(6):
         params.append(created_at_str)
     
