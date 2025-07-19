@@ -279,7 +279,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             # })
             
             # Execute batch query
-            batch_rows = await execute_batch_query(
+            batch_rows = await execute_batch_query_optimized(
                 cursor, batch_contacts, phone_id, created_at_str, waba_id_list, app_id
             )
             
