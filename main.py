@@ -719,10 +719,8 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
     
 #     return modified_fallback_rows
 
-async def generate_fallback_data(cursor, missing_contacts: set, created_at: datetime, 
-                                phone_id: str = None, waba_id_list: List[str] = None, 
-                                app_id: str = None) -> List[Tuple]: 
-    """Generate fallback data for missing contacts with time-based percentage distribution and status transitions""" 
+async def generate_fallback_data(cursor, missing_contacts: set, created_at: datetime) -> List[Tuple]: 
+    """Generate fallback data for missing contacts with time-based percentage distribution""" 
  
     if not missing_contacts: 
         return [] 
@@ -737,7 +735,7 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
         time_diff_minutes = (datetime.now(timezone.utc) - created_at).total_seconds() / 60
 
     
-    # Determine percentages based on time elapsed (matching your table)
+    # Determine percentages based on time elapsed
     if time_diff_minutes <= 10:
         read_pct, delivered_pct, sent_pct = 0.10, 0.30, 0.60
     elif time_diff_minutes <= 30:
@@ -747,94 +745,87 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
     elif time_diff_minutes <= 180:  # 3 hours
         read_pct, delivered_pct, sent_pct = 0.45, 0.50, 0.05
     elif time_diff_minutes <= 360:  # 6 hours
-        read_pct, delivered_pct, sent_pct = 0.55, 0.40, 0.05
+        read_pct, delivered_pct, sent_pct = 0.55, 0.43, 0.02
     elif time_diff_minutes < 1440:  # Before 24 hours
-        read_pct, delivered_pct, sent_pct = 0.65, 0.30, 0.05
+        read_pct, delivered_pct, sent_pct = 0.65, 0.34, 0.01
     else:  # After 24 hours
-        read_pct, delivered_pct, sent_pct = 0.70, 0.25, 0.05
+        read_pct, delivered_pct, sent_pct = 0.70, 0.29, 0.01
     
     # Calculate counts for each status
     read_count = int(total_missing * read_pct)
     delivered_count = int(total_missing * delivered_pct)
     sent_count = total_missing - read_count - delivered_count  # Remaining records
     
-    # Build table name and waba condition
-    table_name = "webhook_responses"
-    waba_condition = ""
-    waba_params = []
-    if waba_id_list and waba_id_list != ['0']:
-        waba_placeholders = ','.join(['%s'] * len(waba_id_list))
-        waba_condition = f"AND waba_id IN ({waba_placeholders})"
-        waba_params = waba_id_list
-    
-    # Fetch fallback records for each status with improved queries
+    # Fetch fallback records for each status
     fallback_records = []
     
-    # Get records with different statuses including failed ones
-    status_queries = {
-        'read': read_count,
-        'delivered': delivered_count, 
-        'sent': sent_count
-    }
-    
-    for target_status, count in status_queries.items():
-        if count > 0:
-            # First try to get records with the target status
-            status_query = f""" 
-                SELECT  
-                    Date, display_phone_number, phone_number_id, waba_id, contact_wa_id, 
-                    status, message_timestamp, error_code, error_message, contact_name, 
-                    message_from, message_type, message_body 
-                FROM {table_name}
-                WHERE status = %s {waba_condition}
-                ORDER BY RAND() 
-                LIMIT %s 
-            """
-            params = [target_status] + waba_params + [count]
-            cursor.execute(status_query, params)
-            rows = cursor.fetchall()
-            fallback_records.extend([(target_status, row) for row in rows])
-            
-            # If we need more records, get from failed status
-            if len(rows) < count:
-                remaining = count - len(rows)
-                failed_query = f""" 
-                    SELECT  
-                        Date, display_phone_number, phone_number_id, waba_id, contact_wa_id, 
-                        status, message_timestamp, error_code, error_message, contact_name, 
-                        message_from, message_type, message_body 
-                    FROM {table_name}
-                    WHERE (status = 'failed' OR error_code = '131047' OR error_code = 131047) 
-                    {waba_condition}
-                    ORDER BY RAND() 
-                    LIMIT %s 
-                """
-                params = waba_params + [remaining]
-                cursor.execute(failed_query, params)
-                failed_rows = cursor.fetchall()
-                fallback_records.extend([(target_status, row) for row in failed_rows])
-    
-    # If we still don't have enough records, fill with any available records
-    if len(fallback_records) < total_missing:
-        logger.info(f"Fallback records: {len(fallback_records)}, total_missing: {total_missing}")
-        remaining_needed = total_missing - len(fallback_records)
-        fallback_query = f""" 
+    # Get 'read' status records
+    if read_count > 0:
+        read_query = """ 
             SELECT  
                 Date, display_phone_number, phone_number_id, waba_id, contact_wa_id, 
                 status, message_timestamp, error_code, error_message, contact_name, 
                 message_from, message_type, message_body 
-            FROM {table_name}
-            WHERE status IN ('read', 'delivered', 'sent', 'failed') 
-            {waba_condition}
+            FROM webhook_responses 
+            WHERE status = 'read' 
             ORDER BY RAND() 
             LIMIT %s 
         """ 
-        params = waba_params + [remaining_needed]
-        cursor.execute(fallback_query, params)
-        additional_rows = cursor.fetchall()
-        fallback_records.extend([('auto_assigned', row) for row in additional_rows])
+        cursor.execute(read_query, (read_count,))
+        read_rows = cursor.fetchall()
+        fallback_records.extend([('read', row) for row in read_rows])
     
-    # Modify fallback records for missing contacts with status transition logic
+    # Get 'delivered' status records
+    if delivered_count > 0:
+        delivered_query = """ 
+            SELECT  
+                Date, display_phone_number, phone_number_id, waba_id, contact_wa_id, 
+                status, message_timestamp, error_code, error_message, contact_name, 
+                message_from, message_type, message_body 
+            FROM webhook_responses 
+            WHERE status = 'delivered' 
+            ORDER BY RAND() 
+            LIMIT %s 
+        """ 
+        cursor.execute(delivered_query, (delivered_count,))
+        delivered_rows = cursor.fetchall()
+        fallback_records.extend([('delivered', row) for row in delivered_rows])
+    
+    # Get 'sent' status records
+    if sent_count > 0:
+        sent_query = """ 
+            SELECT  
+                Date, display_phone_number, phone_number_id, waba_id, contact_wa_id, 
+                status, message_timestamp, error_code, error_message, contact_name, 
+                message_from, message_type, message_body 
+            FROM webhook_responses 
+            WHERE status = 'sent' 
+            ORDER BY RAND() 
+            LIMIT %s 
+        """ 
+        cursor.execute(sent_query, (sent_count,))
+        sent_rows = cursor.fetchall()
+        fallback_records.extend([('sent', row) for row in sent_rows])
+    
+    # If we don't have enough records of specific statuses, fill with any available records
+    if len(fallback_records) < total_missing:
+        logger.info(f"YES fallback_records: {len(fallback_records)},total_missing: {total_missing}")
+        remaining_needed = total_missing - len(fallback_records)
+        fallback_query = """ 
+            SELECT  
+                Date, display_phone_number, phone_number_id, waba_id, contact_wa_id, 
+                status, message_timestamp, error_code, error_message, contact_name, 
+                message_from, message_type, message_body 
+            FROM webhook_responses 
+            WHERE status IN ('read', 'delivered', 'sent') 
+            ORDER BY RAND() 
+            LIMIT %s 
+        """ 
+        cursor.execute(fallback_query, (remaining_needed,))
+        additional_rows = cursor.fetchall()
+        fallback_records.extend([('fallback', row) for row in additional_rows])
+    
+    # Modify fallback records for missing contacts 
     modified_fallback_rows = [] 
     missing_contacts_list = list(missing_contacts)
     
@@ -846,36 +837,40 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
             # Generate random date within 5 minutes of created_at 
             random_seconds = random.randint(0, 300) 
             new_date = created_at + timedelta(seconds=random_seconds) 
-            
-            # Get original status from the record
-            original_status = fallback_row[5]  # status field
-            original_error_code = fallback_row[7]  # error_code field
-            
-            # Determine if this was originally a failed status
-            is_failed = (original_status == 'failed' or 
-                        original_error_code == '131047' or 
-                        original_error_code == 131047)
-            
-            # Apply status transition logic based on time and original status
-            final_status = apply_status_transition(
-                original_status=original_status,
-                is_failed=is_failed,
-                target_status=target_status,
-                time_diff_minutes=time_diff_minutes,
-                record_index=i,
-                total_records=total_missing
-            )
-            
-            # Update the record fields
+         
+            # Determine status based on time and target distribution
+            if target_status == 'fallback':
+                # For fallback records, determine status based on time
+                try:
+                    if (datetime.now() - new_date) < timedelta(hours=24): 
+                        fallback_row[5] = 'pending' 
+                    else:
+                        pass
+                except:
+                    if (datetime.now(timezone.utc) - new_date) < timedelta(hours=24):
+                        fallback_row[5] = 'pending'
+                    else:
+                        pass
+            else:
+                # For specifically selected records, use the target status
+                fallback_row[5] = target_status
+                
+                # But if it's very recent (within 24 hours), some might still be pending
+                try: 
+                    if (datetime.now() - new_date) < timedelta(hours=24): 
+                        # Apply some randomness - not all recent records should be pending
+                        if random.random() < 0.01:  # 30% chance of being pending if recent
+                            fallback_row[5] = 'pending' 
+                except Exception as e: 
+                    from datetime import timezone 
+                    if (datetime.now(timezone.utc) - new_date) < timedelta(hours=24): 
+                        if random.random() < 0.01:  # 30% chance of being pending if recent
+                            fallback_row[5] = 'pending' 
+             
+            # Update the record 
             fallback_row[0] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # Date 
             fallback_row[4] = missing_contact  # contact_wa_id 
-            fallback_row[5] = final_status  # status
             fallback_row[6] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # message_timestamp 
-            
-            # Clear error fields if status is no longer failed
-            if final_status != 'failed':
-                fallback_row[7] = None  # error_code
-                fallback_row[8] = None  # error_message
              
             modified_fallback_rows.append(tuple(fallback_row)) 
      
