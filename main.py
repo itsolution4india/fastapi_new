@@ -474,8 +474,8 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
                 wr1.waba_id, 
                 wr1.contact_wa_id, 
                 CASE  
-                    -- Handle failed status (error_code 131047) - can be changed to any status
-                    WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 OR wr1.status = 'failed' THEN 
+                    -- Handle failed status (error_code 131047 AND status failed)
+                    WHEN (wr1.error_code = '131047' OR wr1.error_code = 131047) AND wr1.status = 'failed' THEN 
                         CASE
                             -- Before or equal to 10 min: 10% read, 30% delivered, 60% sent
                             WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 10 THEN
@@ -527,8 +527,8 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
                                     ELSE 'sent'
                                 END
                         END
-                    -- Handle non-failed statuses with transition rules
-                    ELSE
+                    -- Handle error code 131047 (but not failed status)
+                    WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 THEN
                         CASE
                             -- Before or equal to 10 min: No changes for non-failed
                             WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 10 THEN wr1.status
@@ -604,11 +604,11 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
                 END AS status, 
                 wr1.message_timestamp, 
                 CASE  
-                    WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 OR wr1.status = 'failed' THEN NULL 
+                    WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 THEN NULL 
                     ELSE wr1.error_code 
                 END AS error_code, 
                 CASE  
-                    WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 OR wr1.status = 'failed' THEN NULL 
+                    WHEN wr1.error_code = '131047' OR wr1.error_code = 131047 THEN NULL 
                     ELSE wr1.error_message 
                 END AS error_message, 
                 wr1.contact_name, 
@@ -637,7 +637,11 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
     for _ in range(6):
         params.append(created_at_str)
     
-    # Add created_at_str parameters for non-failed status time checks (6 times)
+    # Add created_at_str parameters for 131047 error code (but not failed) time checks (6 times)
+    for _ in range(6):
+        params.append(created_at_str)
+    
+    # Add created_at_str parameters for other cases time checks (6 times)
     for _ in range(6):
         params.append(created_at_str)
     
