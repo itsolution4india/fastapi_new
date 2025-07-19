@@ -629,14 +629,14 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
                 wr1.message_from, 
                 wr1.message_type, 
                 wr1.message_body 
-            FROM webhook_responses_{app_id} wr1 
+            FROM webhook_responses_{app_id}_dup wr1 
             WHERE wr1.contact_wa_id IN ({placeholders_contacts}) 
             AND wr1.phone_number_id = %s 
             AND wr1.Date >= %s 
             {waba_condition_main}
             AND wr1.message_timestamp = ( 
                 SELECT MAX(wr2.message_timestamp) 
-                FROM webhook_responses_{app_id} wr2 
+                FROM webhook_responses_{app_id}_dup wr2 
                 WHERE wr2.contact_wa_id = wr1.contact_wa_id 
                 AND wr2.phone_number_id = wr1.phone_number_id 
                 AND wr2.Date >= %s 
@@ -838,14 +838,14 @@ async def generate_fallback_data_one(cursor, batch_contacts: List[str], phone_id
                 wr1.message_from, 
                 wr1.message_type, 
                 wr1.message_body 
-            FROM webhook_responses_{app_id} wr1 
+            FROM webhook_responses_{app_id}_dup wr1 
             WHERE wr1.contact_wa_id IN ({placeholders_contacts}) 
             AND wr1.phone_number_id = %s 
             AND wr1.Date >= %s 
             {waba_condition_main}
             AND wr1.message_timestamp = ( 
                 SELECT MAX(wr2.message_timestamp) 
-                FROM webhook_responses_{app_id} wr2 
+                FROM webhook_responses_{app_id}_dup wr2 
                 WHERE wr2.contact_wa_id = wr1.contact_wa_id 
                 AND wr2.phone_number_id = wr1.phone_number_id 
                 AND wr2.Date >= %s 
