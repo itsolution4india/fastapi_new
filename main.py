@@ -348,7 +348,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             missing_contacts_list_two = list(missing_contacts_two)
             for i in range(0, len(missing_contacts_list_two), batch_size):
                 batch_two = set(missing_contacts_list_two[i:i + batch_size])
-                fallback_rows_two = await generate_fallback_data(cursor, batch_two, created_at)
+                fallback_rows_two = await generate_fallback_data(cursor, batch_two, created_at, phones)
                 if fallback_rows_two:
                     all_rows.extend(fallback_rows_two)
                     logger.info(f"Missing contacts Batch two {i + 1} completed: {len(fallback_rows_two)} rows")
@@ -903,7 +903,7 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
 #         logger.error(f"Error executing batch query: {str(e)}") 
 #         return []
 
-async def generate_fallback_data(cursor, missing_contacts: set, created_at: datetime) -> List[Tuple]:
+async def generate_fallback_data(cursor, missing_contacts: set, created_at: datetime, phones: List[str]) -> List[Tuple]:
     """Generate fallback data for missing contacts"""
 
     if not missing_contacts:
@@ -935,13 +935,18 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
             new_date = created_at + timedelta(seconds=random_seconds)
         
             # Check if new_date is within the last 24 hours
-            try:
-                if (datetime.now() - new_date) < timedelta(hours=24):
-                    fallback_row[5] = 'pending'
-            except Exception as e:
-                from datetime import timezone
-                if (datetime.now(timezone.utc) - new_date) < timedelta(hours=24):
-                    fallback_row[5] = 'pending'
+            if missing_contact in phones:
+                fallback_row[5] = 'failed'
+                fallback_row[7] = '131049'
+                fallback_row[8] = "This message was not delivered to maintain healthy ecosystem engagement."
+            else:
+                try:
+                    if (datetime.now() - new_date) < timedelta(hours=24):
+                        fallback_row[5] = 'pending'
+                except Exception as e:
+                    from datetime import timezone
+                    if (datetime.now(timezone.utc) - new_date) < timedelta(hours=24):
+                        fallback_row[5] = 'pending'
             
             # Update the record
             fallback_row[0] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # Date
