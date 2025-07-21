@@ -256,6 +256,9 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
         created_at = report.created_at + timedelta(hours=5, minutes=30)
         created_at_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
         
+        end_time_dt = created_at + timedelta(hours=24)
+        end_time_str = end_time_dt.strftime('%Y-%m-%d %H:%M:%S')
+        
         updated_at = report.updated_at + timedelta(hours=5, minutes=30)
         updated_at_str = updated_at.strftime('%Y-%m-%d %H:%M:%S')
         
@@ -302,7 +305,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             
             # Execute batch query
             batch_rows = await execute_batch_query(
-                cursor, batch_contacts, phone_id, created_at_str, waba_id_list, app_id
+                cursor, batch_contacts, phone_id, created_at_str, end_time_str, waba_id_list, app_id
             )
             
             if batch_rows:
@@ -428,7 +431,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             db.close()
 
 async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str, 
-                             created_at_str: str, waba_id_list: List[str], app_id: str) -> List[Tuple]:
+                             created_at_str: str, end_time_str: str, waba_id_list: List[str], app_id: str) -> List[Tuple]:
     """Execute optimized query for a batch of contacts"""
 
     placeholders_contacts = ','.join(['%s'] * len(batch_contacts))
@@ -461,6 +464,7 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
             WHERE wr1.contact_wa_id IN ({placeholders_contacts})
             AND wr1.phone_number_id = %s
             AND wr1.Date >= %s
+            AND wr1.Date < %s
             {"AND wr1.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
             AND wr1.message_timestamp = (
                 SELECT MAX(wr2.message_timestamp)
@@ -468,19 +472,20 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
                 WHERE wr2.contact_wa_id = wr1.contact_wa_id
                 AND wr2.phone_number_id = wr1.phone_number_id
                 AND wr2.Date >= %s
+                AND wr2.Date < %s
                 {"AND wr2.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
             )
             ORDER BY wr1.contact_wa_id
         """
 
     # Prepare parameters
-    params = batch_contacts + [phone_id, created_at_str]
+    params = batch_contacts + [phone_id, created_at_str, end_time_str]
     if waba_id_list and waba_id_list != ['0']:
         params += waba_id_list  # for wr1.waba_id
-    params.append(created_at_str)
+    params.extend([created_at_str, end_time_str])
     if waba_id_list and waba_id_list != ['0']:
         params += waba_id_list  # for wr2.waba_id
-
+        
     try:
         cursor.execute(base_query, params)
         return cursor.fetchall()
