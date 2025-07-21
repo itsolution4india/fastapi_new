@@ -14,7 +14,8 @@ import threading
 from typing import Dict, Optional, Any, Tuple, List
 from collections import Counter
 import mysql.connector
-from db_models import SessionLocal, ReportInfo
+from db_models import SessionLocal, ReportInfo, User, WhitelistBlacklist
+from sqlalchemy.orm import Session
 import pymysql
 from fastapi.responses import FileResponse
 import zipfile, uuid, math, json, csv, io, random
@@ -192,6 +193,19 @@ def cleanup_old_tasks():
 # Load existing task status on startup
 load_task_status()
 
+def get_whitelist_phones_by_email(db: Session, user_email: str):
+    user = db.query(User).filter(User.email == user_email).first()
+    if not user:
+        return []
+
+    whitelist_entries = (
+        db.query(WhitelistBlacklist)
+        .filter(WhitelistBlacklist.email_id == user.id)
+        .all()
+    )
+
+    return [entry.whitelist_phone for entry in whitelist_entries if entry.whitelist_phone]
+
 async def generate_report_background(task_id: str, request: ReportRequest, insight=False):
     """Optimized background task with batch processing"""
     
@@ -215,7 +229,11 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
         # Database connection
         db = SessionLocal()
         report = db.query(ReportInfo).filter(ReportInfo.id == int(request.report_id)).first()
-        
+        try:
+            phones = get_whitelist_phones_by_email(db, report.email)
+            logger.info(phones)
+        except Exception as e:
+            logger.error(str(e))
         if not report:
             logger.error(f"Report not found for report_id={request.report_id}")
             update_task_status(task_id, {
