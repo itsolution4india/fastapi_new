@@ -228,6 +228,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
     try:
         # Database connection
         db = SessionLocal()
+        phone_number = request.phone_number
         report = db.query(ReportInfo).filter(ReportInfo.id == int(request.report_id)).first()
         try:
             phones = get_whitelist_phones_by_email(db, report.email)
@@ -348,7 +349,7 @@ async def generate_report_background(task_id: str, request: ReportRequest, insig
             missing_contacts_list_two = list(missing_contacts_two)
             for i in range(0, len(missing_contacts_list_two), batch_size):
                 batch_two = set(missing_contacts_list_two[i:i + batch_size])
-                fallback_rows_two = await generate_fallback_data(cursor, batch_two, created_at, phones)
+                fallback_rows_two = await generate_fallback_data(cursor, batch_two, created_at, phones, phone_id, phone_number)
                 if fallback_rows_two:
                     all_rows.extend(fallback_rows_two)
                     logger.info(f"Missing contacts Batch two {i + 1} completed: {len(fallback_rows_two)} rows")
@@ -903,7 +904,7 @@ async def execute_batch_query(cursor, batch_contacts: List[str], phone_id: str,
 #         logger.error(f"Error executing batch query: {str(e)}") 
 #         return []
 
-async def generate_fallback_data(cursor, missing_contacts: set, created_at: datetime, phones: List[str]) -> List[Tuple]:
+async def generate_fallback_data(cursor, missing_contacts: set, created_at: datetime, phones: List[str], phone_id: str, phone_number: str) -> List[Tuple]:
     """Generate fallback data for missing contacts"""
 
     if not missing_contacts:
@@ -951,6 +952,8 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
             # Update the record
             fallback_row[0] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # Date
             fallback_row[4] = missing_contact  # contact_wa_id
+            fallback_row[2] = phone_id
+            fallback_row[1] = phone_number
             fallback_row[6] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # message_timestamp
             
             modified_fallback_rows.append(tuple(fallback_row))

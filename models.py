@@ -73,6 +73,7 @@ class ReportRequest(BaseModel):
     app_id: str
     phone_id: str
     report_id: str
+    phone_number: str
     
 class TaskStatusResponse(BaseModel):
     task_id: str
