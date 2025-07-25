@@ -347,25 +347,6 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
             "message": "Processing missing contacts..."
         })
         
-        # found_contacts = set()
-        # if all_rows:
-        #     for row in all_rows:
-        #         found_contacts.add(row[4])
-        
-        # missing_contacts = set(contact_list) - found_contacts
-        # logger.info(f"Missing contacts found: {len(missing_contacts)} contacts")
-        # if missing_contacts:
-        #     missing_contacts_list = list(missing_contacts)
-        #     for i in range(0, len(missing_contacts_list), batch_size):
-        #         batch = set(missing_contacts_list[i:i + batch_size])
-        #         fallback_rows = await generate_fallback_data_one(
-        #             cursor, batch, phone_id, created_at_str, app_id
-        #         )
-        #         if fallback_rows:
-        #             all_rows.extend(fallback_rows)
-        #             logger.info(f"Missing contacts Batch {i + 1} completed: {len(fallback_rows)} rows")
-        
-        
         found_contacts_two = set()
         if all_rows:
             for row in all_rows:
@@ -389,7 +370,7 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
         })
         
         if data_present == 0 or (now - updated_at).total_seconds() > 1800 or data_present == '0':
-            asyncio.create_task(batch_save_to_database(cursor, connection, all_rows, request.app_id, batch_size=1000))
+            asyncio.create_task(batch_save_to_database(all_rows, request.app_id, batch_size=1000))
         
         seen_contacts = set()
         unique_rows = []
@@ -1570,11 +1551,13 @@ async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, camp
      
     return zip_filename
 
-async def batch_save_to_database(cursor, connection, rows_data: List[Tuple], app_id: str, batch_size: int = 500):
+async def batch_save_to_database(rows_data: List[Tuple], app_id: str, batch_size: int = 500):
     """
     Batch save/update records to database with explicit duplicate checking
     Checks for duplicates based only on waba_id, Date, and contact_wa_id
     """
+    connection = pymysql.connect(**dbconfig)
+    cursor = connection.cursor()
     if not rows_data:
         logger.info("No data to save to database")
         return
