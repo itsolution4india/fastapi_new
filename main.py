@@ -840,19 +840,19 @@ async def execute_batch_first_fuc(cursor, batch_contacts: List[str], phone_id: s
                                     WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 360 THEN
                                         CASE
                                             WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.55) THEN 'read'
-                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.98) THEN 'delivered'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
                                             ELSE 'sent'
                                         END
                                     WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) < 1440 THEN
                                         CASE
                                             WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.65) THEN 'read'
-                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.99) THEN 'delivered'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
                                             ELSE 'sent'
                                         END
                                     ELSE
                                         CASE
                                             WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.70) THEN 'read'
-                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.99) THEN 'delivered'
+                                            WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
                                             ELSE 'sent'
                                         END
                                 END
@@ -872,7 +872,8 @@ async def execute_batch_first_fuc(cursor, batch_contacts: List[str], phone_id: s
                                             WHEN wr1.status = 'sent' THEN
                                                 CASE
                                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.25) THEN 'read'
-                                                    ELSE 'delivered'
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.75) THEN 'delivered'
+                                                    ELSE 'sent'
                                                 END
                                             ELSE wr1.status
                                         END
@@ -882,51 +883,72 @@ async def execute_batch_first_fuc(cursor, batch_contacts: List[str], phone_id: s
                                             WHEN wr1.status = 'sent' THEN
                                                 CASE
                                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.30) THEN 'read'
-                                                    ELSE 'delivered'
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
+                                                    ELSE 'sent'
                                                 END
                                             ELSE wr1.status
                                         END
                                     -- Within 3 hours: Change 'delivered' to 'read', 'sent' to 'delivered'/'read'
                                     WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 180 THEN
                                         CASE
-                                            WHEN wr1.status = 'delivered' THEN 'read'
-                                            WHEN wr1.status = 'sent' THEN
+                                            WHEN wr1.status = 'delivered' THEN
                                                 CASE
                                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.45) THEN 'read'
                                                     ELSE 'delivered'
+                                                END
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.45) THEN 'read'
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
+                                                    ELSE 'sent'
                                                 END
                                             ELSE wr1.status
                                         END
                                     -- Within 6 hours: Change 'delivered' to 'read', 'sent' to 'delivered'/'read'
                                     WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) <= 360 THEN
                                         CASE
-                                            WHEN wr1.status = 'delivered' THEN 'read'
-                                            WHEN wr1.status = 'sent' THEN
+                                            WHEN wr1.status = 'delivered' THEN
                                                 CASE
                                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.55) THEN 'read'
                                                     ELSE 'delivered'
+                                                END
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.55) THEN 'read'
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
+                                                    ELSE 'sent'
                                                 END
                                             ELSE wr1.status
                                         END
                                     -- Within 24 hours: Change 'delivered' to 'read', 'sent' to 'delivered'/'read'
                                     WHEN TIMESTAMPDIFF(MINUTE, %s, NOW()) < 1440 THEN
                                         CASE
-                                            WHEN wr1.status = 'delivered' THEN 'read'
-                                            WHEN wr1.status = 'sent' THEN
+                                            WHEN wr1.status = 'delivered' THEN
                                                 CASE
                                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.65) THEN 'read'
                                                     ELSE 'delivered'
+                                                END
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.65) THEN 'read'
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
+                                                    ELSE 'sent'
                                                 END
                                             ELSE wr1.status
                                         END
                                     -- After 24 hours: Change 'delivered' to 'read', 'sent' to 'delivered'/'read'
                                     ELSE
                                         CASE
-                                            WHEN wr1.status = 'delivered' THEN 'read'
-                                            WHEN wr1.status = 'sent' THEN
+                                            WHEN wr1.status = 'delivered' THEN
                                                 CASE
                                                     WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.70) THEN 'read'
                                                     ELSE 'delivered'
+                                                END
+                                            WHEN wr1.status = 'sent' THEN
+                                                CASE
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.70) THEN 'read'
+                                                    WHEN (ROW_NUMBER() OVER (ORDER BY wr1.contact_wa_id) - 1) < FLOOR({total_records} * 0.95) THEN 'delivered'
+                                                    ELSE 'sent'
                                                 END
                                             ELSE wr1.status
                                         END
