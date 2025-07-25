@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 import pymysql
 from fastapi.responses import FileResponse
 import zipfile, uuid, math, json, csv, io, random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 TEMP_FOLDER = "temp_uploads"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
@@ -1832,8 +1832,7 @@ async def lifespan(app: FastAPI):
         
         # Clean up old files and tasks
         # cleanup_old_tasks()
-        
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         for filename in os.listdir(ZIP_FILES_DIR):
             if filename.endswith('.zip'):
                 file_path = os.path.join(ZIP_FILES_DIR, filename)
