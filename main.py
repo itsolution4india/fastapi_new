@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 import pymysql
 from fastapi.responses import FileResponse
 import zipfile, uuid, math, json, csv, io, random
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 TEMP_FOLDER = "temp_uploads"
 os.makedirs(TEMP_FOLDER, exist_ok=True)
@@ -316,7 +316,7 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
         
         # Process contacts in batches
         data_present = report.deliver_count + report.failed_count + report.pending_count + report.sent_count + report.read_count + report.reply_count
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         if data_present == 0 or (now - updated_at).total_seconds() > 1800 or data_present == '0':
             for batch_num in range(total_batches):
                 start_idx = batch_num * batch_size
@@ -1832,7 +1832,8 @@ async def lifespan(app: FastAPI):
         
         # Clean up old files and tasks
         # cleanup_old_tasks()
-        now = datetime.now(timezone.utc)
+        
+        now = datetime.now()
         for filename in os.listdir(ZIP_FILES_DIR):
             if filename.endswith('.zip'):
                 file_path = os.path.join(ZIP_FILES_DIR, filename)
