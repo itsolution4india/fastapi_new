@@ -318,29 +318,21 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
         data_present = report.deliver_count + report.failed_count + report.pending_count + report.sent_count + report.read_count + report.reply_count
         from datetime import timezone
         now = datetime.now(timezone.utc)
-        if data_present == 0 or (now - updated_at).total_seconds() > 1800 or data_present == '0':
-            for batch_num in range(total_batches):
-                start_idx = batch_num * batch_size
-                end_idx = min((batch_num + 1) * batch_size, len(contact_list))
-                batch_contacts = contact_list[start_idx:end_idx]
-                
-                logger.info(f"Processing batch {batch_num + 1}/{total_batches} with {len(batch_contacts)} contacts")
-                
-                # Execute batch query
+        
+        for batch_num in range(total_batches):
+            start_idx = batch_num * batch_size
+            end_idx = min((batch_num + 1) * batch_size, len(contact_list))
+            batch_contacts = contact_list[start_idx:end_idx]
+            
+            logger.info(f"Processing batch {batch_num + 1}/{total_batches} with {len(batch_contacts)} contacts")
+            if data_present == 0 or (now - updated_at).total_seconds() > 1800 or data_present == '0':
                 batch_rows = await execute_batch_first_fuc(
                     cursor, batch_contacts, phone_id, created_at_str, waba_id_list, app_id
                 )
-                
-                if batch_rows:
-                    all_rows.extend(batch_rows)
-                    logger.info(f"Batch {batch_num + 1} completed: {len(batch_rows)} rows")
-                else:
-                    logger.info(f"Batch {batch_num + 1} completed: 0 rows")
-        else:
-            batch_rows = await execute_batch_second_fuc(
-                cursor, batch_contacts, phone_id, created_at_str, waba_id_list, app_id
-            )
-            
+            else:
+                batch_rows = await execute_batch_second_fuc(
+                    cursor, batch_contacts, phone_id, created_at_str, waba_id_list, app_id
+                )
             if batch_rows:
                 all_rows.extend(batch_rows)
                 logger.info(f"Batch {batch_num + 1} completed: {len(batch_rows)} rows")
