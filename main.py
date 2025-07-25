@@ -331,7 +331,7 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
                 )
             else:
                 batch_rows = await execute_batch_second_fuc(
-                    cursor, batch_contacts, phone_id, created_at_str, waba_id_list, app_id
+                    cursor, batch_contacts, phone_id, created_at_str, end_time_str, waba_id_list, app_id
                 )
             if batch_rows:
                 all_rows.extend(batch_rows)
