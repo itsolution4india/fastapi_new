@@ -309,7 +309,7 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
             return
         
         # BATCH PROCESSING APPROACH
-        batch_size = 1500  # Process 1000 contacts at a time
+        batch_size = 2500  # Process 1000 contacts at a time
         total_batches = math.ceil(len(contact_list) / batch_size)
         
         logger.info(f"Processing {len(contact_list)} contacts in {total_batches} batches of {batch_size}")
@@ -406,17 +406,17 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
         
         # Commit the changes
         db.commit()
+        asyncio.create_task(
+                generate_csv_zip(all_rows, request.report_id, task_id, campaign_title, str(template_name), str(created_at))
+            )
         
-        if not insight:
-            zip_filename = await generate_csv_zip(all_rows, request.report_id, task_id, campaign_title, str(template_name), str(created_at))
-        
-            # Update task status to completed
-            update_task_status(task_id, {
-                "status": "completed",
-                "message": "Report generated successfully",
-                "file_url": f"/download-zip/{zip_filename}",
-                "progress": 100
-            })
+        # Update task status to completed
+        update_task_status(task_id, {
+            "status": "completed",
+            "message": "Report generated successfully",
+            "file_url": f"/zip-reports/",
+            "progress": 100
+        })
         
         logger.info(f"Successfully generated ZIP report for task {task_id}")
         
@@ -1570,8 +1570,6 @@ async def generate_csv_zip(rows: List[Tuple], report_id: str, task_id: str, camp
      
     if not os.path.exists(zip_filepath): 
         raise Exception("Failed to create ZIP file") 
-     
-    return zip_filename
 
 async def batch_save_to_database(rows_data: List[Tuple], app_id: str, batch_size: int = 500):
     """
