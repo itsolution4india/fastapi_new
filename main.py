@@ -319,12 +319,27 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
         from datetime import timezone
         now = datetime.now(timezone.utc)
         
+        should_show_progress = (
+            data_present == 0 or 
+            (now - updated_at).total_seconds() > 1800 or 
+            data_present == '0' or 
+            len(contact_list) < 100
+        )
+        
         for batch_num in range(total_batches):
             start_idx = batch_num * batch_size
             end_idx = min((batch_num + 1) * batch_size, len(contact_list))
             batch_contacts = contact_list[start_idx:end_idx]
             
             logger.info(f"Processing batch {batch_num + 1}/{total_batches} with {len(batch_contacts)} contacts")
+            
+            if should_show_progress:
+                batch_progress = 30 + (50 * (batch_num + 1) / total_batches)
+                update_task_status(task_id, {
+                    "progress": int(batch_progress),
+                    "message": f"Processing batch {batch_num + 1}/{total_batches}..."
+                })
+            
             if data_present == 0 or (now - updated_at).total_seconds() > 1800 or data_present == '0':
                 batch_rows = await execute_batch_first_fuc(
                     cursor, batch_contacts, phone_id, created_at_str, waba_id_list, app_id
