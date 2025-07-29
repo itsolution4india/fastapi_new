@@ -345,9 +345,12 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
                     cursor, batch_contacts, phone_id, created_at_str, waba_id_list, app_id
                 )
             else:
-                batch_rows = await execute_batch_second_fuc(
-                    cursor, batch_contacts, phone_id, created_at_str, end_time_str, waba_id_list, app_id
-                )
+                logger.info(f"Skipping batch {batch_num + 1} due to recent update or data presence.")
+                return
+                # batch_rows = None
+                # batch_rows = await execute_batch_second_fuc(
+                #     cursor, batch_contacts, phone_id, created_at_str, end_time_str, waba_id_list, app_id
+                # )
             if batch_rows:
                 all_rows.extend(batch_rows)
                 logger.info(f"Batch {batch_num + 1} completed: {len(batch_rows)} rows")
