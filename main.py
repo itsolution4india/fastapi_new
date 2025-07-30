@@ -388,7 +388,7 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
         })
         
         if data_present == 0 or (now - updated_at).total_seconds() > 1800 or data_present == '0':
-            asyncio.create_task(batch_save_to_database(all_rows, request.app_id, batch_size=1000))
+            asyncio.create_task(batch_save_to_database(all_rows, request.app_id, batch_size=2000))
         
         seen_contacts = set()
         unique_rows = []
@@ -770,7 +770,7 @@ async def execute_batch_second_fuc(cursor, batch_contacts: List[str], phone_id: 
                 wr1.message_from,
                 wr1.message_type,
                 wr1.message_body
-            FROM webhook_responses_{app_id}_dup wr1
+            FROM webhook_responses_{app_id} wr1
             WHERE wr1.contact_wa_id IN ({placeholders_contacts})
             AND wr1.phone_number_id = %s
             AND wr1.Date >= %s
@@ -778,7 +778,7 @@ async def execute_batch_second_fuc(cursor, batch_contacts: List[str], phone_id: 
             {"AND wr1.waba_id IN (" + ','.join(['%s'] * len(waba_id_list)) + ")" if waba_id_list and waba_id_list != ['0'] else ""}
             AND wr1.message_timestamp = (
                 SELECT MAX(wr2.message_timestamp)
-                FROM webhook_responses_{app_id}_dup wr2
+                FROM webhook_responses_{app_id} wr2
                 WHERE wr2.contact_wa_id = wr1.contact_wa_id
                 AND wr2.phone_number_id = wr1.phone_number_id
                 AND wr2.Date >= %s
@@ -988,14 +988,14 @@ async def execute_batch_first_fuc(cursor, batch_contacts: List[str], phone_id: s
                 wr1.message_from, 
                 wr1.message_type, 
                 wr1.message_body 
-            FROM webhook_responses_{app_id}_dup wr1 
+            FROM webhook_responses_{app_id} wr1 
             WHERE wr1.contact_wa_id IN ({placeholders_contacts}) 
             AND wr1.phone_number_id = %s 
             AND wr1.Date >= %s 
             {waba_condition_main}
             AND wr1.message_timestamp = ( 
                 SELECT MAX(wr2.message_timestamp) 
-                FROM webhook_responses_{app_id}_dup wr2 
+                FROM webhook_responses_{app_id} wr2 
                 WHERE wr2.contact_wa_id = wr1.contact_wa_id 
                 AND wr2.phone_number_id = wr1.phone_number_id 
                 AND wr2.Date >= %s 
@@ -1607,13 +1607,13 @@ async def batch_save_to_database(rows_data: List[Tuple], app_id: str, batch_size
     
     # Prepare queries
     check_duplicate_query = f"""
-        SELECT id FROM webhook_responses_{app_id}_dup
+        SELECT id FROM webhook_responses_{app_id}
         WHERE waba_id = %s AND Date = %s AND contact_wa_id = %s
         LIMIT 1
     """
     
     insert_query = f"""
-        INSERT INTO webhook_responses_{app_id}_dup (
+        INSERT INTO webhook_responses_{app_id} (
             Date, display_phone_number, phone_number_id, waba_id, contact_wa_id,
             status, message_timestamp, error_code, error_message, contact_name,
             message_from, message_type, message_body
@@ -1621,7 +1621,7 @@ async def batch_save_to_database(rows_data: List[Tuple], app_id: str, batch_size
     """
     
     update_query = f"""
-        UPDATE webhook_responses_{app_id}_dup SET
+        UPDATE webhook_responses_{app_id} SET
             status = %s
         WHERE waba_id = %s AND Date = %s AND contact_wa_id = %s
     """
