@@ -1277,14 +1277,20 @@ async def generate_fallback_data(cursor, missing_contacts: set, created_at: date
                 fallback_row[5] = 'failed'
                 fallback_row[7] = '131049'
                 fallback_row[8] = "This message was not delivered to maintain healthy ecosystem engagement."
+            elif len(missing_contacts) > 2500:
+                fallback_row[5] = random.choice(['read', 'sent', 'delivered'])
             else:
                 try:
                     if (datetime.now() - new_date) < timedelta(hours=24):
                         fallback_row[5] = 'pending'
+                    else:
+                        fallback_row[5] = random.choice(['read', 'sent', 'delivered'])
                 except Exception as e:
                     from datetime import timezone
                     if (datetime.now(timezone.utc) - new_date) < timedelta(hours=24):
                         fallback_row[5] = 'pending'
+                    else:
+                        fallback_row[5] = random.choice(['read', 'sent', 'delivered'])
             
             # Update the record
             fallback_row[0] = new_date.strftime('%Y-%m-%d %H:%M:%S')  # Date
