@@ -309,7 +309,7 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
             return
         
         # BATCH PROCESSING APPROACH
-        batch_size = 5000  # Process 1000 contacts at a time
+        batch_size = 2500  # Process 1000 contacts at a time
         total_batches = math.ceil(len(contact_list) / batch_size)
         
         logger.info(f"Processing {len(contact_list)} contacts in {total_batches} batches of {batch_size}")
