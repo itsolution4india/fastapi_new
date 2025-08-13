@@ -309,7 +309,7 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
             return
         
         # BATCH PROCESSING APPROACH
-        batch_size = 2500  # Process 1000 contacts at a time
+        batch_size = 5000  # Process 1000 contacts at a time
         total_batches = math.ceil(len(contact_list) / batch_size)
         
         logger.info(f"Processing {len(contact_list)} contacts in {total_batches} batches of {batch_size}")
@@ -340,7 +340,7 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
                     "message": f"Processing batch {batch_num + 1}/{total_batches}..."
                 })
             
-            if data_present == 0 or (now - updated_at).total_seconds() > 1800 or data_present == '0':
+            if data_present == 0 or (now - updated_at).total_seconds() > 1800 or data_present == '0' or len(contact_list) < 100:
                 batch_rows = await execute_batch_first_fuc(
                     cursor, batch_contacts, phone_id, created_at_str, waba_id_list, app_id
                 )
@@ -387,7 +387,7 @@ async def generate_report_background_testing(task_id: str, request: ReportReques
             "message": "Generating report file..."
         })
         
-        if data_present == 0 or (now - updated_at).total_seconds() > 1800 or data_present == '0':
+        if data_present == 0 or (now - updated_at).total_seconds() > 1800 or data_present == '0' or len(contact_list) < 100:
             asyncio.create_task(batch_save_to_database(all_rows, request.app_id, batch_size=2000))
         
         seen_contacts = set()
